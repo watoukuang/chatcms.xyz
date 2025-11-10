@@ -1,0 +1,73 @@
+/* 主题相关的全局样式 */
+
+/* 浅色模式 (默认) */
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f9fafb;
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --border-color: #e5e7eb;
+  --card-bg: #ffffff;
+  --card-border: #f3f4f6;
+  --accent-color: #3b82f6;
+  --accent-shadow: rgba(59, 130, 246, 0.35);
+}
+
+/* 深色模式 - 更深沉的背景色 */
+.dark {
+  --bg-primary: #121212;  /* 更深的主背景 */
+  --bg-secondary: #1a1b1e; /* 次要背景区域 */
+  --text-primary: #f5f5f5;
+  --text-secondary: #a0a0a0;
+  --border-color: #2c2c2c;
+  --card-bg: #1e1e1e;     /* 卡片背景 */
+  --card-border: #2d2d30;
+  --accent-color: #60a5fa;
+  --accent-shadow: rgba(96, 165, 250, 0.35);
+}
+
+/* 应用主题颜色 */
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* 卡片和组件背景 */
+.card,
+.sidebar,
+.dropdown-menu {
+  background-color: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+/* 头部与底部 */
+header,
+footer {
+  background-color: var(--bg-primary);
+  border-color: var(--border-color);
+}
+
+/* 主题切换指示器 - 添加到页面上以显示当前主题 */
+.theme-indicator {
+  position: fixed;
+  bottom: 1rem;
+  left: 1rem;
+  padding: 0.5rem;
+  font-size: 0.75rem;
+  background-color: var(--accent-color);
+  color: white;
+  border-radius: 9999px;
+  opacity: 0.8;
+  z-index: 50;
+}
+
+/* 暗色模式时的图像调整 */
+.dark img:not([src*=".svg"]) {
+  filter: brightness(0.9) contrast(1.1);
+}
+
+/* 反转某些SVG图标颜色，如果需要 */
+.dark .invert-in-dark {
+  filter: invert(1);
+}
