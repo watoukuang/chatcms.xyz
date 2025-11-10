@@ -7,13 +7,13 @@
 - 构建前端镜像
 
 ```shell
-docker build -t demochain-ui:latest .
+docker build -t chatcms:latest .
 ```
 
 - 启动服务
 
 ```shell
-docker run --name demochain-ui --restart=always -p 3005:3000 demochain-ui:latest
+docker run --name chatcms --restart=always -p 3006:3000 chatcms:latest
 ```
 
 **常用命令**
