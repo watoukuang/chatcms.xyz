@@ -4,6 +4,7 @@ import HForm from './HForm';
 import TCard from './TCard';
 import moment from 'moment';
 import {addTaskAPI, getTasksAPI, updateTaskAPI} from '@/api/gcode/scrum';
+import storage from '@/src/shared/utils/storage';
 import {Task, User} from '@/types/app/scrum';
 import {listEmployeesAPI} from "@/api/sytem/user";
 
@@ -15,6 +16,70 @@ const timeTableSlots = fullDayHours.map(start => {
 });
 
 const timeOptions = fullDayHours.map(time => ({label: time, value: time}));
+
+// 本地缓存键
+const STORAGE_KEY = 'scrum_tasks';
+
+// 读取与写入本地任务列表
+const loadAllTasks = (): Task[] => {
+    const list = storage.get<Task[]>(STORAGE_KEY, []);
+    return Array.isArray(list) ? list : [];
+};
+
+const saveAllTasks = (list: Task[]) => {
+    storage.set(STORAGE_KEY, list);
+};
+
+// 在本地缓存中按用户与日期范围查询
+const getTasksLocal = (params: { userId?: number; startDate?: string; endDate?: string }): Task[] => {
+    const {userId, startDate, endDate} = params;
+    const all = loadAllTasks();
+    return all.filter((t) => {
+        if (userId !== undefined && t.userId !== userId) return false;
+        if (startDate && moment(t.taskTime, 'YYYY-MM-DD').isBefore(moment(startDate, 'YYYY-MM-DD'), 'day')) return false;
+        if (endDate && moment(t.taskTime, 'YYYY-MM-DD').isAfter(moment(endDate, 'YYYY-MM-DD'), 'day')) return false;
+        return true;
+    });
+};
+
+// 新增本地任务
+const addTaskLocal = (partial: Partial<Task>): Task => {
+    const all = loadAllTasks();
+    const newTask: Task = {
+        id: partial.id ?? Date.now(),
+        userId: partial.userId ?? 0,
+        taskTime: partial.taskTime ?? moment().format('YYYY-MM-DD'),
+        startTime: partial.startTime ?? '00:00',
+        endTime: partial.endTime ?? '01:00',
+        task: partial.task ?? '',
+        remark: partial.remark ?? '',
+        state: partial.state ?? 'pending',
+        yn: partial.yn ?? 1,
+        createdAt: partial.createdAt ?? moment().toISOString(),
+        updatedAt: moment().toISOString(),
+    } as Task;
+    all.push(newTask);
+    saveAllTasks(all);
+    return newTask;
+};
+
+// 修改本地任务
+const updateTaskLocal = (updated: Task): Task => {
+    const all = loadAllTasks();
+    const idx = all.findIndex((t) => t.id === updated.id);
+    const item: Task = {
+        ...all[idx],
+        ...updated,
+        updatedAt: moment().toISOString(),
+    } as Task;
+    if (idx >= 0) {
+        all[idx] = item;
+    } else {
+        all.push(item);
+    }
+    saveAllTasks(all);
+    return item;
+};
 
 const stateOptions = [
     {label: '待处理', value: 'pending', color: '#faad14'},
@@ -71,8 +136,8 @@ const TodoPanel: React.FC<ScrumPageProps> = (props) => {
         const startDate = currentDate.clone().startOf('isoWeek').format('YYYY-MM-DD');
         const endDate = currentDate.clone().endOf('isoWeek').format('YYYY-MM-DD');
         try {
-            const res = await getTasksAPI({userId: currentUser, startDate, endDate});
-            setTasks(res.data || []);
+            const list = getTasksLocal({userId: currentUser, startDate, endDate});
+            setTasks(list);
         } catch (error) {
             message.error('获取任务失败');
         } finally {
@@ -140,13 +205,28 @@ const TodoPanel: React.FC<ScrumPageProps> = (props) => {
 
             try {
                 if (editingTask?.id) {
-                    await updateTaskAPI({...taskData, id: editingTask.id} as Task);
+                    const updatedItem = updateTaskLocal({
+                        ...(taskData as Task),
+                        id: editingTask.id as number,
+                    } as Task);
+                    setTasks((prev) => {
+                        const idx = prev.findIndex((t) => t.id === updatedItem.id);
+                        if (idx >= 0) {
+                            const next = [...prev];
+                            next[idx] = updatedItem;
+                            return next;
+                        }
+                        return [...prev, updatedItem];
+                    });
+                    message.success('任务更新成功 (本地缓存)');
                 } else {
-                    await addTaskAPI(taskData);
+                    const createdItem = addTaskLocal(taskData);
+                    setTasks((prev) => [...prev, createdItem]);
+                    message.success('任务添加成功 (本地缓存)');
                 }
-                message.success(editingTask?.id ? '任务更新成功' : '任务添加成功');
                 setIsDrawerVisible(false);
-                fetchTasksForCurrentUser().then(error => console.error(error));
+                setEditingTask(null);
+                form.resetFields();
             } catch (error) {
                 message.error(editingTask?.id ? '更新失败' : '添加失败');
             }
