@@ -2,7 +2,6 @@ import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import {Button, Card, Drawer, Form, message, Space, Spin, Table} from 'antd';
 import HForm from './HForm';
 import TCard from './TCard';
-import Title from './Title';
 import moment from 'moment';
 import {addTaskAPI, getTasksAPI, updateTaskAPI} from '@/api/gcode/scrum';
 import {Task, User} from '@/types/app/scrum';
@@ -259,23 +258,17 @@ const TodoPanel: React.FC<ScrumPageProps> = (props) => {
 
     return (
         <div>
-            <Title value="任务计划">
-                <Button type="primary" onClick={handleAdd} disabled={isPastWeek}>
-                    新增
-                </Button>
-            </Title>
-            <Card style={{marginBottom: 16}}>
-                <Form layout="inline">
-                    <Form.Item>
-                        <Space>
-                            <Button onClick={goToPreviousWeek}>上一周</Button>
-                            <Button onClick={goToNextWeek}>下一周</Button>
-                            <Button onClick={goToToday}>回到今天</Button>
-                        </Space>
-                    </Form.Item>
-                </Form>
-            </Card>
-            <Card>
+            <Card
+                title="任务进程"
+                extra={
+                    <Space>
+                        <Button onClick={goToPreviousWeek}>上一周</Button>
+                        <Button onClick={goToNextWeek}>下一周</Button>
+                        <Button onClick={goToToday}>回到今天</Button>
+                        <Button type="primary" onClick={handleAdd} disabled={isPastWeek}>新增</Button>
+                    </Space>
+                }
+            >
                 <Spin spinning={loading}>
                     <Table columns={columns} dataSource={data} pagination={false} bordered/>
                 </Spin>

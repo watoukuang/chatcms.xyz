@@ -94,16 +94,6 @@ const HForm: React.FC<HFormProps> = (props) => {
                        rules={[{required: true, message: '请选择状态'}]}>
                 <Select options={stateOptions}/>
             </Form.Item>
-            <Form.Item name="userId" label="用户" rules={[{required: true, message: '请选择用户'}]}>
-                <Select
-                    placeholder="请选择用户"
-                    allowClear
-                    showSearch
-                    optionFilterProp="label"
-                    options={users.map(user => ({label: user.name, value: user.id!}))}
-                    loading={users.length === 0}
-                />
-            </Form.Item>
         </Form>
     );
 };

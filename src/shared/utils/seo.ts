@@ -37,6 +37,6 @@ export function getPageSEO(pathname: string): SEOConfig {
         ...pageSEOConfig,
         ogTitle: pageSEOConfig.ogTitle || pageSEOConfig.title || defaultSEO.title,
         ogDescription: pageSEOConfig.ogDescription || pageSEOConfig.description || defaultSEO.description,
-        canonical: `https://chatcms.xyz${pathname}`,
+        canonical: `https://aitodo.me${pathname}`,
     };
 }

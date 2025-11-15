@@ -26,15 +26,15 @@ interface ChatPanelProps {
 }
 
 const ChatPanel: React.FC<ChatPanelProps> = ({
-    startISO, setStartISO,
-    endISO, setEndISO,
-    durationMin, setDurationMin,
-    chatInput, setChatInput,
-    loading, lastMessage,
-    diffMinutes, validation,
-    canSend, handleSend,
-    onKeyDownTextArea
-}) => {
+                                                 startISO, setStartISO,
+                                                 endISO, setEndISO,
+                                                 durationMin, setDurationMin,
+                                                 chatInput, setChatInput,
+                                                 loading, lastMessage,
+                                                 diffMinutes, validation,
+                                                 canSend, handleSend,
+                                                 onKeyDownTextArea
+                                             }) => {
     return (
         <div
             className="mx-auto my-4 p-6 bg-white border-2 rounded-lg shadow-lg w-full max-w-full sm:max-w-xl md:max-w-2xl lg:max-w-3xl xl:max-w-4xl">
@@ -89,9 +89,9 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                 </div>
                 {validation.length > 0 && (
                     <div className="text-red-600 text-sm">
-                    {validation.map((m: string, i: number) => (
-                        <div key={i}>• {m}</div>
-                    ))}
+                        {validation.map((m: string, i: number) => (
+                            <div key={i}>• {m}</div>
+                        ))}
                     </div>
                 )}
                 <div className="mt-4 relative">
@@ -113,11 +113,14 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                     >
                         {loading ? (
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4 animate-spin">
-                                <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                <path
+                                    d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"
+                                    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                             </svg>
                         ) : (
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4">
-                                <path d="M5 12h12M13 5l7 7-7 7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                <path d="M5 12h12M13 5l7 7-7 7" strokeWidth="2" strokeLinecap="round"
+                                      strokeLinejoin="round"/>
                             </svg>
                         )}
                     </button>

@@ -27,7 +27,7 @@ function Application({Component, pageProps}: AppProps): React.ReactElement {
                 <meta name="theme-color" content="#0f1115" media="(prefers-color-scheme: dark)"/>
                 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)"/>
                 <meta property="og:type" content="website"/>
-                <meta property="og:site_name" content="DemoChain"/>
+                <meta property="og:site_name" content="AiTodo"/>
                 <meta property="og:title" content={seo.ogTitle || seo.title}/>
                 <meta property="og:description" content={seo.ogDescription || seo.description}/>
                 <meta property="og:url" content={seo.canonical}/>
