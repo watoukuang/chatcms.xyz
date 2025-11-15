@@ -1,9 +1,8 @@
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
-import {Button, Card, Drawer, Form, message, Space, Spin, Table} from 'antd';
+import {Button, Card, Form, message, Space, Spin, Table, Modal} from 'antd';
 import HForm from './HForm';
 import TCard from './TCard';
 import moment from 'moment';
-import {addTaskAPI, getTasksAPI, updateTaskAPI} from '@/api/gcode/scrum';
 import storage from '@/src/shared/utils/storage';
 import {Task, User} from '@/types/app/scrum';
 import {listEmployeesAPI} from "@/api/sytem/user";
@@ -353,7 +352,7 @@ const TodoPanel: React.FC<ScrumPageProps> = (props) => {
                     <Table columns={columns} dataSource={data} pagination={false} bordered/>
                 </Spin>
             </Card>
-            <Drawer
+            <Modal
                 title={editingTask?.id ? '编辑任务' : '新增任务'}
                 width={800}
                 onClose={() => setIsDrawerVisible(false)}
@@ -376,7 +375,7 @@ const TodoPanel: React.FC<ScrumPageProps> = (props) => {
                     stateOptions={stateOptions}
                     users={userOptions}
                 />
-            </Drawer>
+            </Modal>
         </div>
     );
 };
