@@ -47,11 +47,11 @@ function Application({Component, pageProps}: AppProps): React.ReactElement {
                         __html: JSON.stringify({
                             '@context': 'https://schema.org',
                             '@type': 'WebSite',
-                            name: 'ChatCMS',
-                            url: 'https://chatcms.xyz',
+                            name: 'AITODO',
+                            url: 'https://aitodo.me',
                             potentialAction: {
                                 '@type': 'SearchAction',
-                                target: 'https://chatcms.xyz/?q={search_term_string}',
+                                target: 'https://aitodo.me/?q={search_term_string}',
                                 'query-input': 'required name=search_term_string',
                             },
                         }),

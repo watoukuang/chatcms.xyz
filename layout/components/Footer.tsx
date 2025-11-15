@@ -21,7 +21,7 @@ export default function Footer(): React.ReactElement {
                         className="flex flex-col md:flex-row items-center md:items-center justify-center md:justify-start gap-1 md:gap-4 w-full md:w-auto">
                         <Logo className="mx-auto md:mx-0"/>
                         <p className="text-xs md:text-[13px] text-gray-600 dark:text-gray-400 mt-1 md:mt-0 text-center md:text-left">
-                            © {currentYear} chatcms.xyz · 一站式AI内容生成与分发平台
+                            © {currentYear} aitodo.me · AI TODO FOR ME
                         </p>
                     </div>
 

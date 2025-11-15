@@ -1,6 +1,7 @@
 import request from '../utils/request';
 import {R} from "@/src/shared/types/response";
 import {AuthVO, LoginDTO, RegisterDTO, UserDetail} from "@/src/shared/types/user";
+import storage from '../utils/storage';
 
 
 // 登录
@@ -12,8 +13,8 @@ export async function login(payload: LoginDTO): Promise<AuthVO> {
     const data = response.data;
     if (!data) throw new Error('登录响应数据为空');
     if (typeof window !== 'undefined') {
-        if (data.token) localStorage.setItem('token', data.token);
-        localStorage.setItem('user_detail', JSON.stringify(data.user_detail));
+        if (data.token) storage.set('token', data.token);
+        storage.set('user_detail', data.user_detail);
         window.dispatchEvent(new Event('authChanged'));
     }
     return data;
@@ -33,8 +34,8 @@ export async function logout(): Promise<R<null>> {
     // 仅前端清除本地缓存，不发起后端请求
     if (typeof window !== 'undefined') {
         try {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user_detail');
+            storage.remove('token');
+            storage.remove('user_detail');
             // 通知全局认证状态已变更（与登录保持对称）
             window.dispatchEvent(new Event('authChanged'));
         } catch (e) {

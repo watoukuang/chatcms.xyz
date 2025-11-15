@@ -1,6 +1,7 @@
 import {useState, useEffect, useCallback} from 'react';
 import {logout} from '../api/auth';
 import {UserDetail, AuthState} from '../types/user';
+import storage from '../utils/storage';
 
 type UseAuthReturn = {
     user: UserDetail | null;
@@ -34,19 +35,13 @@ export function useAuth(): UseAuthReturn {
     // 获取本地存储的用户信息
     const getLocalUser = (): UserDetail | null => {
         if (typeof window === 'undefined') return null;
-
-        try {
-            const userInfo = localStorage.getItem('user_detail');
-            return userInfo ? JSON.parse(userInfo) : null;
-        } catch {
-            return null;
-        }
+        return storage.get<UserDetail>('user_detail');
     };
 
     // 获取本地存储的 token
     const getLocalToken = (): string | null => {
         if (typeof window === 'undefined') return null;
-        return localStorage.getItem('token');
+        return storage.get<string>('token');
     };
 
     // 检查 token 是否有效
@@ -81,8 +76,8 @@ export function useAuth(): UseAuthReturn {
                 });
             } else {
                 if (typeof window !== 'undefined') {
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('user_detail');
+                    storage.remove('token');
+                    storage.remove('user_detail');
                 }
                 setAuthState({
                     userDetail: null,
@@ -145,7 +140,7 @@ export function useAuth(): UseAuthReturn {
 
         // 更新本地存储
         if (typeof window !== 'undefined') {
-            localStorage.setItem('user_detail', JSON.stringify(user));
+            storage.set('user_detail', user);
         }
     }, []);
 

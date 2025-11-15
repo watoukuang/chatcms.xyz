@@ -1,10 +1,8 @@
-import React, {useState} from 'react';
+import React from 'react';
 import Logo from '@/components/Logo';
 import Theme from '@/layout/components/Theme';
-import LoginModal from '@/components/Login';
 
 export default function Header(): React.ReactElement | null {
-    const [loginOpen, setLoginOpen] = useState(false);
 
     return (
         <header
@@ -14,7 +12,7 @@ export default function Header(): React.ReactElement | null {
                     <Logo/>
                 </div>
                 <div className="flex items-center gap-3">
-                    <Theme/>        
+                    <Theme/>
                 </div>
             </div>
         </header>

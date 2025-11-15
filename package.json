@@ -1,7 +1,7 @@
 {
-  "name": "demochain-ui",
+  "name": "aitodo.me",
   "version": "1.0.0",
-  "description": "DemoChain - 区块链共识平台",
+  "description": "AI TODO FORM ME",
   "private": true,
   "scripts": {
     "dev": "next dev -p 3010",
@@ -32,8 +32,10 @@
     "@editorjs/quote": "^2.7.6",
     "@editorjs/table": "^2.4.5",
     "@tailwindcss/postcss": "^4.1.13",
+    "antd": "^5.28.1",
     "autoprefixer": "^10.4.14",
     "crypto-js": "^4.2.0",
+    "moment": "^2.30.1",
     "next": "^13.4.1",
     "postcss": "^8.4.23",
     "react": "^18.2.0",

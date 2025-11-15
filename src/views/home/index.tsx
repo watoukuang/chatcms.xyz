@@ -1,129 +1,518 @@
 "use client";
 
-import React from "react";
-import Reveal from "@/components/ui/Reveal";
-import Features from "@/src/views/home/components/Features";
-import Banner from "./components/Banner";
+import React, {useEffect, useMemo, useState} from "react";
+import AddTodo from "@/src/views/home/components/AddTodo";
+import TodoPanel from "@/src/views/home/components/TodoPanel";
+import ChatPanel from "@/src/views/home/components/ChatPanel";
+import storage from "@/src/shared/utils/storage";
 
 export default function HomeLanding(): React.ReactElement {
+    const [startISO, setStartISO] = useState<string>("");
+    const [endISO, setEndISO] = useState<string>("");
+    const [durationMin, setDurationMin] = useState<string>("");
+    const [chatInput, setChatInput] = useState<string>("");
+    const [loading, setLoading] = useState<boolean>(false);
+    const [lastMessage, setLastMessage] = useState<string>("");
+    const [jsonInput, setJsonInput] = useState<string>("");
+    const [jsonErrors, setJsonErrors] = useState<string[]>([]);
+    const [parsedPlan, setParsedPlan] = useState<Plan | null>(null);
+    const [useMockData, setUseMockData] = useState<boolean>(false);
+
+    // 从 localStorage 加载数据
+    useEffect(() => {
+        const stored = storage.get<Plan>('taskPlan');
+        if (stored) {
+            setParsedPlan(stored);
+        }
+    }, []);
+
+    // 保存到 localStorage
+    useEffect(() => {
+        if (parsedPlan) {
+            storage.set('taskPlan', parsedPlan);
+        }
+    }, [parsedPlan]);
+
+    const diffMinutes = useMemo(() => {
+        if (!startISO || !endISO) return undefined;
+        const s = new Date(startISO).getTime();
+        const e = new Date(endISO).getTime();
+        const diff = Math.round((e - s) / 60000);
+        return Number.isFinite(diff) ? diff : undefined;
+    }, [startISO, endISO]);
+
+    const validation = useMemo(() => {
+        const errors: string[] = [];
+        if (startISO && endISO) {
+            if (new Date(startISO) >= new Date(endISO)) {
+                errors.push("结束时间必须大于开始时间");
+            }
+        }
+        const dur = durationMin ? Number(durationMin) : undefined;
+        if (durationMin !== "" && (!Number.isFinite(dur!) || dur! <= 0)) {
+            errors.push("目标总时长需为大于0的数字（分钟）");
+        }
+        if (diffMinutes !== undefined && durationMin !== "") {
+            const durNum = Number(durationMin);
+            if (Number.isFinite(durNum) && durNum > diffMinutes) {
+                errors.push(`目标总时长(${durNum}m)不能大于时间窗(${diffMinutes}m)`);
+            }
+        }
+        return errors;
+    }, [startISO, endISO, durationMin, diffMinutes]);
+
+    const canSend = useMemo(() => {
+        return !loading && chatInput.trim().length > 0 && validation.length === 0 && !!startISO && !!endISO;
+    }, [loading, chatInput, validation.length, startISO, endISO]);
+
+    const API_URL = process.env.NEXT_PUBLIC_PLANNER_API as string | undefined;
+
+    const handleSend = async () => {
+        if (!canSend) return;
+        setLoading(true);
+        const payload = {
+            window: {startISO, endISO},
+            targetMinutes: durationMin ? Number(durationMin) : undefined,
+            prompt: chatInput.trim(),
+        };
+        setLastMessage(JSON.stringify(payload, null, 2));
+        setJsonErrors([]);
+        try {
+            if (!API_URL) {
+                const mock = createMockPlan();
+                setParsedPlan(mock);
+                setJsonInput(JSON.stringify(mock, null, 2));
+                return;
+            }
+            const resp = await fetch(API_URL, {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify(payload),
+            });
+            const text = await resp.text();
+            let data: unknown;
+            try {
+                data = JSON.parse(text);
+            } catch (e) {
+                throw new Error("响应不是合法 JSON");
+            }
+            const res = validatePlan(data);
+            if (res.ok) {
+                setParsedPlan(res.data);
+                setJsonInput(JSON.stringify(res.data, null, 2));
+            } else {
+                setJsonErrors(res.errors);
+            }
+        } catch (err: any) {
+            setJsonErrors([err?.message || "请求失败"]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const createEmptyPlanFromForm = (): Plan => {
+        const validStart = startISO && !Number.isNaN(new Date(startISO).getTime());
+        const validEnd = endISO && !Number.isNaN(new Date(endISO).getTime());
+        let s: Date;
+        let e: Date;
+        if (validStart && validEnd && new Date(startISO) < new Date(endISO)) {
+            s = new Date(startISO);
+            e = new Date(endISO);
+        } else {
+            const now = new Date();
+            s = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 0, 0, 0);
+            e = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 18, 0, 0, 0);
+        }
+        return {
+            window: {startISO: toLocalISO(s), endISO: toLocalISO(e)},
+            tasks: [],
+            schedule: [],
+        };
+    };
+
+    const onKeyDownTextArea = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === "Enter" && !e.shiftKey && !e.metaKey) {
+            e.preventDefault();
+            handleSend();
+        }
+    };
+
+    type Priority = "low" | "medium" | "high";
+    type Energy = "low" | "medium" | "high";
+
+    type Window = {
+        startISO: string;
+        endISO: string;
+    };
+
+    type FixedSlot = {
+        startISO: string;
+        endISO: string;
+    };
+
+    type Task = {
+        id: string;
+        title: string;
+        durationMin: number;
+        priority: Priority;
+        deadlineISO?: string;
+        fixedSlot?: FixedSlot;
+        dependsOn?: string[];
+        energy?: Energy;
+        pomodoro?: number;
+    };
+
+    type Schedule = {
+        taskId: string;
+        startISO: string;
+        endISO: string;
+        note?: string;
+    };
+
+    type Plan = {
+        window: Window;
+        tasks: Task[];
+        schedule: Schedule[];
+    };
+
+    const isISODate = (s: unknown) => typeof s === "string" && !Number.isNaN(new Date(s).getTime());
+    const isNonEmptyString = (s: unknown) => typeof s === "string" && s.trim().length > 0;
+    const isPositiveNumber = (n: unknown) => typeof n === "number" && Number.isFinite(n) && n > 0;
+    const isPriority = (p: unknown): p is Priority => p === "low" || p === "medium" || p === "high";
+    const isEnergy = (e: unknown): e is Energy => e === "low" || e === "medium" || e === "high";
+
+    const validatePlan = (raw: unknown): { ok: true; data: Plan } | { ok: false; errors: string[] } => {
+        const errs: string[] = [];
+        if (typeof raw !== "object" || raw === null) return {ok: false, errors: ["根对象应为 JSON 对象"]};
+        const obj = raw as Record<string, any>;
+        const w = obj.window;
+        if (!w || typeof w !== "object") errs.push("缺少 window 对象");
+        const tasks = Array.isArray(obj.tasks) ? obj.tasks : (errs.push("tasks 应为数组"), [] as any[]);
+        const schedule = Array.isArray(obj.schedule) ? obj.schedule : (errs.push("schedule 应为数组"), [] as any[]);
+        if (w) {
+            if (!isISODate(w.startISO)) errs.push("window.startISO 非法 ISO 日期");
+            if (!isISODate(w.endISO)) errs.push("window.endISO 非法 ISO 日期");
+            if (isISODate(w.startISO) && isISODate(w.endISO)) {
+                if (new Date(w.startISO) >= new Date(w.endISO)) errs.push("window 时间窗必须 start < end");
+            }
+        }
+        const taskIds = new Set<string>();
+        tasks.forEach((t, idx) => {
+            if (typeof t !== "object" || t === null) {
+                errs.push(`tasks[${idx}] 非对象`);
+                return;
+            }
+            if (!isNonEmptyString(t.id)) errs.push(`tasks[${idx}].id 缺失或空`);
+            if (isNonEmptyString(t.id)) taskIds.add(t.id);
+            if (!isNonEmptyString(t.title)) errs.push(`tasks[${idx}].title 缺失或空`);
+            if (!isPositiveNumber(t.durationMin)) errs.push(`tasks[${idx}].durationMin 必须为正数`);
+            if (!isPriority(t.priority)) errs.push(`tasks[${idx}].priority 非法`);
+            if (t.deadlineISO !== undefined && !isISODate(t.deadlineISO)) errs.push(`tasks[${idx}].deadlineISO 非法`);
+            if (t.fixedSlot !== undefined) {
+                const fs = t.fixedSlot;
+                if (!fs || typeof fs !== "object") errs.push(`tasks[${idx}].fixedSlot 非对象`);
+                else {
+                    if (!isISODate(fs.startISO)) errs.push(`tasks[${idx}].fixedSlot.startISO 非法`);
+                    if (!isISODate(fs.endISO)) errs.push(`tasks[${idx}].fixedSlot.endISO 非法`);
+                    if (isISODate(fs.startISO) && isISODate(fs.endISO)) {
+                        if (new Date(fs.startISO) >= new Date(fs.endISO)) errs.push(`tasks[${idx}].fixedSlot 必须 start < end`);
+                    }
+                }
+            }
+            if (t.dependsOn !== undefined) {
+                if (!Array.isArray(t.dependsOn) || !t.dependsOn.every(isNonEmptyString)) errs.push(`tasks[${idx}].dependsOn 必须为字符串数组`);
+            }
+            if (t.energy !== undefined && !isEnergy(t.energy)) errs.push(`tasks[${idx}].energy 非法`);
+            if (t.pomodoro !== undefined && !(typeof t.pomodoro === "number" && Number.isInteger(t.pomodoro) && t.pomodoro >= 0)) errs.push(`tasks[${idx}].pomodoro 非法`);
+        });
+        schedule.forEach((s, idx) => {
+            if (typeof s !== "object" || s === null) {
+                errs.push(`schedule[${idx}] 非对象`);
+                return;
+            }
+            if (!isNonEmptyString(s.taskId)) errs.push(`schedule[${idx}].taskId 缺失或空`);
+            if (!isISODate(s.startISO)) errs.push(`schedule[${idx}].startISO 非法`);
+            if (!isISODate(s.endISO)) errs.push(`schedule[${idx}].endISO 非法`);
+            if (isISODate(s.startISO) && isISODate(s.endISO)) {
+                if (new Date(s.startISO) >= new Date(s.endISO)) errs.push(`schedule[${idx}] 必须 start < end`);
+            }
+        });
+        schedule.forEach((s, idx) => {
+            if (isNonEmptyString(s.taskId) && !taskIds.has(s.taskId)) errs.push(`schedule[${idx}].taskId 未在 tasks 中定义`);
+        });
+        if (errs.length > 0) return {ok: false, errors: errs};
+        return {ok: true, data: obj as Plan};
+    };
+
+    const handleValidateJson = () => {
+        setJsonErrors([]);
+        setParsedPlan(null);
+        let raw: unknown;
+        try {
+            raw = JSON.parse(jsonInput);
+        } catch (e) {
+            setJsonErrors(["JSON 解析失败"]);
+            return;
+        }
+        const res = validatePlan(raw);
+        if (res.ok) {
+            setParsedPlan(res.data);
+        } else {
+            setJsonErrors(res.errors);
+        }
+    };
+
+    const toLocalISO = (d: Date) => {
+        const tzOffsetMin = d.getTimezoneOffset();
+        const sign = tzOffsetMin > 0 ? "-" : "+";
+        const pad = (n: number) => String(Math.abs(n)).padStart(2, "0");
+        const offH = pad(Math.floor(Math.abs(tzOffsetMin) / 60));
+        const offM = pad(Math.abs(tzOffsetMin) % 60);
+        const y = d.getFullYear();
+        const mo = pad(d.getMonth() + 1);
+        const da = pad(d.getDate());
+        const h = pad(d.getHours());
+        const mi = pad(d.getMinutes());
+        const s = pad(d.getSeconds());
+        return `${y}-${mo}-${da}T${h}:${mi}:${s}${sign}${offH}:${offM}`;
+    };
+
+    const createMockPlan = (): Plan => {
+        const now = new Date();
+        const base = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 0, 0, 0);
+        const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 18, 0, 0, 0);
+        const meetingStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 14, 0, 0, 0);
+        const meetingEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 15, 0, 0, 0);
+        const learnStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 16, 0, 0, 0);
+        const learnEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 18, 0, 0, 0);
+        const reportStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 0, 0, 0);
+        const reportEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 45, 0, 0);
+        return {
+            window: {startISO: toLocalISO(base), endISO: toLocalISO(end)},
+            tasks: [
+                {id: "weekly-report", title: "写周报", durationMin: 45, priority: "high", deadlineISO: toLocalISO(end)},
+                {id: "react-perf", title: "学习 React 性能优化", durationMin: 120, priority: "medium"},
+                {
+                    id: "meeting",
+                    title: "项目会议",
+                    durationMin: 60,
+                    priority: "high",
+                    fixedSlot: {startISO: toLocalISO(meetingStart), endISO: toLocalISO(meetingEnd)}
+                },
+            ],
+            schedule: [
+                {taskId: "weekly-report", startISO: toLocalISO(reportStart), endISO: toLocalISO(reportEnd)},
+                {
+                    taskId: "meeting",
+                    startISO: toLocalISO(meetingStart),
+                    endISO: toLocalISO(meetingEnd),
+                    note: "固定日程"
+                },
+                {taskId: "react-perf", startISO: toLocalISO(learnStart), endISO: toLocalISO(learnEnd), note: "2个番茄"},
+            ],
+        };
+    };
+
+    const handleFillMock = () => {
+        const mock = createMockPlan();
+        setJsonInput(JSON.stringify(mock, null, 2));
+        setJsonErrors([]);
+        setParsedPlan(mock);
+    };
+
+    const startOfDay = (d: Date) => {
+        const x = new Date(d);
+        x.setHours(0, 0, 0, 0);
+        return x;
+    };
+    const endOfDay = (d: Date) => {
+        const x = new Date(d);
+        x.setHours(23, 59, 59, 999);
+        return x;
+    };
+    const addDays = (d: Date, days: number) => {
+        const x = new Date(d);
+        x.setDate(x.getDate() + days);
+        return x;
+    };
+    const fmtYMD = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const weekdayCN = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+
+    type DayFragment = {
+        taskId: string;
+        start: Date;
+        end: Date;
+        minutesStart: number;
+        minutesEnd: number;
+    };
+
+    const buildDays = (plan: Plan) => {
+        const ws = new Date(plan.window.startISO);
+        const we = new Date(plan.window.endISO);
+        const startDay = startOfDay(ws);
+        const endDay = startOfDay(we);
+        const days: Date[] = [];
+        for (let d = new Date(startDay); d.getTime() <= endDay.getTime(); d = addDays(d, 1)) {
+            days.push(new Date(d));
+        }
+        return days;
+    };
+
+    const splitToDayFragments = (plan: Plan) => {
+        if (!plan) return {} as Record<string, DayFragment[]>;
+        const days = buildDays(plan);
+        const map: Record<string, DayFragment[]> = {};
+        days.forEach((d) => (map[fmtYMD(d)] = []));
+        const we = new Date(plan.window.endISO);
+        plan.schedule.forEach((s) => {
+            const st = new Date(s.startISO);
+            const en = new Date(s.endISO);
+            let cur = startOfDay(st);
+            while (cur.getTime() <= startOfDay(en).getTime()) {
+                const dayKey = fmtYMD(cur);
+                const dayStart = startOfDay(cur);
+                const dayEnd = endOfDay(cur);
+                const segStart = new Date(Math.max(st.getTime(), dayStart.getTime()));
+                const segEnd = new Date(Math.min(en.getTime(), dayEnd.getTime(), we.getTime()));
+                if (segStart < segEnd && map[dayKey] !== undefined) {
+                    const minutesStart = Math.max(0, Math.floor((segStart.getTime() - dayStart.getTime()) / 60000));
+                    const minutesEnd = Math.min(24 * 60, Math.ceil((segEnd.getTime() - dayStart.getTime()) / 60000));
+                    map[dayKey].push({taskId: s.taskId, start: segStart, end: segEnd, minutesStart, minutesEnd});
+                }
+                cur = addDays(cur, 1);
+            }
+        });
+        return map;
+    };
+
+    const computeLanes = (fragments: DayFragment[]) => {
+        const items = [...fragments].sort((a, b) => a.minutesStart - b.minutesStart || a.minutesEnd - b.minutesEnd);
+        const lanes: DayFragment[][] = [];
+        const laneIndex: number[] = [];
+        items.forEach((it, idx) => {
+            let placed = false;
+            for (let l = 0; l < lanes.length; l++) {
+                const last = lanes[l][lanes[l].length - 1];
+                if (it.minutesStart >= last.minutesEnd) {
+                    lanes[l].push(it);
+                    laneIndex[idx] = l;
+                    placed = true;
+                    break;
+                }
+            }
+            if (!placed) {
+                lanes.push([it]);
+                laneIndex[idx] = lanes.length - 1;
+            }
+        });
+        const total = lanes.length || 1;
+        const result = items.map((it, i) => ({
+            fragment: it,
+            lane: laneIndex[i] ?? 0,
+            lanes: total,
+        }));
+        return result;
+    };
+
+    const findTask = (plan: Plan, id: string) => plan.tasks.find((t) => t.id === id);
+    const priorityColor = (p?: string) =>
+        p === "high" ? "bg-red-500" : p === "medium" ? "bg-amber-500" : p === "low" ? "bg-emerald-500" : "bg-slate-500";
+
+    // 更新任务内容的回调函数
+    const updateTaskInPlan = (day: Date, hour: number, content: string) => {
+        if (!parsedPlan) return;
+
+        const dayStart = new Date(day);
+        dayStart.setHours(hour, 0, 0, 0);
+        const dayEnd = new Date(day);
+        dayEnd.setHours(hour + 1, 0, 0, 0);
+
+        const toISO = (d: Date) => d.toISOString();
+        const taskId = `task-${day.getTime()}-${hour}`;
+
+        // 检查是否已存在该时间段的任务
+        const existingScheduleIndex = parsedPlan.schedule.findIndex(s => {
+            const sStart = new Date(s.startISO);
+            const sEnd = new Date(s.endISO);
+            return sStart.getTime() === dayStart.getTime() && sEnd.getTime() === dayEnd.getTime();
+        });
+
+        if (content.trim() === "") {
+            // 删除任务
+            if (existingScheduleIndex >= 0) {
+                const updatedSchedule = parsedPlan.schedule.filter((_, i) => i !== existingScheduleIndex);
+                const removedTaskId = parsedPlan.schedule[existingScheduleIndex].taskId;
+                const updatedTasks = parsedPlan.tasks.filter(t => t.id !== removedTaskId);
+                setParsedPlan({
+                    ...parsedPlan,
+                    tasks: updatedTasks,
+                    schedule: updatedSchedule
+                });
+            }
+        } else {
+            // 添加或更新任务
+            if (existingScheduleIndex >= 0) {
+                // 更新现有任务
+                const existingTaskId = parsedPlan.schedule[existingScheduleIndex].taskId;
+                const updatedTasks = parsedPlan.tasks.map(t =>
+                    t.id === existingTaskId ? {...t, title: content} : t
+                );
+                setParsedPlan({
+                    ...parsedPlan,
+                    tasks: updatedTasks
+                });
+            } else {
+                // 添加新任务
+                const newTask: Task = {
+                    id: taskId,
+                    title: content,
+                    durationMin: 60,
+                    priority: "medium" as Priority
+                };
+                const newSchedule = {
+                    taskId,
+                    startISO: toISO(dayStart),
+                    endISO: toISO(dayEnd)
+                };
+                setParsedPlan({
+                    ...parsedPlan,
+                    tasks: [...parsedPlan.tasks, newTask],
+                    schedule: [...parsedPlan.schedule, newSchedule]
+                });
+            }
+        }
+    };
+
     return (
         <div className="w-full text-gray-700">
-            <Banner/>
-            <Features/>
-            <section className="bg-transparent">
-                <div
-                    className="mx-auto max-w-screen-2xl px-4 lg:px-12 py-16 md:py-20 border-t border-emerald-100 dark:border-[#1f232b]">
-                    <h2 className="text-center text-3xl font-extrabold text-emerald-600 md:text-4xl dark:text-emerald-300">AI创作流程</h2>
-                    <p className="mt-3 text-center text-gray-500 dark:text-gray-400">简单四步，轻松实现AI智能内容创作与分发</p>
 
-                    <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-                        <Reveal delay={0}><StepItem index={1} title="输入主题" desc="输入您想要创作的内容主题或关键词"
-                                                    icon={<InputIcon className="h-8 w-8"/>}/></Reveal>
-                        <Reveal delay={100}><StepItem index={2} title="AI智能生成" desc="AI自动生成文章内容和视频素材"
-                                                      icon={<AIIcon className="h-8 w-8"/>}/></Reveal>
-                        <Reveal delay={200}><StepItem index={3} title="编辑优化"
-                                                      desc="根据需要对生成的内容进行编辑和优化"
-                                                      icon={<EditIcon className="h-8 w-8"/>}/></Reveal>
-                        <Reveal delay={300}><StepItem index={4} title="一键分发"
-                                                      desc="选择目标平台，一键分发到多个社交媒体"
-                                                      icon={<SendIcon className="h-8 w-8"/>}/></Reveal>
-                    </div>
-                </div>
-            </section>
+            <ChatPanel
+                startISO={startISO}
+                setStartISO={setStartISO}
+                endISO={endISO}
+                setEndISO={setEndISO}
+                durationMin={durationMin}
+                setDurationMin={setDurationMin}
+                chatInput={chatInput}
+                setChatInput={setChatInput}
+                loading={loading}
+                lastMessage={lastMessage}
+                diffMinutes={diffMinutes}
+                validation={validation}
+                canSend={canSend}
+                handleSend={handleSend}
+                onKeyDownTextArea={onKeyDownTextArea}
+            />
 
-            <section className="bg-emerald-50/60 dark:bg-[#0f1115]">
-                <div
-                    className="mx-auto max-w-7xl px-6 py-16 md:py-20 border-t border-emerald-100 dark:border-[#1f232b]">
-                    <h2 className="text-center text-3xl font-extrabold text-emerald-600 md:text-4xl dark:text-emerald-300">支持平台</h2>
-                    <p className="mt-3 text-center text-gray-500 dark:text-gray-400">支持主流社交媒体平台，智能适配各平台特性，让内容传播更广泛</p>
-
-                    <div className="mt-10 grid grid-cols-3 gap-6 sm:grid-cols-4 md:grid-cols-6">
-                        {PLATFORMS.map((p, i) => (
-                            <Reveal key={p} delay={i * 50}>
-                                <div
-                                    className="flex items-center justify-center rounded-xl border border-gray-200 bg-white py-5 text-sm font-medium text-gray-600 transition hover:-translate-y-0.5 hover:shadow-md dark:bg-[#1a1d24] dark:border-[#2a2c31] dark:text-gray-300"
-                                >
-                                    {p}
-                                </div>
-                            </Reveal>
-                        ))}
-                    </div>
-                </div>
-            </section>
+            <TodoPanel
+                plan={parsedPlan ?? createEmptyPlanFromForm()}
+                hourStart={0}
+                hourEnd={24}
+                useMockData={useMockData}
+                useCurrentWeekHeader
+                fullDay
+                onUpdateTask={updateTaskInPlan}
+            />
         </div>
-    );
+    )
 }
-
-function StepItem({index, title, desc, icon}: { index: number; title: string; desc: string; icon: React.ReactNode }) {
-    return (
-        <div
-            className="group rounded-2xl border border-gray-200 bg-white p-7 lg:p-8 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md hover:border-emerald-200 dark:bg-[#1a1d24] dark:border-[#2a2c31] dark:hover:border-emerald-700/30">
-            <div className="flex items-center justify-between">
-                <span
-                    className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-600 text-sm font-bold text-white shadow-sm dark:bg-emerald-500">{index}</span>
-                <div
-                    className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-300">
-                    {icon}
-                </div>
-            </div>
-            <h4 className="mt-5 text-lg font-semibold text-gray-800 dark:text-gray-100">{title}</h4>
-            <p className="mt-2 text-sm leading-7 text-gray-500 dark:text-gray-400">{desc}</p>
-        </div>
-    );
-}
-
-function InputIcon({className = ""}: { className?: string }) {
-    return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={className}>
-            <rect x="3" y="5" width="18" height="14" rx="2"/>
-            <path d="M7 15l4-4 4 4"/>
-            <path d="M7 9h10"/>
-        </svg>
-    );
-}
-
-function AIIcon({className = ""}: { className?: string }) {
-    return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={className}>
-            <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z" fill="currentColor"
-                  stroke="none"/>
-            <circle cx="12" cy="12" r="3" stroke="currentColor" fill="none"/>
-            <path d="M12 1v6M12 17v6M23 12h-6M7 12H1"/>
-        </svg>
-    );
-}
-
-function EditIcon({className = ""}: { className?: string }) {
-    return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={className}>
-            <path d="M3 21l3.75-.75L21 6a2.121 2.121 0 00-3-3L3.75 17.25z"/>
-            <path d="M14 7l3 3"/>
-        </svg>
-    );
-}
-
-function SendIcon({className = ""}: { className?: string }) {
-    return (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={className}>
-            <path d="M22 2L11 13"/>
-            <path d="M22 2l-7 20-4-9-9-4 20-7z"/>
-        </svg>
-    );
-}
-
-const PLATFORMS = [
-    "微博",
-    "抖音",
-    "小红书",
-    "快手",
-    "知乎",
-    "B站",
-    "微信公众号",
-    "今日头条",
-    "腾讯视频",
-    "西瓜视频",
-    "YouTube",
-    "TikTok",
-    "更多平台...",
-];
-
