@@ -484,7 +484,8 @@ export default function HomeLanding(): React.ReactElement {
     };
 
     return (
-        <div className="w-full text-gray-700">
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30 py-6 px-4">
+            <div className="max-w-[1600px] mx-auto">
 
             <ChatPanel
                 startISO={startISO}
@@ -504,15 +505,18 @@ export default function HomeLanding(): React.ReactElement {
                 onKeyDownTextArea={onKeyDownTextArea}
             />
 
-            <TodoPanel
-                plan={parsedPlan ?? createEmptyPlanFromForm()}
-                hourStart={0}
-                hourEnd={24}
-                useMockData={useMockData}
-                useCurrentWeekHeader
-                fullDay
-                onUpdateTask={updateTaskInPlan}
-            />
+                <TodoPanel
+                    plan={parsedPlan ?? createEmptyPlanFromForm()}
+                    hourStart={0}
+                    hourEnd={24}
+                    showLunchRow
+                    lunchStart={12}
+                    useMockData={useMockData}
+                    useCurrentWeekHeader
+                    fullDay
+                    onUpdateTask={updateTaskInPlan}
+                />
+            </div>
         </div>
     )
 }

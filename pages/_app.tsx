@@ -4,6 +4,7 @@ import {useRouter} from 'next/router';
 import Head from 'next/head';
 import {getPageSEO} from '@/src/shared/utils/seo';
 import '../styles/globals.css';
+import '../src/styles/animations.css';
 import {ToastProvider} from 'components/Toast';
 import TopProgressBar from '@/components/ui/TopProgressBar';
 import Layout from '@/layout';

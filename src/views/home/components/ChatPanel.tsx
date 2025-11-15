@@ -36,10 +36,9 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                                                  onKeyDownTextArea
                                              }) => {
     return (
-        <div
-            className="mx-auto my-4 p-6 bg-white border-2 rounded-lg shadow-lg w-full max-w-full sm:max-w-xl md:max-w-2xl lg:max-w-3xl xl:max-w-4xl">
-            <div className="w-full flex flex-col gap-3 pb-4">
-                <div className="flex flex-row flex-wrap items-end gap-4">
+        <div className="mx-auto mb-6 p-6 bg-white border rounded-lg shadow-md w-full">
+            <div className="w-full flex flex-col gap-4">
+                <div className="flex flex-row flex-wrap items-end gap-4 pb-4 border-b">
                     <div className="flex items-center gap-2 basis-[280px] grow">
                         <span className="text-sm text-gray-600 whitespace-nowrap">开始时间</span>
                         <div className="relative flex-1 min-w-[200px]">
@@ -49,7 +48,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                                 onChange={(e) => setStartISO(e.target.value)}
                                 placeholder="年/月/日 --:--"
                                 aria-label="开始时间"
-                                className="border rounded px-3 py-2 text-sm w-full pr-8"
+                                className="border border-gray-300 rounded-md px-3 py-2 text-sm w-full pr-8 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
                             <ClockIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"/>
                         </div>
@@ -63,7 +62,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                                 onChange={(e) => setEndISO(e.target.value)}
                                 placeholder="年/月/日 --:--"
                                 aria-label="结束时间"
-                                className="border rounded px-3 py-2 text-sm w-full pr-8"
+                                className="border border-gray-300 rounded-md px-3 py-2 text-sm w-full pr-8 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
                             <ClockIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"/>
                         </div>
@@ -74,7 +73,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                             type="number"
                             min={1}
                             inputMode="numeric"
-                            className="border rounded px-3 py-2 text-sm w-full min-w-[160px]"
+                            className="border border-gray-300 rounded-md px-3 py-2 text-sm w-full min-w-[160px] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             placeholder="可选"
                             value={durationMin}
                             onChange={(e) => setDurationMin(e.target.value)}
@@ -96,7 +95,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                 )}
                 <div className="mt-4 relative">
                     <textarea
-                        className="flex-1 w-full border rounded px-3 py-2 text-sm min-h-[100px] pr-12"
+                        className="flex-1 w-full border border-gray-300 rounded-md px-3 py-2 text-sm min-h-[100px] pr-12 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="描述你的任务与偏好，Enter 发送，Cmd/Ctrl+Enter 或 Shift+Enter 换行"
                         value={chatInput}
                         onChange={(e) => setChatInput(e.target.value)}
@@ -107,7 +106,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                     <button
                         type="button"
                         aria-label="发送"
-                        className={`absolute right-3 bottom-3 w-8 h-8 rounded-md border bg-gray-100 text-gray-700 hover:bg-gray-200 flex items-center justify-center ${canSend ? "" : "opacity-50"}`}
+                        className={`absolute right-3 bottom-3 w-8 h-8 rounded-md flex items-center justify-center transition-all ${canSend ? "bg-blue-600 text-white hover:bg-blue-700 shadow-sm" : "bg-gray-100 text-gray-400 cursor-not-allowed"}`}
                         onClick={handleSend}
                         disabled={!canSend}
                     >
