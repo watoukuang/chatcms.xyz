@@ -15,7 +15,7 @@
 
 /* 深色模式 - 更深沉的背景色 */
 .dark {
-  --bg-primary: #121212;  /* 更深的主背景 */
+  --bg-primary: #ffffff;  /* 统一白底，即使在暗色模式 */
   --bg-secondary: #1a1b1e; /* 次要背景区域 */
   --text-primary: #f5f5f5;
   --text-secondary: #a0a0a0;
