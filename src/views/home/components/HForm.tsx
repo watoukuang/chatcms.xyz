@@ -1,6 +1,4 @@
 import React from 'react';
-import {Form, Input, Select, Space} from 'antd';
-import {FormInstance} from 'antd/lib/form';
 
 export interface User {
     name: string;
@@ -29,7 +27,17 @@ export interface StateOption {
 }
 
 interface HFormProps {
-    form: FormInstance;
+    values: {
+        userId?: number;
+        task?: string;
+        remark?: string;
+        taskTime?: string;
+        startTime?: string;
+        endTime?: string;
+        state?: string;
+    };
+    errors?: Partial<Record<keyof HFormProps['values'], string>>;
+    onChange: (field: keyof HFormProps['values'], value: any) => void;
     weekDayHeaders: WeekDayHeader[];
     timeOptions: TimeOption[];
     stateOptions: StateOption[];
@@ -37,64 +45,95 @@ interface HFormProps {
 }
 
 const HForm: React.FC<HFormProps> = (props) => {
-    const {form, weekDayHeaders, timeOptions, stateOptions, users} = props;
+    const {values, errors, onChange, weekDayHeaders, timeOptions, stateOptions, users} = props;
     return (
-        <Form form={form} layout="vertical">
-            <Form.Item name="task" label="任务内容" rules={[
-                {required: true, message: '请输入任务内容'},
-                {max: 255, message: '任务内容不能超过255个字符'}
-            ]}>
-                <Input.TextArea rows={8} maxLength={255} showCount/>
-            </Form.Item>
-            <Form.Item name="remark" label="备注">
-                <Input.TextArea rows={10} placeholder="可选，添加任务备注"/>
-            </Form.Item>
-            <Space align="baseline" style={{display: 'flex', width: '100%'}}>
-                <Form.Item name="taskTime" label="日期" rules={[{required: true}]} style={{flex: 1}}>
-                    <Select options={weekDayHeaders.map(day => ({label: day.title, value: day.date}))}/>
-                </Form.Item>
-                <Form.Item
-                    label="开始时间"
-                    name="startTime"
-                    rules={[{required: true, message: '请选择开始时间'}]}
-                    style={{flex: 1}}
-                >
-                    <Select
-                        options={timeOptions.filter(opt => opt.value !== '23:00')}
-                        onChange={() => form.setFieldsValue({endTime: undefined})}
-                    />
-                </Form.Item>
-                <Form.Item
-                    label="结束时间"
-                    name="endTime"
-                    rules={[
-                        {required: true, message: '请选择结束时间'},
-                        ({getFieldValue}) => ({
-                            validator(_, value) {
-                                if (!value || getFieldValue('startTime') < value) {
-                                    return Promise.resolve();
-                                }
-                                return Promise.reject(new Error('结束时间必须晚于开始时间'));
-                            }
-                        })
-                    ]}
-                    style={{flex: 1}}
-                >
-                    <Select
-                        options={timeOptions
-                            // 基本排除：结束时间不应以 08:00 或 13:00 作为候选的起点
+        <div className="flex flex-col gap-4">
+            <div className="flex flex-col">
+                <label className="text-sm text-gray-700 mb-1">任务内容</label>
+                <textarea
+                    value={values.task || ''}
+                    onChange={(e) => onChange('task', e.target.value)}
+                    maxLength={255}
+                    rows={8}
+                    className="border rounded px-3 py-2 text-sm w-full"
+                    placeholder="请输入任务内容"
+                />
+                {errors?.task && <div className="text-xs text-red-600 mt-1">{errors.task}</div>}
+            </div>
+
+            <div className="flex flex-col">
+                <label className="text-sm text-gray-700 mb-1">备注</label>
+                <textarea
+                    value={values.remark || ''}
+                    onChange={(e) => onChange('remark', e.target.value)}
+                    rows={6}
+                    className="border rounded px-3 py-2 text-sm w-full"
+                    placeholder="可选，添加任务备注"
+                />
+            </div>
+
+            <div className="flex items-start gap-4 w-full">
+                <div className="flex-1 flex flex-col">
+                    <label className="text-sm text-gray-700 mb-1">日期</label>
+                    <select
+                        className="border rounded px-3 py-2 text-sm w-full"
+                        value={values.taskTime || ''}
+                        onChange={(e) => onChange('taskTime', e.target.value)}
+                    >
+                        <option value="" disabled>请选择日期</option>
+                        {weekDayHeaders.map(day => (
+                            <option key={day.date} value={day.date}>{day.title}</option>
+                        ))}
+                    </select>
+                    {errors?.taskTime && <div className="text-xs text-red-600 mt-1">{errors.taskTime}</div>}
+                </div>
+                <div className="flex-1 flex flex-col">
+                    <label className="text-sm text-gray-700 mb-1">开始时间</label>
+                    <select
+                        className="border rounded px-3 py-2 text-sm w-full"
+                        value={values.startTime || ''}
+                        onChange={(e) => onChange('startTime', e.target.value)}
+                    >
+                        <option value="" disabled>请选择开始时间</option>
+                        {timeOptions.filter(opt => opt.value !== '23:00').map(opt => (
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                        ))}
+                    </select>
+                    {errors?.startTime && <div className="text-xs text-red-600 mt-1">{errors.startTime}</div>}
+                </div>
+                <div className="flex-1 flex flex-col">
+                    <label className="text-sm text-gray-700 mb-1">结束时间</label>
+                    <select
+                        className="border rounded px-3 py-2 text-sm w-full"
+                        value={values.endTime || ''}
+                        onChange={(e) => onChange('endTime', e.target.value)}
+                    >
+                        <option value="" disabled>请选择结束时间</option>
+                        {timeOptions
                             .filter(opt => opt.value !== '08:00' && opt.value !== '13:00')
-                            // 必须晚于开始时间（若未选择开始时间，则以 '00:00' 为基准）
-                            .filter(opt => opt.value > (form.getFieldValue('startTime') || '00:00'))
-                        }
-                    />
-                </Form.Item>
-            </Space>
-            <Form.Item name="state" label="状态" initialValue="pending"
-                       rules={[{required: true, message: '请选择状态'}]}>
-                <Select options={stateOptions}/>
-            </Form.Item>
-        </Form>
+                            .filter(opt => opt.value > (values.startTime || '00:00'))
+                            .map(opt => (
+                                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                            ))}
+                    </select>
+                    {errors?.endTime && <div className="text-xs text-red-600 mt-1">{errors.endTime}</div>}
+                </div>
+            </div>
+
+            <div className="flex flex-col">
+                <label className="text-sm text-gray-700 mb-1">状态</label>
+                <select
+                    className="border rounded px-3 py-2 text-sm w-full"
+                    value={values.state || 'pending'}
+                    onChange={(e) => onChange('state', e.target.value)}
+                >
+                    {stateOptions.map(opt => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                </select>
+                {errors?.state && <div className="text-xs text-red-600 mt-1">{errors.state}</div>}
+            </div>
+        </div>
     );
 };
 
