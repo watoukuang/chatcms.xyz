@@ -1,4 +1,5 @@
 import React from "react";
+import {useRouter} from 'next/router';
 import TelegramIcon from "@/components/Icons/TelegramIcon";
 import TwitterIcon from "@/components/Icons/TwitterIcon";
 import DiscordIcon from "@/components/Icons/DiscordIcon";
@@ -6,15 +7,16 @@ import Logo from "@/components/Logo";
 
 export default function Footer(): React.ReactElement {
     const currentYear = new Date().getFullYear();
+    const router = useRouter();
+    const isHome = router.pathname === '/';
 
     const socialLinkClass =
-        "inline-flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 text-gray-600 dark:border-[#2a2c31] dark:text-gray-300 transition-all duration-300 transform hover:scale-110 hover:border-emerald-300 hover:text-emerald-600 dark:hover:border-emerald-400 dark:hover:text-emerald-300";
+        "inline-flex h-8 w-8 items-center justify-center rounded-full border border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400 transition-all duration-300 transform hover:scale-110 hover:border-blue-500 hover:text-blue-500 dark:hover:text-blue-400 hover:bg-blue-500/10";
 
     return (
         <footer
-            className="mt-8 border-t border-gray-200 dark:border-[#1f232b] bg-gradient-to-r from-white/60 via-white/30 to-white/10 dark:from-[#111317]/70 dark:via-[#111317]/50 dark:to-[#111317]/30 backdrop-blur"
-        >
-            <div className="px-6 lg:px-12 max-w-screen-2xl mx-auto py-6">
+            className={`${isHome ? 'mt-0' : 'mt-8'} md:ml-[160px] ml-0 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-[#1f2937]/50 backdrop-blur transition-colors`}>
+            <div className={`${isHome ? 'px-0 max-w-none mx-0 py-0' : 'px-4 sm:px-6 lg:px-8 max-w-screen-2xl mx-auto py-6'}`}>
                 <div
                     className="flex flex-col md:flex-row justify-center md:justify-between items-center gap-4 text-center md:text-left w-full">
                     <div
@@ -28,8 +30,8 @@ export default function Footer(): React.ReactElement {
                     {/* 右侧邮箱 + 社交 */}
                     <div className="flex flex-col md:flex-row items-center gap-3 md:gap-4">
                         <a
-                            href="mailto:demochain@gmail.com"
-                            className="text-xs md:text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors duration-300"
+                            href="mailto:chatcms@gmail.com"
+                            className="text-xs md:text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors duration-300"
                         >
                             联系邮箱：chatcms@gmail.com
                         </a>

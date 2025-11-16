@@ -14,8 +14,6 @@ function Application({Component, pageProps}: AppProps): React.ReactElement {
     const seo = getPageSEO(router.pathname);
     const AppLayout = Layout;
 
-    // 取消登录路由拦截与重定向，允许直接访问所有页面
-
     return (
         <>
             <TopProgressBar/>

@@ -484,38 +484,60 @@ export default function HomeLanding(): React.ReactElement {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30 py-6 px-4">
-            <div className="max-w-[1600px] mx-auto">
+        <div className="relative min-h-[80vh] flex flex-col items-center justify-center px-4 py-12 overflow-hidden">
+            {/* 背景渐变效果 */}
+            <div
+                className="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-[#1a1d29] dark:to-blue-950 opacity-50"/>
 
-            <ChatPanel
-                startISO={startISO}
-                setStartISO={setStartISO}
-                endISO={endISO}
-                setEndISO={setEndISO}
-                durationMin={durationMin}
-                setDurationMin={setDurationMin}
-                chatInput={chatInput}
-                setChatInput={setChatInput}
-                loading={loading}
-                lastMessage={lastMessage}
-                diffMinutes={diffMinutes}
-                validation={validation}
-                canSend={canSend}
-                handleSend={handleSend}
-                onKeyDownTextArea={onKeyDownTextArea}
-            />
+            {/* 动态背景光晕 */}
+            <div
+                className="absolute top-20 left-1/4 w-96 h-96 bg-blue-400/20 dark:bg-blue-600/10 rounded-full blur-3xl animate-pulse"/>
+            <div
+                className="absolute bottom-20 right-1/4 w-96 h-96 bg-purple-400/20 dark:bg-purple-600/10 rounded-full blur-3xl animate-pulse"
+                style={{animationDelay: '1s'}}/>
 
-                <TodoPanel
-                    plan={parsedPlan ?? createEmptyPlanFromForm()}
-                    hourStart={0}
-                    hourEnd={24}
-                    showLunchRow
-                    lunchStart={12}
-                    useMockData={useMockData}
-                    useCurrentWeekHeader
-                    fullDay
-                    onUpdateTask={updateTaskInPlan}
-                />
+            {/* 主内容 */}
+            <div className="relative z-10 w-full max-w-5xl">
+                {/* 标题区域 */}
+                <div className="text-center mb-12 space-y-4">
+                    <div className="inline-block">
+                        <span
+                            className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 dark:from-blue-400 dark:via-purple-400 dark:to-blue-400 bg-clip-text text-transparent animate-gradient bg-[length:200%_auto] tracking-tight">
+                            AI TODO for Me
+                        </span>
+                    </div>
+                    <p className="text-base md:text-lg text-gray-600 dark:text-gray-400 font-light max-w-2xl mx-auto">
+                        智能任务规划，让 AI 帮你高效管理时间
+                    </p>
+                </div>
+
+                {/* ChatPanel 卡片 */}
+                <div className="transform hover:scale-[1.01] transition-transform duration-300">
+                    <ChatPanel
+                        startISO={startISO}
+                        setStartISO={setStartISO}
+                        endISO={endISO}
+                        setEndISO={setEndISO}
+                        durationMin={durationMin}
+                        setDurationMin={setDurationMin}
+                        chatInput={chatInput}
+                        setChatInput={setChatInput}
+                        loading={loading}
+                        lastMessage={lastMessage}
+                        diffMinutes={diffMinutes}
+                        validation={validation}
+                        canSend={canSend}
+                        handleSend={handleSend}
+                        onKeyDownTextArea={onKeyDownTextArea}
+                    />
+                </div>
+
+                {/* 底部提示 */}
+                <div className="mt-8 text-center">
+                    <p className="text-sm text-gray-500 dark:text-gray-500">
+                        ✨ 输入你的任务需求，让 AI 为你智能规划
+                    </p>
+                </div>
             </div>
         </div>
     )

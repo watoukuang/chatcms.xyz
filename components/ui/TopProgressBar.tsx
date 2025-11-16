@@ -66,7 +66,7 @@ export default function TopProgressBar(): React.ReactElement | null {
   return (
     <div className="fixed left-0 top-0 z-[1000] w-full h-0.5">
       <div
-        className="h-full transition-[width] duration-150 ease-out bg-gradient-to-r from-emerald-500 via-lime-500 to-sky-500 dark:from-emerald-400 dark:via-lime-400 dark:to-sky-400"
+        className="h-full transition-[width] duration-150 ease-out bg-gray-500"
         style={{ width: `${width}%` }}
       />
       {/* 细微阴影，让进度条看起来更自然 */}

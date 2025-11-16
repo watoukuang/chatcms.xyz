@@ -1,6 +1,6 @@
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
-import HForm from '../../schedule/components/HForm';
-import TCard from '../../schedule/components/TCard';
+import HForm from './HForm';
+import TCard from './TCard';
 import moment from 'moment';
 import storage from '@/src/shared/utils/storage';
 import {Task, User} from '@/types/app/scrum';
@@ -330,23 +330,28 @@ const TodoPanel: React.FC<ScrumPageProps> = (props) => {
     return (
         <div>
             {/* 顶部卡片区域 */}
-            <div className="bg-white dark:bg-[#1f2937] border border-gray-200 dark:border-gray-800 rounded-lg shadow-lg mb-6 transition-colors">
-                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800">
+            <div
+                className="bg-white dark:bg-[#1f2937] border border-gray-200 dark:border-gray-800 rounded-lg shadow-lg mb-6 transition-colors">
+                <div
+                    className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800">
                     <div className="text-lg font-semibold text-gray-900 dark:text-white">📅 任务进程</div>
                     <div className="flex items-center gap-3">
-                        <button className="px-3 py-1.5 border border-gray-300 dark:border-gray-700 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm text-gray-700 dark:text-gray-300"
-                                onClick={goToPreviousWeek}>上一周
+                        <button
+                            className="px-3 py-1.5 border border-gray-300 dark:border-gray-700 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm text-gray-700 dark:text-gray-300"
+                            onClick={goToPreviousWeek}>上一周
                         </button>
-                        <button className="px-3 py-1.5 border border-gray-300 dark:border-gray-700 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm text-gray-700 dark:text-gray-300" 
-                                onClick={goToNextWeek}>下一周
+                        <button
+                            className="px-3 py-1.5 border border-gray-300 dark:border-gray-700 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm text-gray-700 dark:text-gray-300"
+                            onClick={goToNextWeek}>下一周
                         </button>
-                        <button className="px-3 py-1.5 border border-gray-300 dark:border-gray-700 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm text-gray-700 dark:text-gray-300" 
-                                onClick={goToToday}>回到今天
+                        <button
+                            className="px-3 py-1.5 border border-gray-300 dark:border-gray-700 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm text-gray-700 dark:text-gray-300"
+                            onClick={goToToday}>回到今天
                         </button>
                         <div className="h-6 w-px bg-gray-300 dark:bg-gray-700"></div>
                         <button
                             className={`px-4 py-1.5 rounded-md text-white text-sm font-medium transition-all ${isPastWeek ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 shadow-sm hover:shadow'}`}
-                            onClick={handleAdd} 
+                            onClick={handleAdd}
                             disabled={isPastWeek}>+ 新增任务
                         </button>
                     </div>
@@ -370,9 +375,12 @@ const TodoPanel: React.FC<ScrumPageProps> = (props) => {
                         <table className="min-w-full border-collapse">
                             <thead>
                             <tr className="bg-gray-50">
-                                <th className="border border-gray-200 px-3 py-3 w-[150px] sticky left-0 bg-gray-50 z-10 font-semibold text-gray-700 text-sm">⏰ 时间</th>
+                                <th className="border border-gray-200 px-3 py-3 w-[150px] sticky left-0 bg-gray-50 z-10 font-semibold text-gray-700 text-sm">⏰
+                                    时间
+                                </th>
                                 {weekDayHeaders.map(h => (
-                                    <th key={h.date} className="border border-gray-200 px-3 py-3 w-[180px] font-medium text-gray-700 text-sm">
+                                    <th key={h.date}
+                                        className="border border-gray-200 px-3 py-3 w-[180px] font-medium text-gray-700 text-sm">
                                         <div className="flex items-center justify-center gap-1">
                                             {h.title}
                                         </div>
@@ -398,7 +406,8 @@ const TodoPanel: React.FC<ScrumPageProps> = (props) => {
                                                 if (task.startTime === cellStartTime) {
                                                     const rowHours = moment(task.endTime, 'HH:mm').diff(moment(task.startTime, 'HH:mm'), 'hours');
                                                     return (
-                                                        <td key={`${h.date}-${slot}`} className="border border-gray-200 p-0 align-middle bg-white"
+                                                        <td key={`${h.date}-${slot}`}
+                                                            className="border border-gray-200 p-0 align-middle bg-white"
                                                             rowSpan={rowHours} style={{height: `${80 * rowHours}px`}}>
                                                             <div className="flex items-center justify-center h-full">
                                                                 <TCard task={task}
@@ -411,7 +420,8 @@ const TodoPanel: React.FC<ScrumPageProps> = (props) => {
                                                 return null;
                                             }
                                             return (
-                                                <td key={`${h.date}-${slot}`} className="border border-gray-200 px-2 py-2 align-middle bg-white">
+                                                <td key={`${h.date}-${slot}`}
+                                                    className="border border-gray-200 px-2 py-2 align-middle bg-white">
                                                     <div
                                                         onClick={isPastWeek ? undefined : () => {
                                                             setEditingTask({
@@ -443,7 +453,8 @@ const TodoPanel: React.FC<ScrumPageProps> = (props) => {
             {/* 弹窗 */}
             {isDrawerVisible && (
                 <div className="fixed inset-0 z-50 animate-fadeIn">
-                    <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsDrawerVisible(false)}/>
+                    <div className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                         onClick={() => setIsDrawerVisible(false)}/>
                     <div className="absolute inset-0 flex items-center justify-center p-4">
                         <div className="bg-white w-full max-w-[800px] rounded-lg shadow-2xl transform transition-all">
                             <div className="px-6 py-4 border-b bg-gray-50">
@@ -463,11 +474,13 @@ const TodoPanel: React.FC<ScrumPageProps> = (props) => {
                                 />
                             </div>
                             <div className="px-6 py-4 border-t bg-gray-50 flex justify-end gap-3">
-                                <button className="px-4 py-2 border border-gray-300 rounded-md hover:bg-white transition-colors text-sm font-medium text-gray-700"
-                                        onClick={() => setIsDrawerVisible(false)}>取消
+                                <button
+                                    className="px-4 py-2 border border-gray-300 rounded-md hover:bg-white transition-colors text-sm font-medium text-gray-700"
+                                    onClick={() => setIsDrawerVisible(false)}>取消
                                 </button>
-                                <button className="px-4 py-2 rounded-md bg-blue-600 hover:bg-blue-700 text-white transition-all shadow-sm hover:shadow text-sm font-medium"
-                                        onClick={handleOk}>✓ 提交
+                                <button
+                                    className="px-4 py-2 rounded-md bg-blue-600 hover:bg-blue-700 text-white transition-all shadow-sm hover:shadow text-sm font-medium"
+                                    onClick={handleOk}>✓ 提交
                                 </button>
                             </div>
                         </div>
@@ -477,8 +490,9 @@ const TodoPanel: React.FC<ScrumPageProps> = (props) => {
 
             {/* 简易 Toast */}
             {toast && (
-                <div className="fixed top-4 right-4 bg-gray-900 text-white text-sm px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-slideIn"
-                     onAnimationEnd={() => setTimeout(() => setToast(null), 2000)}>
+                <div
+                    className="fixed top-4 right-4 bg-gray-900 text-white text-sm px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-slideIn"
+                    onAnimationEnd={() => setTimeout(() => setToast(null), 2000)}>
                     <span className="text-green-400">✓</span>
                     {toast}
                 </div>

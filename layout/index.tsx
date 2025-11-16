@@ -1,19 +1,28 @@
 import React from 'react';
-import Header from './components/Header';
-import Footer from './components/Footer';
+import Sidebar from '@/layout/components/Sidebar';
+import Header from '@/layout/components/Header';
+import Footer from '@/layout/components/Footer';
 import {LayoutProps} from '../types';
+import {useRouter} from 'next/router';
 
 export default function Layout({children}: LayoutProps): React.ReactElement {
+    const router = useRouter();
+    const isHome = router.pathname === '/';
     return (
-        <div
-            className="flex flex-col min-h-screen bg-gradient-to-br from-green-50 via-green-50 to-green-100 dark:from-[#0f1115] dark:via-[#111317] dark:to-[#0f1115]">
-            <Header/>
-            <main className="flex-1 py-4 sm:py-6 lg:py-8">
-                <div className="container mx-auto px-6 sm:px-8 lg:px-12">
-                    {children}
-                </div>
-            </main>
-            <Footer/>
+        <div className="min-h-screen bg-white dark:bg-[#1a1d29]">
+            {/* 左侧边栏 */}
+            <Sidebar/>
+            {/* 顶部导航 */}
+            <div>
+                <Header/>
+                {/* 主内容区 */}
+                <main className={`md:ml-[160px] ml-0 ${isHome ? 'pt-0' : 'pt-[60px]'} ${isHome ? '' : 'min-h-[calc(100vh-60px)] flex flex-col'}`}>
+                    <div className={`w-full ${isHome ? 'mx-0 px-0 py-0' : 'flex-1 max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6'}`}>
+                        {children}
+                    </div>
+                </main>
+                <Footer/>
+            </div>
         </div>
     );
 }
