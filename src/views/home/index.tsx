@@ -484,7 +484,7 @@ export default function HomeLanding(): React.ReactElement {
     };
 
     return (
-        <div className="relative min-h-[80vh] flex flex-col items-center justify-center px-4 py-12 overflow-hidden">
+        <div className="relative min-h-screen flex flex-col items-center justify-center px-4 py-20 overflow-hidden">
             {/* 背景渐变效果 */}
             <div
                 className="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-[#1a1d29] dark:to-blue-950 opacity-50"/>
@@ -499,7 +499,7 @@ export default function HomeLanding(): React.ReactElement {
             {/* 主内容 */}
             <div className="relative z-10 w-full max-w-5xl">
                 {/* 标题区域 */}
-                <div className="text-center mb-12 space-y-4">
+                <div className="text-center mb-16 space-y-6">
                     <div className="inline-block">
                         <span
                             className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 dark:from-blue-400 dark:via-purple-400 dark:to-blue-400 bg-clip-text text-transparent animate-gradient bg-[length:200%_auto] tracking-tight">
@@ -533,7 +533,7 @@ export default function HomeLanding(): React.ReactElement {
                 </div>
 
                 {/* 底部提示 */}
-                <div className="mt-8 text-center">
+                <div className="mt-12 text-center">
                     <p className="text-sm text-gray-500 dark:text-gray-500">
                         ✨ 输入你的任务需求，让 AI 为你智能规划
                     </p>
