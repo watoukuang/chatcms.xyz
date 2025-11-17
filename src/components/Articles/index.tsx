@@ -1,9 +1,9 @@
 import React, {useEffect, useState} from 'react';
 import {Article, pageArticleAPI} from '@/src/shared/api/article';
 import Pagination from '@/src/views/order/components/pagination';
-import Acard from '@/components/Articles/components/Acard';
-import Skeleton from '@/components/Articles/components/Skeleton';
-import Empty from '@/components/Articles/components/Empty';
+import Acard from '@/src/components/Articles/components/Acard';
+import Skeleton from '@/src/components/Articles/components/Skeleton';
+import Empty from '@/src/components/Articles/components/Empty';
 
 // 模拟分类数据
 const categories = [

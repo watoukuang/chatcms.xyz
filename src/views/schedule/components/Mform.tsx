@@ -1,15 +1,5 @@
 import React from 'react';
 
-export interface User {
-    name: string;
-    id: string | number;
-}
-
-export interface DataType {
-    key: React.Key;
-    time: string;
-}
-
 export interface WeekDayHeader {
     title: string;
     date: string;
@@ -47,7 +37,7 @@ const Mform: React.FC<HFormProps> = (props) => {
     return (
         <div className="flex flex-col gap-4">
             <div className="flex flex-col">
-                <label className="text-sm text-gray-700 mb-1">任务内容</label>
+                <label className="text-sm text-gray-700 mb-1">任务</label>
                 <textarea
                     value={values.task || ''}
                     onChange={(e) => onChange('task', e.target.value)}

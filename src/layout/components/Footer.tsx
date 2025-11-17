@@ -1,25 +1,21 @@
 import React from "react";
 import {useRouter} from 'next/router';
-import {useSidebar} from '@/src/contexts/SidebarContext';
-import TelegramIcon from "@/components/Icons/TelegramIcon";
-import TwitterIcon from "@/components/Icons/TwitterIcon";
-import DiscordIcon from "@/components/Icons/DiscordIcon";
-import Logo from "@/components/Logo";
+import TelegramIcon from "@/src/components/Icons/TelegramIcon";
+import TwitterIcon from "@/src/components/Icons/TwitterIcon";
+import DiscordIcon from "@/src/components/Icons/DiscordIcon";
+import Logo from "@/src/components/Logo";
 
 export default function Footer(): React.ReactElement {
     const currentYear = new Date().getFullYear();
     const router = useRouter();
     const isHome = router.pathname === '/';
-    const { isCollapsed } = useSidebar();
 
     const socialLinkClass =
         "inline-flex h-8 w-8 items-center justify-center rounded-full border border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400 transition-all duration-300 transform hover:scale-110 hover:border-blue-500 hover:text-blue-500 dark:hover:text-blue-400 hover:bg-blue-500/10";
 
     return (
         <footer
-            className={`${isHome ? 'mt-0 relative' : 'mt-8'} ml-0 transition-all duration-300 ${ 
-                isCollapsed ? 'md:ml-[80px]' : 'md:ml-[200px]'
-            } border-t border-gray-200/50 dark:border-gray-700/50 bg-gradient-to-b from-gray-50/80 to-white/80 dark:from-[#1f2937]/80 dark:to-[#1a1d29]/80 backdrop-blur-md`}>
+            className={`${isHome ? 'mt-0 relative' : 'mt-8'} ml-0 transition-all duration-300 md:ml-[80px] border-t border-gray-200/50 dark:border-gray-700/50 bg-gradient-to-b from-gray-50/80 to-white/80 dark:from-[#1f2937]/80 dark:to-[#1a1d29]/80 backdrop-blur-md`}>
             <div className={`${isHome ? 'px-4 sm:px-6 lg:px-8 max-w-screen-2xl mx-auto py-8' : 'px-4 sm:px-6 lg:px-8 max-w-screen-2xl mx-auto py-6'}`}>
                 <div
                     className="flex flex-col md:flex-row justify-center md:justify-between items-center gap-4 text-center md:text-left w-full">

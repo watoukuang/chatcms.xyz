@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import LogoIcon from "@/components/Icons/LogoIcon";
+import LogoIcon from "@/src/components/Icons/LogoIcon";
 
 interface LogoProps {
     className?: string;
@@ -9,7 +9,7 @@ interface LogoProps {
 const Logo: React.FC<LogoProps> = ({className}) => {
     return (
         <Link
-            href="/"
+            href="/public"
             className={`group flex items-center min-w-0 overflow-hidden ${className || ""}`}
             onClick={() => {
                 if (typeof window !== "undefined") {

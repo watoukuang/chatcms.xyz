@@ -3,9 +3,10 @@ import moment from 'moment';
 
 interface DataExportProps {
     onImport?: (data: any) => void;
+    iconOnly?: boolean;
 }
 
-const DataExport: React.FC<DataExportProps> = ({onImport}) => {
+const DataExport: React.FC<DataExportProps> = ({onImport, iconOnly = false}) => {
     const [showMenu, setShowMenu] = useState(false);
     const [importError, setImportError] = useState<string | null>(null);
 
@@ -133,21 +134,25 @@ const DataExport: React.FC<DataExportProps> = ({onImport}) => {
 
     return (
         <div className="relative">
-            {/* 触发按钮 */}
+            {/* 触发按钮（支持图标模式） */}
             <button
-                onClick={() => setShowMenu(!showMenu)}
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 shadow-lg shadow-green-500/30 hover:shadow-green-500/50 transition-all duration-300 hover:scale-105"
-                title="数据管理"
+                onClick={() => iconOnly ? handleExportAll() : setShowMenu(!showMenu)}
+                className={`${iconOnly
+                    ? 'w-9 h-9 flex items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all'
+                    : 'flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 shadow-lg shadow-green-500/30 hover:shadow-green-500/50 transition-all duration-300 hover:scale-105'
+                }`}
+                title={iconOnly ? '导出数据' : '数据管理'}
             >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                {/* 下载图标 */}
+                <svg className={`${iconOnly ? 'w-5 h-5 text-gray-700 dark:text-gray-300' : 'w-5 h-5'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M12 12v6m0 0l-3-3m3 3l3-3M12 4v8"/>
                 </svg>
-                <span className="font-medium">数据管理</span>
+                {!iconOnly && <span className="font-medium">数据管理</span>}
             </button>
 
-            {/* 下拉菜单 */}
-            {showMenu && (
+            {/* 下拉菜单（图标模式不显示菜单） */}
+            {!iconOnly && showMenu && (
                 <>
                     {/* 遮罩层 */}
                     <div

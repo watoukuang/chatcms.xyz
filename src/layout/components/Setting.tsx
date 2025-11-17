@@ -1,41 +1,15 @@
 import React, {useState, useEffect} from 'react';
-import storage from '@/src/shared/utils/storage';
+import {useAppSettings, DEFAULT_WORK_HOURS_SETTINGS, WorkHoursSettings} from '@/src/provider/AppSettingsProvider';
 
-interface WorkHoursSettings {
-    workDays: number[]; // 0=周日, 1=周一, ..., 6=周六
-    dailyHours: number;
-    startTime: string;
-    lunchBreak: {
-        enabled: boolean;
-        start: string;
-        end: string;
-    };
-    unavailableSlots: Array<{
-        day: number;
-        start: string;
-        end: string;
-        reason: string;
-    }>;
+interface WorkHoursConfigProps {
+    iconOnly?: boolean;
 }
 
-const defaultSettings: WorkHoursSettings = {
-    workDays: [1, 2, 3, 4, 5], // 周一到周五
-    dailyHours: 8,
-    startTime: '09:00',
-    lunchBreak: {
-        enabled: true,
-        start: '12:00',
-        end: '13:00'
-    },
-    unavailableSlots: []
-};
-
-const STORAGE_KEY = 'work_hours_settings';
-
-const WorkHoursConfig: React.FC = () => {
+const Setting: React.FC<WorkHoursConfigProps> = ({iconOnly = false}) => {
     const [isOpen, setIsOpen] = useState(false);
-    const [settings, setSettings] = useState<WorkHoursSettings>(defaultSettings);
+    const [settings, setSettings] = useState<WorkHoursSettings>(DEFAULT_WORK_HOURS_SETTINGS);
     const [hasChanges, setHasChanges] = useState(false);
+    const {workHoursSettings, updateWorkHoursSettings} = useAppSettings();
 
     const weekDays = [
         {value: 0, label: '周日'},
@@ -47,17 +21,17 @@ const WorkHoursConfig: React.FC = () => {
         {value: 6, label: '周六'}
     ];
 
-    // 加载设置
+    // 打开时同步当前全局设置到本地编辑状态
     useEffect(() => {
-        const saved = storage.get<WorkHoursSettings>(STORAGE_KEY, null);
-        if (saved) {
-            setSettings(saved);
+        if (isOpen) {
+            setSettings(workHoursSettings);
+            setHasChanges(false);
         }
-    }, []);
+    }, [isOpen, workHoursSettings]);
 
-    // 保存设置
+    // 保存设置到全局
     const handleSave = () => {
-        storage.set(STORAGE_KEY, settings);
+        updateWorkHoursSettings(settings);
         setHasChanges(false);
         alert('工作时段配置已保存');
         setIsOpen(false);
@@ -78,7 +52,7 @@ const WorkHoursConfig: React.FC = () => {
     const calculateEndTime = () => {
         const [hours, minutes] = settings.startTime.split(':').map(Number);
         let totalMinutes = hours * 60 + minutes + settings.dailyHours * 60;
-        
+
         // 如果启用午休，加上午休时间
         if (settings.lunchBreak.enabled) {
             const [lunchStart] = settings.lunchBreak.start.split(':').map(Number);
@@ -86,7 +60,7 @@ const WorkHoursConfig: React.FC = () => {
             const lunchDuration = (lunchEnd * 60) - (lunchStart * 60);
             totalMinutes += lunchDuration;
         }
-        
+
         const endHours = Math.floor(totalMinutes / 60) % 24;
         const endMinutes = totalMinutes % 60;
         return `${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
@@ -94,22 +68,28 @@ const WorkHoursConfig: React.FC = () => {
 
     return (
         <>
-            {/* 触发按钮 */}
+            {/* 触发按钮（支持图标模式） */}
             <button
                 onClick={() => setIsOpen(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-lg hover:from-purple-600 hover:to-pink-700 shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 transition-all duration-300 hover:scale-105"
+                className={`${iconOnly
+                    ? 'w-9 h-9 flex items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all'
+                    : 'flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-lg hover:from-purple-600 hover:to-pink-700 shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 transition-all duration-300 hover:scale-105'
+                }`}
                 title="工作时段配置"
             >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                {/* 设置图标 */}
+                <svg className={`${iconOnly ? 'w-5 h-5 text-gray-700 dark:text-gray-300' : 'w-5 h-5'}`} fill="none"
+                     viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                           d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
-                <span className="font-medium hidden sm:inline">工作时段</span>
+                {!iconOnly && <span className="font-medium hidden sm:inline">工作时段</span>}
             </button>
 
             {/* 配置弹窗 */}
             {isOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn">
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn">
                     <div
                         className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-slideDown">
                         {/* 头部 */}
@@ -204,7 +184,10 @@ const WorkHoursConfig: React.FC = () => {
                                         onClick={() => {
                                             setSettings({
                                                 ...settings,
-                                                lunchBreak: {...settings.lunchBreak, enabled: !settings.lunchBreak.enabled}
+                                                lunchBreak: {
+                                                    ...settings.lunchBreak,
+                                                    enabled: !settings.lunchBreak.enabled
+                                                }
                                             });
                                             setHasChanges(true);
                                         }}
@@ -260,7 +243,8 @@ const WorkHoursConfig: React.FC = () => {
                             </div>
 
                             {/* 提示信息 */}
-                            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                            <div
+                                className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                                 <div className="flex gap-3">
                                     <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5"
                                          fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -284,7 +268,7 @@ const WorkHoursConfig: React.FC = () => {
                             className="sticky bottom-0 bg-gray-50 dark:bg-gray-900 px-6 py-4 flex items-center justify-between border-t border-gray-200 dark:border-gray-700 rounded-b-2xl">
                             <button
                                 onClick={() => {
-                                    setSettings(defaultSettings);
+                                    setSettings(DEFAULT_WORK_HOURS_SETTINGS);
                                     setHasChanges(true);
                                 }}
                                 className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
@@ -318,4 +302,4 @@ const WorkHoursConfig: React.FC = () => {
     );
 };
 
-export default WorkHoursConfig;
+export default Setting;

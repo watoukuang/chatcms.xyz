@@ -22,7 +22,7 @@ export default function Header({
             className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-800">
             <div className="text-lg font-semibold text-gray-900 dark:text-white">{title}</div>
             <div className="flex items-center gap-3 flex-wrap">
-                {/*<WorkHoursConfig/>*/}
+                {/*<Setting/>*/}
                 {/*<div className="h-6 w-px bg-gray-300 dark:bg-gray-700 hidden sm:block"></div>*/}
                 <button
                     className="px-3 py-1.5 border border-gray-300 dark:border-gray-700 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm text-gray-700 dark:text-gray-300"

@@ -5,7 +5,7 @@ import {Task} from '@/types/app/scrum';
 import Modal from './components/Modal';
 import Header from './components/Header';
 import {calculateSkipMap, generateTimeTableSlots, generateWeekHeaders} from './utils/timeUtils';
-import {addTaskLocal, getTasksLocal, updateTaskLocal} from './services/taskService';
+import {addTaskLocal, getTasksLocal, updateTaskLocal} from '@/src/shared/cached';
 import {stateOptions, timeOptions} from './constants';
 import Calendar from "./components/Calendar";
 
@@ -177,7 +177,7 @@ export default function ScheduleView(props?: ScrumPageProps): React.ReactElement
             <div
                 className="bg-white dark:bg-[#1f2937] border border-gray-200 dark:border-gray-800 rounded-lg shadow-lg mb-6 transition-colors">
                 <Header
-                    title="📅 固定任务看板"
+                    title="📅 固定任务"
                     isPastWeek={isPastWeek}
                     onPrevWeek={goToPreviousWeek}
                     onNextWeek={goToNextWeek}

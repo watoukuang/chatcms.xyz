@@ -91,7 +91,7 @@ export function useAuth(): UseAuthReturn {
         // 初始化
         refreshAuth();
 
-        // 监听同标签自定义事件与跨标签 storage 事件
+        // 监听同标签自定义事件与跨标签 cached 事件
         const onAuthChanged = () => refreshAuth();
         const onStorage = (e: StorageEvent) => {
             if (e.key === 'token' || e.key === 'user_detail') refreshAuth();

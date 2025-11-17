@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 import Link from 'next/link';
 import PaymentModel from './components/payment-model';
-import {useToast} from 'components/Toast';
+import {useToast} from '@/src/components/Toast';
 import {PlanType} from "@/src/shared/types/plan";
 
 const combos = [

@@ -31,7 +31,6 @@ export const getTasksLocal = (params: {
     const {userId, startDate, endDate} = params;
     const all = loadAllTasks();
     return all.filter((t) => {
-        if (userId !== undefined && t.userId !== userId) return false;
         if (startDate && moment(t.taskTime, 'YYYY-MM-DD').isBefore(moment(startDate, 'YYYY-MM-DD'), 'day')) return false;
         if (endDate && moment(t.taskTime, 'YYYY-MM-DD').isAfter(moment(endDate, 'YYYY-MM-DD'), 'day')) return false;
         return true;

@@ -5,9 +5,10 @@ import Head from 'next/head';
 import {getPageSEO} from '@/src/shared/utils/seo';
 import '../styles/globals.css';
 import '../src/styles/animations.css';
-import {ToastProvider} from 'components/Toast';
-import TopProgressBar from '@/components/ui/TopProgressBar';
-import Layout from '@/layout';
+import {ToastProvider} from '@/src/components/Toast';
+import TopProgressBar from '@/src/components/ui/TopProgressBar';
+import Layout from 'src/layout';
+import {AppSettingsProvider} from '@/src/provider/AppSettingsProvider';
 
 function Application({Component, pageProps}: AppProps): React.ReactElement {
     const router = useRouter();
@@ -59,9 +60,11 @@ function Application({Component, pageProps}: AppProps): React.ReactElement {
             </Head>
 
             <ToastProvider>
-                <AppLayout>
-                    <Component {...pageProps} />
-                </AppLayout>
+                <AppSettingsProvider>
+                    <AppLayout>
+                        <Component {...pageProps} />
+                    </AppLayout>
+                </AppSettingsProvider>
             </ToastProvider>
         </>
     );

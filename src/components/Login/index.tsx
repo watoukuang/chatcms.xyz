@@ -1,8 +1,8 @@
 import React, {useEffect, useState} from 'react';
 import {createPortal} from 'react-dom';
-import GoogleIcon from '@/components/Icons/GoogleIcon'
+import GoogleIcon from '@/src/components/Icons/GoogleIcon'
 import {login, register} from '@/src/shared/api/auth';
-import {useToast} from 'components/Toast';
+import {useToast} from '@/src/components/Toast';
 import {LoginDTO, RegisterDTO} from "@/src/shared/types/user";
 import {useRouter} from 'next/router';
 
