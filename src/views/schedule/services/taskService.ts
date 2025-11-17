@@ -45,16 +45,12 @@ export const addTaskLocal = (partial: Partial<Task>): Task => {
     const all = loadAllTasks();
     const newTask: Task = {
         id: partial.id ?? Date.now(),
-        userId: partial.userId ?? 0,
         taskTime: partial.taskTime ?? moment().format('YYYY-MM-DD'),
         startTime: partial.startTime ?? '00:00',
         endTime: partial.endTime ?? '01:00',
         task: partial.task ?? '',
         remark: partial.remark ?? '',
         state: partial.state ?? 'pending',
-        yn: partial.yn ?? 1,
-        createdAt: partial.createdAt ?? moment().toISOString(),
-        updatedAt: moment().toISOString(),
     } as Task;
     all.push(newTask);
     saveAllTasks(all);

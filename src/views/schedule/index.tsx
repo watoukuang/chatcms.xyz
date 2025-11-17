@@ -1,11 +1,9 @@
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import Mform from './components/Mform';
 import moment from 'moment';
-import {Task, User} from '@/types/app/scrum';
-import {listEmployeesAPI} from "@/api/sytem/user";
+import {Task} from '@/types/app/scrum';
 import Modal from './components/Modal';
 import Header from './components/Header';
-import WorkHoursConfig from './components/WorkHoursConfig';
 import {calculateSkipMap, generateTimeTableSlots, generateWeekHeaders} from './utils/timeUtils';
 import {addTaskLocal, getTasksLocal, updateTaskLocal} from './services/taskService';
 import {stateOptions, timeOptions} from './constants';
@@ -24,8 +22,6 @@ interface ScrumPageProps {
 }
 
 export default function ScheduleView(props?: ScrumPageProps): React.ReactElement {
-    const [currentUser, setCurrentUser] = useState<number | undefined>(undefined);
-    const [userOptions, setUserOptions] = useState<User[]>([]);
     const [tasks, setTasks] = useState<Task[]>([]);
     const [isDrawerVisible, setIsDrawerVisible] = useState(false);
     const [editingTask, setEditingTask] = useState<Partial<Task> | null>(null);
@@ -43,49 +39,32 @@ export default function ScheduleView(props?: ScrumPageProps): React.ReactElement
     const timeTableSlots = useMemo(() => generateTimeTableSlots(), []);
     const skipMap = useMemo(() => calculateSkipMap(tasks, weekDayHeaders, timeTableSlots), [tasks, weekDayHeaders, timeTableSlots]);
 
-    const fetchUsers = useCallback(async () => {
-        const res = await listEmployeesAPI();
-        const users = res.data || [];
-        setUserOptions(users);
-    }, []);
-
     const fetchTasksForCurrentUser = useCallback(async () => {
         setLoading(true);
         const startDate = currentDate.clone().startOf('isoWeek').format('YYYY-MM-DD');
         const endDate = currentDate.clone().endOf('isoWeek').format('YYYY-MM-DD');
         try {
             // 即使没有选择用户，也加载所有任务
-            const list = getTasksLocal({userId: currentUser, startDate, endDate});
+            const list = getTasksLocal({startDate, endDate});
             setTasks(list);
         } catch (error) {
             console.error('获取任务失败:', error);
         } finally {
             setLoading(false);
         }
-    }, [currentUser, currentDate]);
+    }, [currentDate]);
 
-    useEffect(() => {
-        fetchUsers().then(error => console.error(error));
-    }, [fetchUsers]);
-
-    // 监听 currentDate 和 currentUser 变化时重新加载任务
-    useEffect(() => {
-        fetchTasksForCurrentUser();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentDate, currentUser]);
 
     useEffect(() => {
         if (isDrawerVisible) {
             const base = editingTask || {};
             setFormValues({
-                userId: base.userId || currentUser,
                 taskTime: base.taskTime || weekDayHeaders[0]?.date,
                 startTime: base.startTime || '',
                 endTime: base.endTime || '',
                 task: base.task || '',
                 remark: base.remark || '',
                 state: base.state || 'pending',
-                yn: base.yn ?? 1,
             });
             setFormErrors({});
         } else {
@@ -93,7 +72,7 @@ export default function ScheduleView(props?: ScrumPageProps): React.ReactElement
             setFormErrors({});
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isDrawerVisible, editingTask, weekDayHeaders, currentUser]);
+    }, [isDrawerVisible, editingTask, weekDayHeaders]);
 
     // 周切换
     const goToPreviousWeek = () => {
@@ -106,7 +85,6 @@ export default function ScheduleView(props?: ScrumPageProps): React.ReactElement
         setCurrentDate(moment());
     };
 
-    const handleUserChange = (value: number) => setCurrentUser(value);
 
     const handleAdd = () => {
         if (isPastWeek) return;
@@ -120,54 +98,70 @@ export default function ScheduleView(props?: ScrumPageProps): React.ReactElement
         setIsDrawerVisible(true);
     };
 
+    // 校验表单字段
+    const validateForm = (values: any): Record<string, string> => {
+        const {taskTime, startTime, endTime, task} = values || {};
+        const errs: Record<string, string> = {};
+        const requiredChecks: Array<[boolean, string, string]> = [
+            [!!task && String(task).trim() !== '', 'task', '请输入任务内容'],
+            [!!taskTime, 'taskTime', '请选择日期'],
+            [!!startTime, 'startTime', '请选择开始时间'],
+            [!!endTime, 'endTime', '请选择结束时间'],
+        ];
+        requiredChecks.forEach(([ok, key, msg]) => {
+            if (!ok) errs[key] = msg;
+        });
+        if (values?.startTime && values?.endTime && !(values.startTime < values.endTime)) {
+            errs.endTime = '结束时间必须晚于开始时间';
+        }
+        return errs;
+    };
+
+    // 构造任务数据
+    const buildTaskData = (values: any): Partial<Task> => {
+        const {taskTime, startTime, endTime, task, remark, state} = values || {};
+        return {taskTime, startTime, endTime, task, remark, state};
+    };
+
+    // 本地持久化（新增/更新）并返回保存结果
+    const persistTaskLocal = (data: Partial<Task>, current: Partial<Task> | null): {
+        saved: Task;
+        updated: boolean
+    } => {
+        if (current?.id) {
+            const saved = updateTaskLocal({...(data as Task), id: current.id as number} as Task);
+            return {saved, updated: true};
+        }
+        const saved = addTaskLocal(data);
+        return {saved, updated: false};
+    };
+
+    // 合并到任务列表（存在则替换，不存在则追加）
+    const mergeTaskList = (list: Task[], saved: Task): Task[] => {
+        return list.some(t => t.id === saved.id)
+            ? list.map(t => (t.id === saved.id ? saved : t))
+            : [...list, saved];
+    };
+
+    // 关闭弹窗并清理编辑状态
+    const closeEditor = () => {
+        setIsDrawerVisible(false);
+        setEditingTask(null);
+    };
+
     const handleOk = () => {
-        const {userId, taskTime, startTime, endTime, task, remark, state, yn} = formValues;
-        const errs: { [k: string]: string } = {};
-        if (!task || String(task).trim() === '') errs.task = '请输入任务内容';
-        if (!taskTime) errs.taskTime = '请选择日期';
-        if (!startTime) errs.startTime = '请选择开始时间';
-        if (!endTime) errs.endTime = '请选择结束时间';
-        if (startTime && endTime && !(startTime < endTime)) errs.endTime = '结束时间必须晚于开始时间';
-        if (Object.keys(errs).length > 0) {
+        const errs = validateForm(formValues);
+        if (Object.keys(errs).length) {
             setFormErrors(errs);
             return;
         }
-
-        const taskData: Partial<Task> = {
-            userId,
-            taskTime,
-            startTime,
-            endTime,
-            task,
-            remark,
-            state,
-            yn
-        };
-
+        const taskData = buildTaskData(formValues);
         try {
-            if (editingTask?.id) {
-                const updatedItem = updateTaskLocal({
-                    ...(taskData as Task),
-                    id: editingTask.id as number,
-                } as Task);
-                setTasks((prev) => {
-                    const idx = prev.findIndex((t) => t.id === updatedItem.id);
-                    if (idx >= 0) {
-                        const next = [...prev];
-                        next[idx] = updatedItem;
-                        return next;
-                    }
-                    return [...prev, updatedItem];
-                });
-                setToast('任务更新成功 (本地缓存)');
-            } else {
-                const createdItem = addTaskLocal(taskData);
-                setTasks((prev) => [...prev, createdItem]);
-                setToast('任务添加成功 (本地缓存)');
-            }
-            setIsDrawerVisible(false);
-            setEditingTask(null);
-        } catch (error) {
+            const {saved, updated} = persistTaskLocal(taskData, editingTask);
+            setTasks(prev => mergeTaskList(prev, saved));
+            setToast(updated ? '任务更新成功 (本地缓存)' : '任务添加成功 (本地缓存)');
+            closeEditor();
+        } catch {
             setToast(editingTask?.id ? '更新失败' : '添加失败');
         }
     };
@@ -224,7 +218,6 @@ export default function ScheduleView(props?: ScrumPageProps): React.ReactElement
                     weekDayHeaders={weekDayHeaders}
                     timeOptions={timeOptions}
                     stateOptions={stateOptions}
-                    users={userOptions}
                 />
             </Modal>
 

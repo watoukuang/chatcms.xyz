@@ -28,7 +28,6 @@ export interface StateOption {
 
 interface HFormProps {
     values: {
-        userId?: number;
         task?: string;
         remark?: string;
         taskTime?: string;
@@ -41,11 +40,10 @@ interface HFormProps {
     weekDayHeaders: WeekDayHeader[];
     timeOptions: TimeOption[];
     stateOptions: StateOption[];
-    users: User[];
 }
 
 const Mform: React.FC<HFormProps> = (props) => {
-    const {values, errors, onChange, weekDayHeaders, timeOptions, stateOptions, users} = props;
+    const {values, errors, onChange, weekDayHeaders, timeOptions, stateOptions} = props;
     return (
         <div className="flex flex-col gap-4">
             <div className="flex flex-col">
@@ -54,7 +52,7 @@ const Mform: React.FC<HFormProps> = (props) => {
                     value={values.task || ''}
                     onChange={(e) => onChange('task', e.target.value)}
                     maxLength={255}
-                    rows={8}
+                    rows={3}
                     className="border rounded px-3 py-2 text-sm w-full"
                     placeholder="请输入任务内容"
                 />
