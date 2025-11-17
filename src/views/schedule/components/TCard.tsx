@@ -1,5 +1,5 @@
 import React from 'react';
-import { Task } from '@/types/app/scrum';
+import {Task} from '@/types/app/scrum';
 
 interface TaskCardProps {
     task: Task;

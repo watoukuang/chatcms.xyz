@@ -44,7 +44,7 @@ interface HFormProps {
     users: User[];
 }
 
-const HForm: React.FC<HFormProps> = (props) => {
+const Mform: React.FC<HFormProps> = (props) => {
     const {values, errors, onChange, weekDayHeaders, timeOptions, stateOptions, users} = props;
     return (
         <div className="flex flex-col gap-4">
@@ -137,4 +137,4 @@ const HForm: React.FC<HFormProps> = (props) => {
     );
 };
 
-export default HForm;
+export default Mform;

@@ -1,4 +1,5 @@
 import React from "react";
+import PromptTemplates from './PromptTemplates';
 
 const ClockIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" {...props}>
@@ -23,6 +24,7 @@ interface ChatPanelProps {
     canSend: boolean;
     handleSend: () => void;
     onKeyDownTextArea: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
+    showTemplates?: boolean;
 }
 
 const ChatPanel: React.FC<ChatPanelProps> = ({
@@ -33,11 +35,16 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                                                  loading, lastMessage,
                                                  diffMinutes, validation,
                                                  canSend, handleSend,
-                                                 onKeyDownTextArea
+                                                 onKeyDownTextArea,
+                                                 showTemplates = true
                                              }) => {
     return (
         <div className="mx-auto mb-6 p-8 bg-white/80 dark:bg-[#1f2937]/80 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/50 rounded-2xl shadow-2xl shadow-blue-500/5 dark:shadow-blue-500/10 w-full transition-all duration-300 max-w-3xl hover:shadow-3xl hover:shadow-blue-500/10 dark:hover:shadow-blue-500/20">
             <div className="w-full flex flex-col gap-4">
+                {/* 智能提示词模板 */}
+                {showTemplates && (
+                    <PromptTemplates onSelectTemplate={(template) => setChatInput(template)} />
+                )}
                 <div className="flex flex-row flex-wrap items-end gap-4 pb-6 border-b border-gray-200/70 dark:border-gray-700/70">
                     <div className="flex items-center gap-2 basis-[280px] grow">
                         <span className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">开始时间</span>
@@ -87,13 +94,18 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                     )}
                 </div>
                 {validation.length > 0 && (
-                    <div className="text-red-600 text-sm">
-                        {validation.map((m: string, i: number) => (
-                            <div key={i}>• {m}</div>
-                        ))}
+                    <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                        <div className="text-red-600 dark:text-red-400 text-sm space-y-1">
+                            {validation.map((m: string, i: number) => (
+                                <div key={i} className="flex items-start gap-2">
+                                    <span className="text-red-500">⚠️</span>
+                                    <span>{m}</span>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 )}
-                <div className="mt-4 relative">
+                <div className="relative">
                     <textarea
                         className="flex-1 w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800/50 rounded-xl px-4 py-3 text-sm min-h-[80px] pr-12 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all shadow-sm hover:shadow-md resize-none"
                         placeholder="描述你的任务与偏好，Enter 发送，Cmd/Ctrl+Enter 或 Shift+Enter 换行"

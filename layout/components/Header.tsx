@@ -1,6 +1,7 @@
 import React from 'react';
 import Theme from "@/layout/components/Theme";
 import {useSidebar} from '@/src/contexts/SidebarContext';
+import DataExport from '@/src/components/DataExport';
 
 const Header: React.FC = () => {
     const { isCollapsed, toggleSidebar } = useSidebar();
@@ -34,8 +35,9 @@ const Header: React.FC = () => {
                 </div>
             </div>
 
-            {/* 右侧：搜索框 + 按钮 */}
-            <div className="flex items-center gap-4">
+            {/* 右侧：数据管理 + 主题切换 */}
+            <div className="flex items-center gap-3">
+                <DataExport />
                 {/* 搜索框 */}
                 {/*<div className="relative">*/}
                 {/*    <input*/}
