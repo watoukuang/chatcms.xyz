@@ -48,15 +48,14 @@ export default function ScheduleView(props?: ScrumPageProps): React.ReactElement
     const timeTableSlots = useMemo(() => generateTimeTableSlots(workHoursSettings), [workHoursSettings]);
     const skipMap = useMemo(() => calculateSkipMap(tasks, weekDayHeaders, timeTableSlots), [tasks, weekDayHeaders, timeTableSlots]);
 
-    const fetchTasksForCurrentUser = useCallback(async () => {
+    const fetchTasksForCurrentWeek = useCallback(async () => {
         setLoading(true);
         const startDate = currentDate.clone().startOf('isoWeek').format('YYYY-MM-DD');
         const endDate = currentDate.clone().endOf('isoWeek').format('YYYY-MM-DD');
-        console.log('📅 加载任务数据:', {startDate, endDate});
+        console.log('加载任务数据（按周范围）:', {startDate, endDate});
         try {
-            // 即使没有选择用户，也加载所有任务
             const list = getTasksLocal({startDate, endDate});
-            console.log('✅ 加载到的任务数量:', list.length, list);
+            console.log('加载到的任务数量:', list.length, list);
             setTasks(list);
         } catch (error) {
             console.error('❌ 获取任务失败:', error);
@@ -67,8 +66,8 @@ export default function ScheduleView(props?: ScrumPageProps): React.ReactElement
 
     // 加载任务数据
     useEffect(() => {
-        fetchTasksForCurrentUser();
-    }, [fetchTasksForCurrentUser]);
+        fetchTasksForCurrentWeek();
+    }, [fetchTasksForCurrentWeek]);
 
     useEffect(() => {
         if (isDrawerVisible) {

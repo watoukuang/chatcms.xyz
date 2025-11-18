@@ -51,11 +51,10 @@ export const saveAllTasks = async (list: Task[]): Promise<void> => {
  * 按条件查询本地任务
  */
 export const getTasksLocal = (params: {
-    userId?: number;
     startDate?: string;
     endDate?: string;
 }): Task[] => {
-    const {userId, startDate, endDate} = params;
+    const {startDate, endDate} = params;
     const all = loadAllTasksSync();
     return all.filter((t) => {
         if (startDate && moment(t.taskTime, 'YYYY-MM-DD').isBefore(moment(startDate, 'YYYY-MM-DD'), 'day')) return false;
@@ -68,7 +67,6 @@ export const getTasksLocal = (params: {
  * 按条件查询本地任务（异步版本）
  */
 export const getTasksLocalAsync = async (params: {
-    userId?: number;
     startDate?: string;
     endDate?: string;
 }): Promise<Task[]> => {

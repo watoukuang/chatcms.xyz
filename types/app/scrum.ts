@@ -11,7 +11,6 @@ export interface Task {
 
 
 export interface TaskQueryParams {
-    userId?: number;
     startDate?: string;
     endDate?: string;
 }

@@ -47,14 +47,13 @@ const DataExport: React.FC<DataExportProps> = ({onImport, iconOnly = false}) => 
             }
 
             // CSV 头部
-            const headers = ['ID', '用户ID', '任务日期', '开始时间', '结束时间', '任务内容', '备注', '状态', '创建时间', '更新时间'];
+            const headers = ['ID', '任务日期', '开始时间', '结束时间', '任务内容', '备注', '状态', '创建时间', '更新时间'];
             const csvRows = [headers.join(',')];
 
             // 数据行
             tasks.forEach((task: any) => {
                 const row = [
                     task.id || '',
-                    task.userId || '',
                     task.taskTime || '',
                     task.startTime || '',
                     task.endTime || '',

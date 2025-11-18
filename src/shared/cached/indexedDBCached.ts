@@ -1,6 +1,6 @@
 import moment from 'moment';
-import indexedDB, { STORES } from '@/src/shared/utils/indexedDB';
-import { Task } from '@/types/app/scrum';
+import indexedDB, {STORES} from '@/src/shared/utils/indexedDB';
+import {Task} from '@/types/app/scrum';
 import storage from '@/src/shared/utils/storage';
 
 /**
@@ -46,15 +46,14 @@ export const saveAllTasksToDB = async (list: Task[]): Promise<void> => {
  * 按条件查询任务（从 IndexedDB）
  */
 export const getTasksFromDB = async (params: {
-    userId?: number;
     startDate?: string;
     endDate?: string;
 }): Promise<Task[]> => {
-    const { startDate, endDate } = params;
-    
+    const {startDate, endDate} = params;
+
     try {
         let tasks: Task[] = [];
-        
+
         if (startDate && endDate) {
             // 使用索引范围查询
             const range = IDBKeyRange.bound(startDate, endDate);
@@ -68,7 +67,7 @@ export const getTasksFromDB = async (params: {
                 return true;
             });
         }
-        
+
         return tasks;
     } catch (error) {
         console.error('Failed to query tasks from IndexedDB:', error);

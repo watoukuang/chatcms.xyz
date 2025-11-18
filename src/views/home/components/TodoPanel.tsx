@@ -3,8 +3,7 @@ import Mform from '../../schedule/components/Mform';
 import TCard from '../../schedule/components/TCard';
 import moment from 'moment';
 import storage from '@/src/shared/utils/storage';
-import {Task, User} from '@/types/app/scrum';
-import {listEmployeesAPI} from "@/api/sytem/user";
+import {Task} from '@/types/app/scrum';
 
 // 改为全天 24 小时：00:00–23:00（每小时一个区间），不包含 24:00 以避免跨日解析问题
 const fullDayHours = Array.from({length: 24}, (_, i) => `${String(i).padStart(2, '0')}:00`);
@@ -29,11 +28,10 @@ const saveAllTasks = (list: Task[]) => {
 };
 
 // 在本地缓存中按用户与日期范围查询
-const getTasksLocal = (params: { userId?: number; startDate?: string; endDate?: string }): Task[] => {
-    const {userId, startDate, endDate} = params;
+const getTasksLocal = (params: { startDate?: string; endDate?: string }): Task[] => {
+    const {startDate, endDate} = params;
     const all = loadAllTasks();
     return all.filter((t) => {
-        if (userId !== undefined && t.userId !== userId) return false;
         if (startDate && moment(t.taskTime, 'YYYY-MM-DD').isBefore(moment(startDate, 'YYYY-MM-DD'), 'day')) return false;
         if (endDate && moment(t.taskTime, 'YYYY-MM-DD').isAfter(moment(endDate, 'YYYY-MM-DD'), 'day')) return false;
         return true;
@@ -45,7 +43,6 @@ const addTaskLocal = (partial: Partial<Task>): Task => {
     const all = loadAllTasks();
     const newTask: Task = {
         id: partial.id ?? Date.now(),
-        userId: partial.userId ?? 0,
         taskTime: partial.taskTime ?? moment().format('YYYY-MM-DD'),
         startTime: partial.startTime ?? '00:00',
         endTime: partial.endTime ?? '01:00',
@@ -99,8 +96,7 @@ interface ScrumPageProps {
 }
 
 const TodoPanel: React.FC<ScrumPageProps> = (props) => {
-    const [currentUser, setCurrentUser] = useState<number | undefined>(undefined);
-    const [userOptions, setUserOptions] = useState<User[]>([]);
+    
     const [tasks, setTasks] = useState<Task[]>([]);
     const [isDrawerVisible, setIsDrawerVisible] = useState(false);
     const [editingTask, setEditingTask] = useState<Partial<Task> | null>(null);
@@ -126,42 +122,34 @@ const TodoPanel: React.FC<ScrumPageProps> = (props) => {
         });
     }, [currentDate]);
 
-    const fetchUsers = useCallback(async () => {
-        const res = await listEmployeesAPI();
-        const users = res.data || [];
-        setUserOptions(users);
-    }, []);
+    
 
-    const fetchTasksForCurrentUser = useCallback(async () => {
+    const fetchTasksForCurrentWeek = useCallback(async () => {
         setLoading(true);
         const startDate = currentDate.clone().startOf('isoWeek').format('YYYY-MM-DD');
         const endDate = currentDate.clone().endOf('isoWeek').format('YYYY-MM-DD');
         try {
-            // 即使没有选择用户，也加载所有任务
-            const list = getTasksLocal({userId: currentUser, startDate, endDate});
+            const list = getTasksLocal({startDate, endDate});
             setTasks(list);
         } catch (error) {
             console.error('获取任务失败:', error);
         } finally {
             setLoading(false);
         }
-    }, [currentUser, currentDate]);
+    }, [currentDate]);
 
-    useEffect(() => {
-        fetchUsers().then(error => console.error(error));
-    }, [fetchUsers]);
+    
 
-    // 监听 currentDate 和 currentUser 变化时重新加载任务
+    // 监听 currentDate 变化时重新加载任务
     useEffect(() => {
-        fetchTasksForCurrentUser();
+        fetchTasksForCurrentWeek();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [currentDate, currentUser]);
+    }, [currentDate]);
 
     useEffect(() => {
         if (isDrawerVisible) {
             const base = editingTask || {};
             setFormValues({
-                userId: base.userId || currentUser,
                 taskTime: base.taskTime || weekDayHeaders[0]?.date,
                 startTime: base.startTime || '',
                 endTime: base.endTime || '',
@@ -176,7 +164,7 @@ const TodoPanel: React.FC<ScrumPageProps> = (props) => {
             setFormErrors({});
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isDrawerVisible, editingTask, weekDayHeaders, currentUser]);
+    }, [isDrawerVisible, editingTask, weekDayHeaders]);
 
     // 周切换
     const goToPreviousWeek = () => {
@@ -204,7 +192,7 @@ const TodoPanel: React.FC<ScrumPageProps> = (props) => {
     };
 
     const handleOk = () => {
-        const {userId, taskTime, startTime, endTime, task, remark, state, yn} = formValues;
+        const {taskTime, startTime, endTime, task, remark, state, yn} = formValues;
         const errs: { [k: string]: string } = {};
         if (!task || String(task).trim() === '') errs.task = '请输入任务内容';
         if (!taskTime) errs.taskTime = '请选择日期';
@@ -217,7 +205,6 @@ const TodoPanel: React.FC<ScrumPageProps> = (props) => {
         }
 
         const taskData: Partial<Task> = {
-            userId,
             taskTime,
             startTime,
             endTime,
@@ -459,7 +446,6 @@ const TodoPanel: React.FC<ScrumPageProps> = (props) => {
                                     weekDayHeaders={weekDayHeaders}
                                     timeOptions={timeOptions}
                                     stateOptions={stateOptions}
-                                    users={userOptions}
                                 />
                             </div>
                             <div className="px-6 py-4 border-t bg-gray-50 flex justify-end gap-3">
