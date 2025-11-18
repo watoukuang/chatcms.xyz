@@ -27,7 +27,7 @@ interface ScrumPageProps {
 export default function ScheduleView(props?: ScrumPageProps): React.ReactElement {
     const {workHoursSettings} = useAppSettings();
     const [tasks, setTasks] = useState<Task[]>([]);
-    const [isDrawerVisible, setIsDrawerVisible] = useState(false);
+    const [visible, setVisible] = useState(false);
     const [editingTask, setEditingTask] = useState<Partial<Task> | null>(null);
     const [currentDate, setCurrentDate] = useState(moment());
     const [loading, setLoading] = useState(false);
@@ -45,7 +45,6 @@ export default function ScheduleView(props?: ScrumPageProps): React.ReactElement
     const isPastWeek = useMemo(() => currentDate.clone().endOf('isoWeek').isBefore(moment(), 'day'), [currentDate]);
 
     const weekDayHeaders = useMemo(() => generateWeekHeaders(currentDate), [currentDate]);
-    const timeTableSlots = useMemo(() => generateTimeTableSlots(workHoursSettings), [workHoursSettings]);
 
     const fetchTasksForCurrentWeek = useCallback(async () => {
         setLoading(true);
@@ -69,7 +68,7 @@ export default function ScheduleView(props?: ScrumPageProps): React.ReactElement
     }, [fetchTasksForCurrentWeek]);
 
     useEffect(() => {
-        if (isDrawerVisible) {
+        if (visible) {
             const base = editingTask || {};
             setFormValues({
                 taskTime: base.taskTime || weekDayHeaders[0]?.date,
@@ -85,34 +84,25 @@ export default function ScheduleView(props?: ScrumPageProps): React.ReactElement
             setFormErrors({});
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isDrawerVisible, editingTask, weekDayHeaders]);
+    }, [visible, editingTask, weekDayHeaders]);
 
     // 周切换
-    const goToPreviousWeek = () => {
-        setCurrentDate(currentDate.clone().subtract(1, 'week'));
-    };
-    const goToNextWeek = () => {
-        setCurrentDate(currentDate.clone().add(1, 'week'));
-    };
-    const goToToday = () => {
-        setCurrentDate(moment());
-    };
+    const goToPreviousWeek = () => setCurrentDate(currentDate.clone().subtract(1, 'week'));
+    const goToNextWeek = () => setCurrentDate(currentDate.clone().add(1, 'week'));
+    const goToToday = () => setCurrentDate(moment());
 
 
     const handleAdd = () => {
-        if (isPastWeek) return;
         setEditingTask({});
-        setIsDrawerVisible(true);
+        setVisible(true);
     };
 
     const handleEdit = (task: Task) => {
-        if (isPastWeek) return;
         setEditingTask(task);
-        setIsDrawerVisible(true);
+        setVisible(true);
     };
 
-    // 校验表单字段
-    const validateForm = (values: any): Record<string, string> => {
+    const validate = (values: any): Record<string, string> => {
         const {taskTime, startTime, endTime, task} = values || {};
         const errs: Record<string, string> = {};
         const requiredChecks: Array<[boolean, string, string]> = [
@@ -158,30 +148,30 @@ export default function ScheduleView(props?: ScrumPageProps): React.ReactElement
 
     // 关闭弹窗并清理编辑状态
     const closeEditor = () => {
-        setIsDrawerVisible(false);
+        setVisible(false);
         setEditingTask(null);
     };
 
     const handleOk = () => {
-        const errs = validateForm(formValues);
+        const errs = validate(formValues);
         if (Object.keys(errs).length) {
             setFormErrors(errs);
             return;
         }
         const taskData = buildTaskData(formValues);
-        console.log('💾 保存任务:', taskData);
+        console.log('保存任务:', taskData);
         try {
             const {saved, updated} = persistTaskLocal(taskData, editingTask);
-            console.log('✅ 任务已保存:', saved);
+            console.log('任务已保存:', saved);
             setTasks(prev => {
                 const newList = mergeTaskList(prev, saved);
-                console.log('📋 更新后的任务列表:', newList);
+                console.log('更新后的任务列表:', newList);
                 return newList;
             });
             setToast(updated ? '任务更新成功 (本地缓存)' : '任务添加成功 (本地缓存)');
             closeEditor();
         } catch (error) {
-            console.error('❌ 保存失败:', error);
+            console.error('保存失败:', error);
             setToast(editingTask?.id ? '更新失败' : '添加失败');
         }
     };
@@ -228,16 +218,16 @@ export default function ScheduleView(props?: ScrumPageProps): React.ReactElement
                             endTime,
                             state: 'pending'
                         });
-                        setIsDrawerVisible(true);
+                        setVisible(true);
                     }}
                 />
             </div>
 
             {/* 弹窗 */}
             <Modal
-                open={isDrawerVisible}
+                open={visible}
                 title={editingTask?.id ? '✏️ 编辑任务' : '➕ 新增任务'}
-                onClose={() => setIsDrawerVisible(false)}
+                onClose={() => setVisible(false)}
                 onOk={handleOk}
                 okText="✓ 提交"
                 cancelText="取消"

@@ -48,10 +48,7 @@ const addTaskLocal = (partial: Partial<Task>): Task => {
         endTime: partial.endTime ?? '01:00',
         task: partial.task ?? '',
         remark: partial.remark ?? '',
-        state: partial.state ?? 'pending',
-        yn: partial.yn ?? 1,
-        createdAt: partial.createdAt ?? moment().toISOString(),
-        updatedAt: moment().toISOString(),
+        state: partial.state ?? 'pending'
     } as Task;
     all.push(newTask);
     saveAllTasks(all);
@@ -64,8 +61,7 @@ const updateTaskLocal = (updated: Task): Task => {
     const idx = all.findIndex((t) => t.id === updated.id);
     const item: Task = {
         ...all[idx],
-        ...updated,
-        updatedAt: moment().toISOString(),
+        ...updated
     } as Task;
     if (idx >= 0) {
         all[idx] = item;
@@ -155,8 +151,7 @@ const TodoPanel: React.FC<ScrumPageProps> = (props) => {
                 endTime: base.endTime || '',
                 task: base.task || '',
                 remark: base.remark || '',
-                state: base.state || 'pending',
-                yn: base.yn ?? 1,
+                state: base.state || 'pending'
             });
             setFormErrors({});
         } else {
@@ -177,8 +172,6 @@ const TodoPanel: React.FC<ScrumPageProps> = (props) => {
         setCurrentDate(moment());
     };
 
-    const handleUserChange = (value: number) => setCurrentUser(value);
-
     const handleAdd = () => {
         if (isPastWeek) return;
         setEditingTask({});
@@ -192,7 +185,7 @@ const TodoPanel: React.FC<ScrumPageProps> = (props) => {
     };
 
     const handleOk = () => {
-        const {taskTime, startTime, endTime, task, remark, state, yn} = formValues;
+        const {taskTime, startTime, endTime, task, remark, state} = formValues;
         const errs: { [k: string]: string } = {};
         if (!task || String(task).trim() === '') errs.task = '请输入任务内容';
         if (!taskTime) errs.taskTime = '请选择日期';
@@ -210,8 +203,7 @@ const TodoPanel: React.FC<ScrumPageProps> = (props) => {
             endTime,
             task,
             remark,
-            state,
-            yn
+            state
         };
 
         try {
