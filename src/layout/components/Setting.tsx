@@ -49,22 +49,41 @@ const Setting: React.FC<WorkHoursConfigProps> = ({iconOnly = false}) => {
         setHasChanges(true);
     };
 
-    // 计算结束时间
-    const calculateEndTime = () => {
-        const [hours, minutes] = settings.startTime.split(':').map(Number);
-        let totalMinutes = hours * 60 + minutes + settings.dailyHours * 60;
-
-        // 如果启用午休，加上午休时间
-        if (settings.lunchBreak.enabled) {
-            const [lunchStart] = settings.lunchBreak.start.split(':').map(Number);
-            const [lunchEnd] = settings.lunchBreak.end.split(':').map(Number);
-            const lunchDuration = (lunchEnd * 60) - (lunchStart * 60);
-            totalMinutes += lunchDuration;
+    // 时间工具与总工时计算（不跨天）
+    const timeToMinutes = (t: string) => {
+        const [h, m] = t.split(':').map(Number);
+        return h * 60 + m;
+    };
+    const minutesToTime = (mins: number) => {
+        const h = Math.floor(mins / 60);
+        const m = mins % 60;
+        return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    };
+    const clamp = (x: number, a: number, b: number) => Math.max(a, Math.min(b, x));
+    const computeTotalWorkMinutes = () => {
+        const start = timeToMinutes(settings.startTime);
+        const end = timeToMinutes(settings.endTime);
+        if (end <= start) return 0;
+        const base = end - start;
+        const breaks = (settings.breaks || []).map(b => ({
+            s: clamp(timeToMinutes(b.start), start, end),
+            e: clamp(timeToMinutes(b.end), start, end)
+        })).filter(b => b.e > b.s);
+        // 合并重叠休息段，计算总休息分钟
+        breaks.sort((a, b) => a.s - b.s);
+        let merged: Array<{s: number; e: number}> = [];
+        for (const b of breaks) {
+            const last = merged[merged.length - 1];
+            if (!last || b.s > last.e) merged.push({ ...b });
+            else last.e = Math.max(last.e, b.e);
         }
-
-        const endHours = Math.floor(totalMinutes / 60) % 24;
-        const endMinutes = totalMinutes % 60;
-        return `${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
+        const breakMinutes = merged.reduce((sum, b) => sum + (b.e - b.s), 0);
+        return Math.max(0, base - breakMinutes);
+    };
+    const formatHours = (mins: number) => {
+        const h = Math.floor(mins / 60);
+        const m = mins % 60;
+        return m === 0 ? `${h}小时` : `${h}小时${m}分钟`;
     };
 
     // 支持 ESC 关闭弹窗
@@ -115,7 +134,7 @@ const Setting: React.FC<WorkHoursConfigProps> = ({iconOnly = false}) => {
                         {/* 内容 */}
                         <div className="p-6 space-y-6">
                             {/* 工作日选择 */}
-                            <div>
+                            <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                                     工作日
                                 </label>
@@ -136,108 +155,115 @@ const Setting: React.FC<WorkHoursConfigProps> = ({iconOnly = false}) => {
                                 </div>
                             </div>
 
-                            {/* 每日工时 */}
-                            <div>
+                            {/* 工作时段：开始/结束 + 总工时 */}
+                            <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    每日工作时长（小时）
+                                    工作时段
                                 </label>
-                                <input
-                                    type="number"
-                                    min="1"
-                                    max="24"
-                                    value={settings.dailyHours}
-                                    onChange={(e) => {
-                                        setSettings({...settings, dailyHours: parseInt(e.target.value) || 8});
-                                        setHasChanges(true);
-                                    }}
-                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                />
-                            </div>
-
-                            {/* 开始时间 */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    开始时间
-                                </label>
-                                <input
-                                    type="time"
-                                    value={settings.startTime}
-                                    onChange={(e) => {
-                                        setSettings({...settings, startTime: e.target.value});
-                                        setHasChanges(true);
-                                    }}
-                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                />
-                                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                                    预计结束时间：{calculateEndTime()}
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">开始</label>
+                                        <input
+                                            type="time"
+                                            value={settings.startTime}
+                                            onChange={(e) => {
+                                                setSettings({...settings, startTime: e.target.value});
+                                                setHasChanges(true);
+                                            }}
+                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">结束</label>
+                                        <input
+                                            type="time"
+                                            value={settings.endTime}
+                                            onChange={(e) => {
+                                                setSettings({...settings, endTime: e.target.value});
+                                                setHasChanges(true);
+                                            }}
+                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                        />
+                                    </div>
+                                </div>
+                                <p className="mt-3 text-sm text-gray-600 dark:text-gray-300">
+                                    总工时：{formatHours(computeTotalWorkMinutes())}
                                 </p>
+                                {timeToMinutes(settings.endTime) <= timeToMinutes(settings.startTime) && (
+                                    <p className="mt-1 text-xs text-red-600">结束时间必须晚于开始时间</p>
+                                )}
                             </div>
 
-                            {/* 午休设置 */}
+                            {/* 休息时段（可添加多段） */}
                             <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                                 <div className="flex items-center justify-between mb-3">
-                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                        午休时间
-                                    </label>
+                                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">休息时段</label>
                                     <button
                                         onClick={() => {
-                                            setSettings({
-                                                ...settings,
-                                                lunchBreak: {
-                                                    ...settings.lunchBreak,
-                                                    enabled: !settings.lunchBreak.enabled
-                                                }
-                                            });
+                                            const startDefault = minutesToTime(timeToMinutes(settings.startTime) + 60);
+                                            const endDefault = minutesToTime(timeToMinutes(settings.startTime) + 90);
+                                            setSettings(prev => ({
+                                                ...prev,
+                                                breaks: [...(prev.breaks || []), { start: startDefault, end: endDefault, label: '休息' }]
+                                            }));
                                             setHasChanges(true);
                                         }}
-                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                                            settings.lunchBreak.enabled ? 'bg-purple-600' : 'bg-gray-300 dark:bg-gray-600'
-                                        }`}
+                                        className="px-3 py-1.5 text-xs rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300"
                                     >
-                                        <span
-                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                                                settings.lunchBreak.enabled ? 'translate-x-6' : 'translate-x-1'
-                                            }`}
-                                        />
+                                        添加休息时段
                                     </button>
                                 </div>
-                                {settings.lunchBreak.enabled && (
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
-                                                开始
-                                            </label>
-                                            <input
-                                                type="time"
-                                                value={settings.lunchBreak.start}
-                                                onChange={(e) => {
-                                                    setSettings({
-                                                        ...settings,
-                                                        lunchBreak: {...settings.lunchBreak, start: e.target.value}
-                                                    });
-                                                    setHasChanges(true);
-                                                }}
-                                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
-                                                结束
-                                            </label>
-                                            <input
-                                                type="time"
-                                                value={settings.lunchBreak.end}
-                                                onChange={(e) => {
-                                                    setSettings({
-                                                        ...settings,
-                                                        lunchBreak: {...settings.lunchBreak, end: e.target.value}
-                                                    });
-                                                    setHasChanges(true);
-                                                }}
-                                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                            />
-                                        </div>
+                                {(settings.breaks && settings.breaks.length > 0) ? (
+                                    <div className="space-y-3">
+                                        {settings.breaks.map((b, idx) => (
+                                            <div key={idx} className="grid grid-cols-[1fr_1fr_auto] gap-3 items-end">
+                                                <div>
+                                                    <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">开始</label>
+                                                    <input
+                                                        type="time"
+                                                        value={b.start}
+                                                        onChange={(e) => {
+                                                            const breaks = [...settings.breaks];
+                                                            breaks[idx] = { ...breaks[idx], start: e.target.value };
+                                                            setSettings({ ...settings, breaks });
+                                                            setHasChanges(true);
+                                                        }}
+                                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">结束</label>
+                                                    <input
+                                                        type="time"
+                                                        value={b.end}
+                                                        onChange={(e) => {
+                                                            const breaks = [...settings.breaks];
+                                                            breaks[idx] = { ...breaks[idx], end: e.target.value };
+                                                            setSettings({ ...settings, breaks });
+                                                            setHasChanges(true);
+                                                        }}
+                                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                                    />
+                                                </div>
+                                                <button
+                                                    onClick={() => {
+                                                        const breaks = [...settings.breaks];
+                                                        breaks.splice(idx, 1);
+                                                        setSettings({ ...settings, breaks });
+                                                        setHasChanges(true);
+                                                    }}
+                                                    className="px-3 py-2 text-xs rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                                >
+                                                    删除
+                                                </button>
+                                                {(timeToMinutes(b.end) <= timeToMinutes(b.start)) && (
+                                                    <div className="col-span-3 text-xs text-red-600">休息结束必须晚于开始</div>
+                                                )}
+                                            </div>
+                                        ))}
                                     </div>
+                                ) : (
+                                    <p className="text-xs text-gray-500 dark:text-gray-400">暂无休息时段</p>
                                 )}
                             </div>
 
@@ -254,8 +280,8 @@ const Setting: React.FC<WorkHoursConfigProps> = ({iconOnly = false}) => {
                                         <p className="font-medium mb-1">配置说明</p>
                                         <ul className="space-y-1 text-xs">
                                             <li>• 选择你的工作日，系统会在这些日期生成固定任务时段</li>
-                                            <li>• 设置每日工作时长，系统会自动计算结束时间</li>
-                                            <li>• 启用午休后，午休时间不计入工作时长</li>
+                                            <li>• 设置工作开始/结束时间，系统计算总工时</li>
+                                            <li>• 可添加多段休息，休息时间不计入总工时</li>
                                         </ul>
                                     </div>
                                 </div>
