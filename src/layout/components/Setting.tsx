@@ -2,11 +2,11 @@ import React, {useState, useEffect} from 'react';
 import SettingsIcon from '@/src/components/Icons/SettingsIcon';
 import {useAppSettings, DEFAULT_WORK_HOURS_SETTINGS, WorkHoursSettings} from '@/src/provider/AppSettingsProvider';
 
-interface WorkHoursConfigProps {
+interface SettingProps {
     iconOnly?: boolean;
 }
 
-const Setting: React.FC<WorkHoursConfigProps> = ({iconOnly = false}) => {
+const Setting: React.FC<SettingProps> = ({iconOnly = false}) => {
     const [isOpen, setIsOpen] = useState(false);
     const [settings, setSettings] = useState<WorkHoursSettings>(DEFAULT_WORK_HOURS_SETTINGS);
     const [hasChanges, setHasChanges] = useState(false);
@@ -351,4 +351,4 @@ const Setting: React.FC<WorkHoursConfigProps> = ({iconOnly = false}) => {
     );
 };
 
-export default Setting
+export default Setting;
