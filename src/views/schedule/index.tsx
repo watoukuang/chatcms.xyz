@@ -5,7 +5,7 @@ import {Task} from '@/types/app/scrum';
 import Modal from './components/Modal';
 import Header from './components/Header';
 import {calculateSkipMap, generateTimeTableSlots, generateWeekHeaders} from './utils/timeUtils';
-import {addTaskLocal, getTasksLocal, updateTaskLocal, initMigration, loadAllTasksSync} from '@/src/shared/cached';
+import {addTaskLocal, getTasksLocal, initMigration, loadAllTasksSync, updateTaskLocal} from '@/src/shared/cached';
 import {stateOptions, timeOptions} from './constants';
 import Calendar from "./components/Calendar";
 import {useAppSettings} from '@/src/provider/AppSettingsProvider';
@@ -46,7 +46,6 @@ export default function ScheduleView(props?: ScrumPageProps): React.ReactElement
 
     const weekDayHeaders = useMemo(() => generateWeekHeaders(currentDate), [currentDate]);
     const timeTableSlots = useMemo(() => generateTimeTableSlots(workHoursSettings), [workHoursSettings]);
-    const skipMap = useMemo(() => calculateSkipMap(tasks, weekDayHeaders, timeTableSlots), [tasks, weekDayHeaders, timeTableSlots]);
 
     const fetchTasksForCurrentWeek = useCallback(async () => {
         setLoading(true);
@@ -197,8 +196,6 @@ export default function ScheduleView(props?: ScrumPageProps): React.ReactElement
 
     return (
         <div>
-
-            {/* 统计面板 */}
             {showStats && (
                 <div className="mb-6">
                     <TaskStatistics tasks={allTasks}/>
@@ -256,7 +253,6 @@ export default function ScheduleView(props?: ScrumPageProps): React.ReactElement
                 />
             </Modal>
 
-            {/* 简易 Toast */}
             {toast && (
                 <div
                     className="fixed top-4 right-4 bg-gray-900 text-white text-sm px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-slideIn"
