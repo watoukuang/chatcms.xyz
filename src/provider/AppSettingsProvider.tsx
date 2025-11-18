@@ -10,6 +10,7 @@ export interface WorkHoursSettings {
         end: string;
         label?: string;
     }>;
+    calendarStoragePath?: string; // 日历存储路径（供前端显示与记录）
     unavailableSlots: Array<{
         day: number;
         start: string;
@@ -25,6 +26,7 @@ export const DEFAULT_WORK_HOURS_SETTINGS: WorkHoursSettings = {
     breaks: [
         { start: '12:00', end: '13:00', label: '午休' }
     ],
+    calendarStoragePath: '',
     unavailableSlots: []
 };
 
@@ -112,5 +114,6 @@ function migrateSettings(saved: any): WorkHoursSettings {
         ? saved.breaks
         : (saved?.lunchBreak?.enabled ? [{ start: saved.lunchBreak.start, end: saved.lunchBreak.end, label: '午休' }] : base.breaks);
     const unavailableSlots = Array.isArray(saved?.unavailableSlots) ? saved.unavailableSlots : base.unavailableSlots;
-    return { workDays, startTime, endTime, breaks, unavailableSlots };
+    const calendarStoragePath = typeof saved?.calendarStoragePath === 'string' ? saved.calendarStoragePath : base.calendarStoragePath;
+    return { workDays, startTime, endTime, breaks, calendarStoragePath, unavailableSlots };
 }
