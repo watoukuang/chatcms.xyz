@@ -138,7 +138,8 @@ const Setting: React.FC<WorkHoursConfigProps> = ({iconOnly = false}) => {
                         {/* 内容 */}
                         <div className="p-6 space-y-6">
                             {/* 提示信息 */}
-                            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                            <div
+                                className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                                 <div className="flex items-start gap-3">
                                     <span className="text-2xl">ℹ️</span>
                                     <div className="flex-1">
@@ -350,4 +351,4 @@ const Setting: React.FC<WorkHoursConfigProps> = ({iconOnly = false}) => {
     );
 };
 
-export default Setting;
+export default Setting

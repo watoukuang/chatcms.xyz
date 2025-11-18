@@ -12,8 +12,8 @@ const Sidebar: React.FC = () => {
         {icon: <ClockIcon className="w-4 h-4"/>, label: '制定任务', href: '/'},
         {icon: <ArticleIcon className="w-4 h-4"/>, label: '固定日程', href: '/schedule'},
         {icon: <FolderIcon className="w-4 h-4"/>, label: '灵活备选', href: '/blocklog'},
-        {icon: <FolderIcon className="w-4 h-4"/>, label: '任务市场', href: '/blocklog'},
-        {icon: <FolderIcon className="w-4 h-4"/>, label: '智能应用', href: '/blocklog'}
+        {icon: '🏪', label: '任务市场', href: '/marketplace'},
+        {icon: '🤖', label: '智能应用', href: '/ai-tools'}
     ];
 
     const router = useRouter();
@@ -59,7 +59,9 @@ const Sidebar: React.FC = () => {
                             }`}>
                             <span className={`transition-transform duration-300 ${
                                 isActive(item.href) ? 'scale-100' : 'group-hover:scale-110'
-                            }`}>{item.icon}</span>
+                            }`}>
+                                {typeof item.icon === 'string' ? item.icon : item.icon}
+                            </span>
                         </div>
 
                         {/* 标签文字（收缩样式下显示为小号居中） */}

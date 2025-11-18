@@ -5,10 +5,11 @@ import {Task} from '@/types/app/scrum';
 import Modal from './components/Modal';
 import Header from './components/Header';
 import {calculateSkipMap, generateTimeTableSlots, generateWeekHeaders} from './utils/timeUtils';
-import {addTaskLocal, getTasksLocal, updateTaskLocal, initMigration} from '@/src/shared/cached';
+import {addTaskLocal, getTasksLocal, updateTaskLocal, initMigration, loadAllTasksSync} from '@/src/shared/cached';
 import {stateOptions, timeOptions} from './constants';
 import Calendar from "./components/Calendar";
 import {useAppSettings} from '@/src/provider/AppSettingsProvider';
+import TaskStatistics from '@/src/components/TaskStatistics';
 import '@/src/shared/utils/debugStorage'; // 加载调试工具
 
 interface ScrumPageProps {
@@ -51,7 +52,7 @@ export default function ScheduleView(props?: ScrumPageProps): React.ReactElement
         setLoading(true);
         const startDate = currentDate.clone().startOf('isoWeek').format('YYYY-MM-DD');
         const endDate = currentDate.clone().endOf('isoWeek').format('YYYY-MM-DD');
-        console.log('📅 加载任务数据:', { startDate, endDate });
+        console.log('📅 加载任务数据:', {startDate, endDate});
         try {
             // 即使没有选择用户，也加载所有任务
             const list = getTasksLocal({startDate, endDate});
@@ -192,8 +193,19 @@ export default function ScheduleView(props?: ScrumPageProps): React.ReactElement
         setFormErrors((prev) => ({...prev, [field]: ''}));
     };
 
+    const [showStats, setShowStats] = useState(false);
+    const allTasks = useMemo(() => loadAllTasksSync(), [tasks]);
+
     return (
         <div>
+
+            {/* 统计面板 */}
+            {showStats && (
+                <div className="mb-6">
+                    <TaskStatistics tasks={allTasks}/>
+                </div>
+            )}
+
             {/* 顶部卡片区域 */}
             <div
                 className="bg-white dark:bg-[#1f2937] border border-gray-200 dark:border-gray-800 rounded-lg shadow-lg mb-6 transition-colors">
@@ -204,6 +216,8 @@ export default function ScheduleView(props?: ScrumPageProps): React.ReactElement
                     onNextWeek={goToNextWeek}
                     onToday={goToToday}
                     onAdd={handleAdd}
+                    showStats={showStats}
+                    onToggleStats={() => setShowStats(!showStats)}
                 />
                 <Calendar
                     tasks={tasks}

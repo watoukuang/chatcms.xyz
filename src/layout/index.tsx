@@ -17,7 +17,8 @@ function LayoutContent({children}: LayoutProps): React.ReactElement {
             {/* 顶部导航 */}
             <Header/>
             {/* 主内容区 */}
-            <main className={`ml-0 transition-all duration-300 md:ml-[80px] ${isHome ? 'pt-0' : 'pt-[60px]'} ${isHome ? '' : 'min-h-[calc(100vh-60px)] flex flex-col'}`}>
+            <main
+                className={`ml-0 transition-all duration-300 md:ml-[80px] ${isHome ? 'pt-0' : 'pt-[60px]'} ${isHome ? '' : 'min-h-[calc(100vh-60px)] flex flex-col'}`}>
                 <div
                     className={`w-full ${isHome ? 'mx-0 px-0 py-0' : 'flex-1 max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6'}`}>
                     {children}

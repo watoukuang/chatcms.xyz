@@ -7,6 +7,8 @@ interface HeaderProps {
     onNextWeek: () => void;
     onToday: () => void;
     onAdd: () => void;
+    showStats?: boolean;
+    onToggleStats?: () => void;
 }
 
 export default function Header({
@@ -16,6 +18,8 @@ export default function Header({
     onNextWeek,
     onToday,
     onAdd,
+    showStats,
+    onToggleStats,
 }: HeaderProps): React.ReactElement {
     return (
         <div
@@ -42,6 +46,16 @@ export default function Header({
                 >
                     回到今天
                 </button>
+                {/* 统计/日程切换按钮（可选） */}
+                {typeof showStats === 'boolean' && onToggleStats && (
+                    <button
+                        onClick={onToggleStats}
+                        className="px-4 py-1.5 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 shadow-lg transition-all flex items-center gap-2 text-sm"
+                    >
+                        <span>{showStats ? '📅' : '📊'}</span>
+                        <span>{showStats ? '显示日程' : '显示统计'}</span>
+                    </button>
+                )}
                 <div className="h-6 w-px bg-gray-300 dark:border-gray-700 hidden sm:block"></div>
                 <button
                     className={`px-4 py-1.5 rounded-md text-white text-sm font-medium transition-all ${isPastWeek ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 shadow-sm hover:shadow'}`}
