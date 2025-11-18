@@ -40,37 +40,28 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                                              }) => {
     return (
         <div
-            className="mx-auto mb-6 p-8 bg-white/80 dark:bg-[#1f2937]/80 backdrop-blur-xl border border-gray-200/50 dark:border-gray-700/50 rounded-2xl shadow-2xl shadow-blue-500/5 dark:shadow-blue-500/10 w-full transition-all duration-300 max-w-3xl hover:shadow-3xl hover:shadow-blue-500/10 dark:hover:shadow-blue-500/20">
+            className="mx-auto p-6 bg-white/95 dark:bg-[#1f2937]/95 backdrop-blur-xl border border-gray-200/80 dark:border-gray-700/80 rounded-2xl shadow-2xl w-full transition-all duration-300">
             <div className="w-full flex flex-col gap-4">
-                <div
-                    className="flex flex-row flex-wrap items-end gap-4 pb-6 border-b border-gray-200/70 dark:border-gray-700/70">
-                    <div className="flex items-center gap-2 basis-[280px] grow">
-                        <span
-                            className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">开始时间</span>
-                        <div className="relative flex-1 min-w-[200px]">
-                            <input
-                                type="datetime-local"
-                                value={startISO}
-                                onChange={(e) => setStartISO(e.target.value)}
-                                placeholder="年/月/日 --:--"
-                                aria-label="开始时间"
-                                className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800/50 rounded-lg px-4 py-2.5 text-sm w-full pr-8 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all shadow-sm hover:shadow-md"
-                            />
-                        </div>
+                <div className="flex flex-row flex-wrap items-center gap-3 pb-4 border-b border-gray-200/70 dark:border-gray-700/70">
+                    <div className="flex items-center gap-2 flex-1 min-w-[200px]">
+                        <span className="text-xs font-medium text-gray-600 dark:text-gray-400 whitespace-nowrap">开始</span>
+                        <input
+                            type="datetime-local"
+                            value={startISO}
+                            onChange={(e) => setStartISO(e.target.value)}
+                            aria-label="开始时间"
+                            className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800/50 rounded-lg px-3 py-2 text-sm flex-1 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
+                        />
                     </div>
-                    <div className="flex items-center gap-2 basis-[280px] grow">
-                        <span
-                            className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">结束时间</span>
-                        <div className="relative flex-1 min-w-[200px]">
-                            <input
-                                type="datetime-local"
-                                value={endISO}
-                                onChange={(e) => setEndISO(e.target.value)}
-                                placeholder="年/月/日 --:--"
-                                aria-label="结束时间"
-                                className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800/50 rounded-lg px-4 py-2.5 text-sm w-full pr-8 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all shadow-sm hover:shadow-md"
-                            />
-                        </div>
+                    <div className="flex items-center gap-2 flex-1 min-w-[200px]">
+                        <span className="text-xs font-medium text-gray-600 dark:text-gray-400 whitespace-nowrap">结束</span>
+                        <input
+                            type="datetime-local"
+                            value={endISO}
+                            onChange={(e) => setEndISO(e.target.value)}
+                            aria-label="结束时间"
+                            className="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800/50 rounded-lg px-3 py-2 text-sm flex-1 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
+                        />
                     </div>
                 </div>
                 {validation.length > 0 && (

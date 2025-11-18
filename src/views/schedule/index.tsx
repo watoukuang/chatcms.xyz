@@ -4,7 +4,7 @@ import moment from 'moment';
 import {Task} from '@/types/app/scrum';
 import Modal from './components/Modal';
 import Header from './components/Header';
-import {calculateSkipMap, generateTimeTableSlots, generateWeekHeaders} from './utils/timeUtils';
+import {generateWeekHeaders} from './utils/timeUtils';
 import {addTaskLocal, getTasksLocal, initMigration, loadAllTasksSync, updateTaskLocal} from '@/src/shared/cached';
 import {stateOptions, timeOptions} from './constants';
 import Calendar from "./components/Calendar";
