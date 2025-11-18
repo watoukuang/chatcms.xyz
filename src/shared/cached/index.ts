@@ -1,14 +1,37 @@
 import moment from 'moment';
 import storage from '@/src/shared/utils/storage';
 import {Task} from '@/types/app/scrum';
+import {
+    loadAllTasksFromDB,
+    saveAllTasksToDB,
+    getTasksFromDB,
+    addTaskToDB,
+    updateTaskInDB,
+    deleteTaskFromDB,
+    migrateToIndexedDB
+} from './indexedDBCached';
 
 // 本地缓存键
 const STORAGE_KEY = 'scrum_tasks';
 
+// 是否使用 IndexedDB（默认启用）
+const USE_INDEXED_DB = true;
+
 /**
  * 从本地缓存读取所有任务
  */
-export const loadAllTasks = (): Task[] => {
+export const loadAllTasks = async (): Promise<Task[]> => {
+    if (USE_INDEXED_DB) {
+        return await loadAllTasksFromDB();
+    }
+    const list = storage.get<Task[]>(STORAGE_KEY, []);
+    return Array.isArray(list) ? list : [];
+};
+
+/**
+ * 同步版本（兼容旧代码）
+ */
+export const loadAllTasksSync = (): Task[] => {
     const list = storage.get<Task[]>(STORAGE_KEY, []);
     return Array.isArray(list) ? list : [];
 };
@@ -16,8 +39,12 @@ export const loadAllTasks = (): Task[] => {
 /**
  * 保存所有任务到本地缓存
  */
-export const saveAllTasks = (list: Task[]): void => {
-    storage.set(STORAGE_KEY, list);
+export const saveAllTasks = async (list: Task[]): Promise<void> => {
+    if (USE_INDEXED_DB) {
+        await saveAllTasksToDB(list);
+    } else {
+        storage.set(STORAGE_KEY, list);
+    }
 };
 
 /**
@@ -29,7 +56,7 @@ export const getTasksLocal = (params: {
     endDate?: string;
 }): Task[] => {
     const {userId, startDate, endDate} = params;
-    const all = loadAllTasks();
+    const all = loadAllTasksSync();
     return all.filter((t) => {
         if (startDate && moment(t.taskTime, 'YYYY-MM-DD').isBefore(moment(startDate, 'YYYY-MM-DD'), 'day')) return false;
         if (endDate && moment(t.taskTime, 'YYYY-MM-DD').isAfter(moment(endDate, 'YYYY-MM-DD'), 'day')) return false;
@@ -38,10 +65,24 @@ export const getTasksLocal = (params: {
 };
 
 /**
+ * 按条件查询本地任务（异步版本）
+ */
+export const getTasksLocalAsync = async (params: {
+    userId?: number;
+    startDate?: string;
+    endDate?: string;
+}): Promise<Task[]> => {
+    if (USE_INDEXED_DB) {
+        return await getTasksFromDB(params);
+    }
+    return getTasksLocal(params);
+};
+
+/**
  * 新增本地任务
  */
 export const addTaskLocal = (partial: Partial<Task>): Task => {
-    const all = loadAllTasks();
+    const all = loadAllTasksSync();
     const newTask: Task = {
         id: partial.id ?? Date.now(),
         taskTime: partial.taskTime ?? moment().format('YYYY-MM-DD'),
@@ -52,7 +93,11 @@ export const addTaskLocal = (partial: Partial<Task>): Task => {
         state: partial.state ?? 'pending',
     } as Task;
     all.push(newTask);
-    saveAllTasks(all);
+    storage.set(STORAGE_KEY, all);
+    // 异步保存到 IndexedDB
+    if (USE_INDEXED_DB) {
+        addTaskToDB(partial).catch(console.error);
+    }
     return newTask;
 };
 
@@ -60,7 +105,7 @@ export const addTaskLocal = (partial: Partial<Task>): Task => {
  * 修改本地任务
  */
 export const updateTaskLocal = (updated: Task): Task => {
-    const all = loadAllTasks();
+    const all = loadAllTasksSync();
     const idx = all.findIndex((t) => t.id === updated.id);
     const item: Task = {
         ...all[idx],
@@ -72,6 +117,32 @@ export const updateTaskLocal = (updated: Task): Task => {
     } else {
         all.push(item);
     }
-    saveAllTasks(all);
+    storage.set(STORAGE_KEY, all);
+    // 异步保存到 IndexedDB
+    if (USE_INDEXED_DB) {
+        updateTaskInDB(item).catch(console.error);
+    }
     return item;
+};
+
+/**
+ * 删除本地任务
+ */
+export const deleteTaskLocal = (taskId: number): void => {
+    const all = loadAllTasksSync();
+    const filtered = all.filter(t => t.id !== taskId);
+    storage.set(STORAGE_KEY, filtered);
+    // 异步删除 IndexedDB
+    if (USE_INDEXED_DB) {
+        deleteTaskFromDB(taskId).catch(console.error);
+    }
+};
+
+/**
+ * 初始化数据迁移
+ */
+export const initMigration = async (): Promise<void> => {
+    if (USE_INDEXED_DB) {
+        await migrateToIndexedDB();
+    }
 };

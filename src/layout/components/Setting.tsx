@@ -34,9 +34,13 @@ const Setting: React.FC<WorkHoursConfigProps> = ({iconOnly = false}) => {
     const handleSave = () => {
         updateWorkHoursSettings(settings);
         setHasChanges(false);
-        alert('工作时段配置已保存');
-        setIsOpen(false);
+        setToast('工作时段配置已保存，日程表已自动更新');
+        setTimeout(() => {
+            setIsOpen(false);
+        }, 1500);
     };
+
+    const [toast, setToast] = useState<string | null>(null);
 
     // 切换工作日
     const toggleWorkDay = (day: number) => {
@@ -133,6 +137,25 @@ const Setting: React.FC<WorkHoursConfigProps> = ({iconOnly = false}) => {
 
                         {/* 内容 */}
                         <div className="p-6 space-y-6">
+                            {/* 提示信息 */}
+                            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                                <div className="flex items-start gap-3">
+                                    <span className="text-2xl">ℹ️</span>
+                                    <div className="flex-1">
+                                        <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-1">设置说明</h4>
+                                        <p className="text-sm text-blue-800 dark:text-blue-200">
+                                            这些设置将自动应用到<strong>日程表（Schedule）</strong>页面：
+                                        </p>
+                                        <ul className="text-sm text-blue-700 dark:text-blue-300 mt-2 space-y-1 list-disc list-inside">
+                                            <li>工作日将在日程表中高亮显示</li>
+                                            <li>非工作日显示为灰色背景</li>
+                                            <li>休息时段显示为琥珀色背景</li>
+                                            <li>时间范围将限制日程表的显示时段</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
                             {/* 工作日选择 */}
                             <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
@@ -311,6 +334,16 @@ const Setting: React.FC<WorkHoursConfigProps> = ({iconOnly = false}) => {
                             </div>
                         </div>
                     </div>
+                </div>
+            )}
+
+            {/* Toast 提示 */}
+            {toast && (
+                <div
+                    className="fixed top-4 right-4 bg-gradient-to-r from-purple-500 to-pink-600 text-white text-sm px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-slideIn z-[60]"
+                    onAnimationEnd={() => setTimeout(() => setToast(null), 2000)}>
+                    <span className="text-xl">✓</span>
+                    {toast}
                 </div>
             )}
         </>

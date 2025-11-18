@@ -1,4 +1,5 @@
 import moment from 'moment';
+import { WorkHoursSettings } from '@/src/provider/AppSettingsProvider';
 
 /**
  * 生成全天24小时的时间数组
@@ -9,12 +10,34 @@ export const generateFullDayHours = (): string[] => {
 };
 
 /**
+ * 根据工作时间设置生成时间数组
+ * @param workHoursSettings 工作时间设置
+ * @returns 时间数组
+ */
+export const generateWorkHours = (workHoursSettings?: WorkHoursSettings): string[] => {
+    if (!workHoursSettings) {
+        return generateFullDayHours();
+    }
+
+    const startHour = parseInt(workHoursSettings.startTime.split(':')[0]);
+    const endHour = parseInt(workHoursSettings.endTime.split(':')[0]);
+    
+    const hours: string[] = [];
+    for (let i = startHour; i < endHour; i++) {
+        hours.push(`${String(i).padStart(2, '0')}:00`);
+    }
+    
+    return hours;
+};
+
+/**
  * 生成时间表格的时间段数组
+ * @param workHoursSettings 可选的工作时间设置
  * @returns 时间段数组 ['00:00-01:00', '01:00-02:00', ...]
  */
-export const generateTimeTableSlots = (): string[] => {
-    const fullDayHours = generateFullDayHours();
-    return fullDayHours.map(start => {
+export const generateTimeTableSlots = (workHoursSettings?: WorkHoursSettings): string[] => {
+    const hours = workHoursSettings ? generateWorkHours(workHoursSettings) : generateFullDayHours();
+    return hours.map(start => {
         const end = moment(start, 'HH:mm').add(1, 'hour').format('HH:mm');
         return `${start}-${end}`;
     });

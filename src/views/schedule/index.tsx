@@ -5,9 +5,11 @@ import {Task} from '@/types/app/scrum';
 import Modal from './components/Modal';
 import Header from './components/Header';
 import {calculateSkipMap, generateTimeTableSlots, generateWeekHeaders} from './utils/timeUtils';
-import {addTaskLocal, getTasksLocal, updateTaskLocal} from '@/src/shared/cached';
+import {addTaskLocal, getTasksLocal, updateTaskLocal, initMigration} from '@/src/shared/cached';
 import {stateOptions, timeOptions} from './constants';
 import Calendar from "./components/Calendar";
+import {useAppSettings} from '@/src/provider/AppSettingsProvider';
+import '@/src/shared/utils/debugStorage'; // 加载调试工具
 
 interface ScrumPageProps {
     plan?: any;
@@ -22,6 +24,7 @@ interface ScrumPageProps {
 }
 
 export default function ScheduleView(props?: ScrumPageProps): React.ReactElement {
+    const {workHoursSettings} = useAppSettings();
     const [tasks, setTasks] = useState<Task[]>([]);
     const [isDrawerVisible, setIsDrawerVisible] = useState(false);
     const [editingTask, setEditingTask] = useState<Partial<Task> | null>(null);
@@ -33,27 +36,38 @@ export default function ScheduleView(props?: ScrumPageProps): React.ReactElement
     // 简易消息提示
     const [toast, setToast] = useState<string | null>(null);
 
+    // 初始化 IndexedDB 迁移
+    useEffect(() => {
+        initMigration().catch(console.error);
+    }, []);
+
     const isPastWeek = useMemo(() => currentDate.clone().endOf('isoWeek').isBefore(moment(), 'day'), [currentDate]);
 
     const weekDayHeaders = useMemo(() => generateWeekHeaders(currentDate), [currentDate]);
-    const timeTableSlots = useMemo(() => generateTimeTableSlots(), []);
+    const timeTableSlots = useMemo(() => generateTimeTableSlots(workHoursSettings), [workHoursSettings]);
     const skipMap = useMemo(() => calculateSkipMap(tasks, weekDayHeaders, timeTableSlots), [tasks, weekDayHeaders, timeTableSlots]);
 
     const fetchTasksForCurrentUser = useCallback(async () => {
         setLoading(true);
         const startDate = currentDate.clone().startOf('isoWeek').format('YYYY-MM-DD');
         const endDate = currentDate.clone().endOf('isoWeek').format('YYYY-MM-DD');
+        console.log('📅 加载任务数据:', { startDate, endDate });
         try {
             // 即使没有选择用户，也加载所有任务
             const list = getTasksLocal({startDate, endDate});
+            console.log('✅ 加载到的任务数量:', list.length, list);
             setTasks(list);
         } catch (error) {
-            console.error('获取任务失败:', error);
+            console.error('❌ 获取任务失败:', error);
         } finally {
             setLoading(false);
         }
     }, [currentDate]);
 
+    // 加载任务数据
+    useEffect(() => {
+        fetchTasksForCurrentUser();
+    }, [fetchTasksForCurrentUser]);
 
     useEffect(() => {
         if (isDrawerVisible) {
@@ -156,12 +170,19 @@ export default function ScheduleView(props?: ScrumPageProps): React.ReactElement
             return;
         }
         const taskData = buildTaskData(formValues);
+        console.log('💾 保存任务:', taskData);
         try {
             const {saved, updated} = persistTaskLocal(taskData, editingTask);
-            setTasks(prev => mergeTaskList(prev, saved));
+            console.log('✅ 任务已保存:', saved);
+            setTasks(prev => {
+                const newList = mergeTaskList(prev, saved);
+                console.log('📋 更新后的任务列表:', newList);
+                return newList;
+            });
             setToast(updated ? '任务更新成功 (本地缓存)' : '任务添加成功 (本地缓存)');
             closeEditor();
-        } catch {
+        } catch (error) {
+            console.error('❌ 保存失败:', error);
             setToast(editingTask?.id ? '更新失败' : '添加失败');
         }
     };
@@ -189,6 +210,7 @@ export default function ScheduleView(props?: ScrumPageProps): React.ReactElement
                     currentDate={currentDate}
                     isPastWeek={isPastWeek}
                     onEditTask={handleEdit}
+                    workHoursSettings={workHoursSettings}
                     onAddTask={(taskTime, startTime, endTime) => {
                         setEditingTask({
                             taskTime,

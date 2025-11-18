@@ -4,6 +4,7 @@ import TCard from "@/src/views/schedule/components/TCard";
 import {Task} from "@/types/app/scrum";
 import {generateWeekHeaders, generateTimeTableSlots, calculateSkipMap} from '../utils/timeUtils';
 import {stateOptions} from '../constants';
+import {WorkHoursSettings} from '@/src/provider/AppSettingsProvider';
 
 interface CalendarProps {
     tasks?: Task[];
@@ -11,6 +12,7 @@ interface CalendarProps {
     isPastWeek?: boolean;
     onEditTask?: (task: Task) => void;
     onAddTask?: (taskTime: string, startTime: string, endTime: string) => void;
+    workHoursSettings?: WorkHoursSettings;
 }
 
 const Calendar: React.FC<CalendarProps> = ({
@@ -18,11 +20,30 @@ const Calendar: React.FC<CalendarProps> = ({
                                                currentDate = moment(),
                                                isPastWeek = false,
                                                onEditTask,
-                                               onAddTask
+                                               onAddTask,
+                                               workHoursSettings
                                            }) => {
     const tableHeaders = useMemo(() => generateWeekHeaders(currentDate), [currentDate]);
-    const timeTableSlots = useMemo(() => generateTimeTableSlots(), []);
+    const timeTableSlots = useMemo(() => generateTimeTableSlots(workHoursSettings), [workHoursSettings]);
     const skipMap = useMemo(() => calculateSkipMap(tasks, tableHeaders, timeTableSlots), [tasks, tableHeaders, timeTableSlots]);
+
+    // 检查某个时间段是否在休息时间内
+    const isBreakTime = (slotStart: string): boolean => {
+        if (!workHoursSettings?.breaks) return false;
+        const slotTime = moment(slotStart, 'HH:mm');
+        return workHoursSettings.breaks.some(breakPeriod => {
+            const breakStart = moment(breakPeriod.start, 'HH:mm');
+            const breakEnd = moment(breakPeriod.end, 'HH:mm');
+            return slotTime.isSameOrAfter(breakStart) && slotTime.isBefore(breakEnd);
+        });
+    };
+
+    // 检查某一天是否为工作日
+    const isWorkDay = (date: string): boolean => {
+        if (!workHoursSettings?.workDays) return true;
+        const dayOfWeek = moment(date).day();
+        return workHoursSettings.workDays.includes(dayOfWeek);
+    };
 
     return (
         <div>
@@ -78,19 +99,38 @@ const Calendar: React.FC<CalendarProps> = ({
                                         }
                                         return null;
                                     }
+                                    const isBreak = isBreakTime(cellStartTime);
+                                    const isNonWorkDay = !isWorkDay(h.date);
+                                    const cellBgClass = isBreak 
+                                        ? 'bg-amber-50 dark:bg-amber-900/10' 
+                                        : isNonWorkDay 
+                                        ? 'bg-gray-100 dark:bg-gray-800/50' 
+                                        : 'bg-white';
+                                    const cellTitle = isBreak 
+                                        ? '休息时间' 
+                                        : isNonWorkDay 
+                                        ? '非工作日' 
+                                        : isPastWeek 
+                                        ? '历史周不可编辑' 
+                                        : '点击添加任务';
+                                    
                                     return (
                                         <td key={`${h.date}-${slot}`}
-                                            className="border border-gray-200 px-2 py-2 align-middle bg-white">
+                                            className={`border border-gray-200 px-2 py-2 align-middle ${cellBgClass}`}>
                                             <div
-                                                onClick={isPastWeek ? undefined : () => {
+                                                onClick={isPastWeek || isBreak || isNonWorkDay ? undefined : () => {
                                                     const endTime = moment(cellStartTime, 'HH:mm').add(1, 'hour').format('HH:mm');
                                                     onAddTask?.(h.date, cellStartTime, endTime);
                                                 }}
-                                                className={`h-[60px] w-full flex items-center justify-center text-gray-300 hover:bg-blue-50 hover:text-blue-400 transition-all rounded ${isPastWeek ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
-                                                title={isPastWeek ? '历史周不可编辑' : '点击添加任务'}
-                                                aria-label="该日暂无任务，显示为短横线"
+                                                className={`h-[60px] w-full flex items-center justify-center text-gray-300 transition-all rounded ${
+                                                    isPastWeek || isBreak || isNonWorkDay 
+                                                        ? 'cursor-not-allowed opacity-50' 
+                                                        : 'cursor-pointer hover:bg-blue-50 hover:text-blue-400'
+                                                }`}
+                                                title={cellTitle}
+                                                aria-label={isBreak ? '休息时间' : isNonWorkDay ? '非工作日' : '该日暂无任务，显示为短横线'}
                                             >
-                                                -
+                                                {isBreak ? '☕' : isNonWorkDay ? '🏖️' : '-'}
                                             </div>
                                         </td>
                                     );
