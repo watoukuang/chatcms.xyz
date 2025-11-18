@@ -60,8 +60,12 @@ const Sidebar: React.FC = () => {
                             }`}>{item.icon}</span>
                         </div>
 
-                        {/* 标签文字（收缩样式隐藏） */}
-                        <div className="hidden">{item.label}</div>
+                        {/* 标签文字（收缩样式下显示为小号居中） */}
+                        <div className={`text-xs text-center ${
+                            isActive(item.href)
+                                ? 'text-gray-900 dark:text-white'
+                                : 'text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white'
+                        }`}>{item.label}</div>
                     </Link>
                 ))}
             </nav>
