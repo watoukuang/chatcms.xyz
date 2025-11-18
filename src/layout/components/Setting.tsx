@@ -1,4 +1,5 @@
 import React, {useState, useEffect} from 'react';
+import SettingsIcon from '@/src/components/Icons/SettingsIcon';
 import {useAppSettings, DEFAULT_WORK_HOURS_SETTINGS, WorkHoursSettings} from '@/src/provider/AppSettingsProvider';
 
 interface WorkHoursConfigProps {
@@ -66,6 +67,16 @@ const Setting: React.FC<WorkHoursConfigProps> = ({iconOnly = false}) => {
         return `${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
     };
 
+    // 支持 ESC 关闭弹窗
+    useEffect(() => {
+        if (!isOpen) return;
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') setIsOpen(false);
+        };
+        document.addEventListener('keydown', onKeyDown);
+        return () => document.removeEventListener('keydown', onKeyDown);
+    }, [isOpen]);
+
     return (
         <>
             {/* 触发按钮（支持图标模式） */}
@@ -77,40 +88,28 @@ const Setting: React.FC<WorkHoursConfigProps> = ({iconOnly = false}) => {
                 }`}
                 title="工作时段配置"
             >
-                {/* 设置图标 */}
-                <svg className={`${iconOnly ? 'w-5 h-5 text-gray-700 dark:text-gray-300' : 'w-5 h-5'}`} fill="none"
-                     viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
+                {/* 设置图标（滑杆样式） */}
+                <SettingsIcon className={`${iconOnly ? 'w-5 h-5 text-gray-700 dark:text-gray-300' : 'w-5 h-5'}`} />
                 {!iconOnly && <span className="font-medium hidden sm:inline">工作时段</span>}
             </button>
 
             {/* 配置弹窗 */}
             {isOpen && (
                 <div
-                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn">
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fadeIn"
+                    onClick={() => setIsOpen(false)}
+                >
                     <div
-                        className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-slideDown">
+                        className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-slideDown"
+                        onClick={(e) => e.stopPropagation()}
+                    >
                         {/* 头部 */}
                         <div
-                            className="sticky top-0 bg-gradient-to-r from-purple-500 to-pink-600 text-white px-6 py-4 flex items-center justify-between rounded-t-2xl">
+                            className="sticky top-0 bg-gradient-to-r from-purple-500 to-pink-600 text-white px-6 py-4 flex items-center justify-between rounded-t-2xl min-h-[56px]">
                             <div className="flex items-center gap-3">
-                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                                <h2 className="text-xl font-bold">工作时段配置</h2>
+                                <SettingsIcon className="w-6 h-6 shrink-0" />
+                                <span className="text-xl font-bold leading-none h-6 flex items-center">设置</span>
                             </div>
-                            <button
-                                onClick={() => setIsOpen(false)}
-                                className="p-1 hover:bg-white/20 rounded-lg transition-colors"
-                            >
-                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                                          d="M6 18L18 6M6 6l12 12"/>
-                                </svg>
-                            </button>
                         </div>
 
                         {/* 内容 */}
