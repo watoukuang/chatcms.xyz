@@ -101,19 +101,19 @@ const Calendar: React.FC<CalendarProps> = ({
                                     }
                                     const isBreak = isBreakTime(cellStartTime);
                                     const isNonWorkDay = !isWorkDay(h.date);
-                                    const cellBgClass = isBreak 
-                                        ? 'bg-amber-50 dark:bg-amber-900/10' 
-                                        : isNonWorkDay 
-                                        ? 'bg-gray-100 dark:bg-gray-800/50' 
-                                        : 'bg-white';
-                                    const cellTitle = isBreak 
-                                        ? '休息时间' 
-                                        : isNonWorkDay 
-                                        ? '非工作日' 
-                                        : isPastWeek 
-                                        ? '历史周不可编辑' 
-                                        : '点击添加任务';
-                                    
+                                    const cellBgClass = isBreak
+                                        ? 'bg-amber-50 dark:bg-amber-900/10'
+                                        : isNonWorkDay
+                                            ? 'bg-gray-100 dark:bg-gray-800/50'
+                                            : 'bg-white';
+                                    const cellTitle = isBreak
+                                        ? '休息时间'
+                                        : isNonWorkDay
+                                            ? '非工作日'
+                                            : isPastWeek
+                                                ? '历史周不可编辑'
+                                                : '点击添加任务';
+
                                     return (
                                         <td key={`${h.date}-${slot}`}
                                             className={`border border-gray-200 px-2 py-2 align-middle ${cellBgClass}`}>
@@ -123,8 +123,8 @@ const Calendar: React.FC<CalendarProps> = ({
                                                     onAddTask?.(h.date, cellStartTime, endTime);
                                                 }}
                                                 className={`h-[60px] w-full flex items-center justify-center text-gray-300 transition-all rounded ${
-                                                    isPastWeek || isBreak || isNonWorkDay 
-                                                        ? 'cursor-not-allowed opacity-50' 
+                                                    isPastWeek || isBreak || isNonWorkDay
+                                                        ? 'cursor-not-allowed opacity-50'
                                                         : 'cursor-pointer hover:bg-blue-50 hover:text-blue-400'
                                                 }`}
                                                 title={cellTitle}
