@@ -24,7 +24,7 @@ function LayoutContent({children}: LayoutProps): React.ReactElement {
                     {children}
                 </div>
             </main>
-            <Footer/>
+            {!isHome && <Footer/>}
         </div>
     );
 }
