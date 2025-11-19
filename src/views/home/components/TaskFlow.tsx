@@ -8,11 +8,13 @@ export type SimpleTask = {
     task?: string;
     remark?: string;
     state?: 'pending' | 'in-progress' | 'completed' | 'delayed';
+    // 新增：链式导航字段，指向相邻任务的 id（若存在）
+    prev?: number;
+    next?: number;
 };
 
 interface TaskFlowProps {
     tasks: SimpleTask[];
-    title?: string;
     onTaskClick?: (t: SimpleTask, index: number) => void;
 }
 
@@ -111,25 +113,12 @@ const Arrow: React.FC = () => (
     </div>
 );
 
-const TaskFlow: React.FC<TaskFlowProps> = ({tasks, title, onTaskClick}) => {
+const TaskFlow: React.FC<TaskFlowProps> = ({tasks, onTaskClick}) => {
     if (!tasks || tasks.length === 0) return null;
 
     return (
         <div
             className="w-full bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-200/60 dark:border-gray-700/60 rounded-2xl p-6 shadow-lg">
-            {/* 标题栏 */}
-            <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                    <span className="text-2xl">🤖</span>
-                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-            {title || `AI 规划了 ${tasks.length} 个任务`}
-          </span>
-                </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">
-                    点击任意卡片可进一步拆解
-                </div>
-            </div>
-
             {/* 任务卡片流 */}
             <div className="w-full overflow-x-auto pb-2">
                 <div className="flex items-stretch gap-3 py-2 min-w-max">
@@ -140,13 +129,6 @@ const TaskFlow: React.FC<TaskFlowProps> = ({tasks, title, onTaskClick}) => {
                         </React.Fragment>
                     ))}
                 </div>
-            </div>
-
-            {/* 底部提示 */}
-            <div
-                className="mt-4 pt-4 border-t border-gray-200/60 dark:border-gray-700/60 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-                <span>💡 提示：任务会按时间顺序执行</span>
-                <span>总计 {tasks.length} 个步骤</span>
             </div>
         </div>
     );
