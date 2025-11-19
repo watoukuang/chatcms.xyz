@@ -7,23 +7,30 @@ type Props = {
     // 一维任务数组：包含父任务与其后插入的子任务
     tasks: UiTask[];
     onTaskClick: (t: UiTask, index: number) => void;
+    onReset?: () => void;
 };
 
-export default function TaskContext({tasks, onTaskClick}: Props): React.ReactElement {
+export default function TaskContext({tasks, onTaskClick, onReset}: Props): React.ReactElement {
     if (!tasks || tasks.length === 0) return <></>;
     return (
         <div
             className="w-full flex-1 p-2.5 animate-fadeIn flex flex-col rounded border border-gray-200 dark:border-gray-700 bg-gradient-to-br from-white to-blue-50/30 dark:from-gray-800 dark:to-blue-900/10 shadow-xl mt-3">
             {/* 标题栏 */}
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-200 dark:border-gray-700">
                 <div className="flex items-center gap-2">
                     <span className="text-2xl">🤖</span>
                     <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                                     {`AI 规划了 ${tasks.length} 个任务`}
                                 </span>
                 </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">
-                    点击任意卡片可进一步拆解
+                <div className="flex items-center gap-3">
+                    <button
+                        type="button"
+                        onClick={() => onReset?.()}
+                        className="px-2 py-1 text-xs rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    >
+                        重置
+                    </button>
                 </div>
             </div>
 

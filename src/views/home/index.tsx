@@ -263,6 +263,7 @@ export default function HomeLanding(): React.ReactElement {
                     <TaskContext
                         tasks={tasks}
                         onTaskClick={(t, index) => handleSplitTask(t, {taskIndex: index})}
+                        onReset={() => setTasks([])}
                     />
                 </div>
             </div>
