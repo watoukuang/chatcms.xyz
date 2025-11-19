@@ -117,18 +117,14 @@ const TaskFlow: React.FC<TaskFlowProps> = ({tasks, onTaskClick}) => {
     if (!tasks || tasks.length === 0) return null;
 
     return (
-        <div
-            className="w-full bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm border border-gray-200/60 dark:border-gray-700/60 rounded-2xl p-6 shadow-lg">
-            {/* 任务卡片流 */}
-            <div className="w-full overflow-x-auto pb-2">
-                <div className="flex items-stretch gap-3 py-2 min-w-max">
-                    {tasks.map((t, i) => (
-                        <React.Fragment key={(t.id ?? i).toString() + '-' + (t.task || '')}>
-                            <TaskCard t={t} onClick={() => onTaskClick?.(t, i)}/>
-                            {i < tasks.length - 1 && <Arrow/>}
-                        </React.Fragment>
-                    ))}
-                </div>
+        <div className="w-full overflow-x-auto pb-2">
+            <div className="flex items-stretch gap-3 py-2 min-w-max">
+                {tasks.map((t, i) => (
+                    <React.Fragment key={(t.id ?? i).toString() + '-' + (t.task || '')}>
+                        <TaskCard t={t} onClick={() => onTaskClick?.(t, i)}/>
+                        {i < tasks.length - 1 && <Arrow/>}
+                    </React.Fragment>
+                ))}
             </div>
         </div>
     );

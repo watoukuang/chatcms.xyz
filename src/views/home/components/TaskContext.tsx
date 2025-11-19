@@ -12,7 +12,7 @@ type Props = {
 export default function TaskContext({tasks, onTaskClick}: Props): React.ReactElement {
     if (!tasks || tasks.length === 0) return <></>;
     return (
-        <div className="mt-20 animate-fadeIn">
+        <div className="w-full flex-1 p-2.5 animate-fadeIn flex flex-col rounded-2xl border border-gray-200 dark:border-gray-700 bg-gradient-to-br from-white to-blue-50/30 dark:from-gray-800 dark:to-blue-900/10 shadow-xl mt-3">
             {/* 标题栏 */}
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
@@ -26,15 +26,12 @@ export default function TaskContext({tasks, onTaskClick}: Props): React.ReactEle
                 </div>
             </div>
 
-            {/* 任务流 */}
             <TaskFlow
                 tasks={tasks}
                 onTaskClick={(t, i) => onTaskClick(t, i)}
             />
-
-            {/* 底部提示 */}
             <div
-                className="mt-4 pt-4 border-t border-gray-200/60 dark:border-gray-700/60 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                className="mt-auto pt-4 border-t border-gray-200/60 dark:border-gray-700/60 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
                 <span>💡 提示：任务会按时间顺序执行</span>
                 <span>总计 {tasks.length} 个步骤</span>
             </div>

@@ -242,15 +242,15 @@ export default function HomeLanding(): React.ReactElement {
     const isEmpty = tasks.length === 0 && !loading;
     return (
         <div
-            className={"relative min-h-screen flex flex-col items-center px-4 pb-0 overflow-hidden"}>
+            className={"relative min-h-screen flex flex-col items-center px-4 pb-0 pt-[60px] overflow-hidden"}>
             {/* 背景（极简） */}
             <div className="absolute inset-0 bg-white dark:bg-[#0b0f19]"/>
 
             {/* 主内容（适当加宽，仅内容区内居中） */}
             <div className="relative z-10 w-full mx-auto">
                 {/* 只在内容区内居中：使用内容区最小高度为 (视口高度 - 底栏/安全边距) */}
-                <div className={`${isEmpty ? 'grid place-items-center' : ''}`}
-                     style={{minHeight: 'calc(100vh - 260px)'}}>
+                <div className={`${isEmpty ? 'grid place-items-center' : 'flex flex-col'}`}
+                     style={{minHeight: isEmpty ? 'calc(100dvh - 60px - 260px)' : 'calc(100dvh - 60px)'}}>
                     {tasks.length === 0 && !loading && (
                         <EmptyState onPickTemplate={(t) => setChatInput(t)}/>
                     )}
