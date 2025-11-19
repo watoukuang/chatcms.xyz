@@ -13,7 +13,7 @@ export default function TaskContext({tasks, onTaskClick}: Props): React.ReactEle
     if (!tasks || tasks.length === 0) return <></>;
     return (
         <div
-            className="w-full flex-1 p-2.5 animate-fadeIn flex flex-col rounded-2xl border border-gray-200 dark:border-gray-700 bg-gradient-to-br from-white to-blue-50/30 dark:from-gray-800 dark:to-blue-900/10 shadow-xl mt-3">
+            className="w-full flex-1 p-2.5 animate-fadeIn flex flex-col rounded border border-gray-200 dark:border-gray-700 bg-gradient-to-br from-white to-blue-50/30 dark:from-gray-800 dark:to-blue-900/10 shadow-xl mt-3">
             {/* 标题栏 */}
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
