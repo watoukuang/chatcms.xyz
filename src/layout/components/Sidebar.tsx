@@ -77,7 +77,7 @@ const Sidebar: React.FC = () => {
 
             {/* Bottom Actions */}
             <div
-                className={"mt-auto px-3 py-4 border-t border-gray-800/60 flex flex-col items-center gap-2"}
+                className={"mt-auto px-3 py-4 border-t border-lime-500/30 dark:border-lime-700/40 flex flex-col items-center gap-2"}
             >
                 <DataExport iconOnly/>
                 <Setting iconOnly/>
