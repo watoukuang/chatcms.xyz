@@ -1,6 +1,7 @@
 "use client";
 
 import React, {useMemo, useRef, useState} from "react";
+import {useRouter} from 'next/router';
 import moment from 'moment';
 import ChatPanel from "@/src/views/home/components/ChatPanel";
 import {SimpleTask as UiTask} from "@/src/views/home/components/TaskFlow";
@@ -12,6 +13,7 @@ import HistorySidebar, {TaskHistory} from "@/src/views/home/components/HistorySi
 import {useSidebar} from "@/src/contexts/SidebarContext";
 
 export default function HomeLanding(): React.ReactElement {
+    const router = useRouter();
     const {isCollapsed, collapse, expand, toggleSidebar} = useSidebar();
     const [startISO, setStartISO] = useState<string>("");
     const [endISO, setEndISO] = useState<string>("");
@@ -268,6 +270,22 @@ export default function HomeLanding(): React.ReactElement {
         setActiveHistoryId(h.id);
     };
 
+    // 支持通过 query 参数 historyId 深链选中历史
+    React.useEffect(() => {
+        if (!router.isReady) return;
+        const raw = router.query?.historyId;
+        const historyId = Array.isArray(raw) ? raw[0] : raw;
+        if (typeof historyId === 'string' && historyId) {
+            const found = histories.find(h => h.id === historyId);
+            if (found) {
+                restoreFromHistory(found);
+            } else {
+                setActiveHistoryId(historyId);
+            }
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [router.isReady, histories]);
+
     const handleSend = async () => {
         if (!canSend) return;
         setLoading(true);
@@ -438,6 +456,8 @@ export default function HomeLanding(): React.ReactElement {
                                     setTasks([]);
                                     updateActiveHistoryTasks([]);
                                 }}
+                                groupId={activeHistoryId || undefined}
+                                groupTitle={(histories.find(h => h.id === activeHistoryId)?.title) || undefined}
                             />
                         </div>
 

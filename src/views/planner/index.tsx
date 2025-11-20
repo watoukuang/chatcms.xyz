@@ -1,14 +1,19 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useMemo} from 'react';
 import {Task} from '@/types/app/scrum';
 import storage from '@/src/shared/utils/storage';
 import moment from 'moment';
+import {useRouter} from 'next/router';
+import Link from 'next/link';
 
 interface BacklogTask extends Omit<Task, 'taskTime'> {
-    priority: 'low' | 'medium' | 'high' | 'urgent';
+    priority?: 'low' | 'medium' | 'high' | 'urgent';
     estimatedMinutes?: number;
     tags?: string[];
     createdAt: string;
     scheduledDate?: string;
+    groupId?: string;
+    groupTitle?: string;
+    origin?: 'prompt' | 'ai_split' | 'batch';
 }
 
 const priorityConfig = {
@@ -43,13 +48,14 @@ const priorityConfig = {
 };
 
 export default function BlocklogView(): React.ReactElement {
+    const router = useRouter();
     const [tasks, setTasks] = useState<BacklogTask[]>([]);
     const [filteredTasks, setFilteredTasks] = useState<BacklogTask[]>([]);
-    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [editingTask, setEditingTask] = useState<BacklogTask | null>(null);
     const [filterPriority, setFilterPriority] = useState<string>('all');
     const [searchQuery, setSearchQuery] = useState('');
     const [sortBy, setSortBy] = useState<'priority' | 'created' | 'estimated'>('priority');
+    const [groupFilter, setGroupFilter] = useState<string>('all');
 
     // 加载任务
     useEffect(() => {
@@ -77,8 +83,10 @@ export default function BlocklogView(): React.ReactElement {
         // 排序
         filtered.sort((a, b) => {
             if (sortBy === 'priority') {
-                const priorityOrder = {urgent: 0, high: 1, medium: 2, low: 3};
-                return priorityOrder[a.priority] - priorityOrder[b.priority];
+                const priorityOrder: Record<string, number> = {urgent: 0, high: 1, medium: 2, low: 3};
+                const ao = a.priority ? priorityOrder[a.priority] ?? 99 : 99;
+                const bo = b.priority ? priorityOrder[b.priority] ?? 99 : 99;
+                return ao - bo;
             } else if (sortBy === 'created') {
                 return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
             } else {
@@ -89,28 +97,21 @@ export default function BlocklogView(): React.ReactElement {
         setFilteredTasks(filtered);
     }, [tasks, filterPriority, searchQuery, sortBy]);
 
+    // 可选分组列表（用于下拉筛选）
+    const groupOptions = useMemo(() => {
+        const map = new Map<string, string>();
+        filteredTasks.forEach(t => {
+            const id = t.groupId || '__ungrouped__';
+            const title = t.groupTitle || '未分组';
+            if (!map.has(id)) map.set(id, title);
+        });
+        return Array.from(map.entries());
+    }, [filteredTasks]);
+
     // 保存任务
     const saveTasks = (newTasks: BacklogTask[]) => {
         setTasks(newTasks);
         storage.set('backlog_tasks', newTasks);
-    };
-
-    // 添加任务
-    const handleAddTask = (taskData: Partial<BacklogTask>) => {
-        const newTask: BacklogTask = {
-            id: Date.now(),
-            task: taskData.task || '',
-            remark: taskData.remark || '',
-            priority: taskData.priority || 'medium',
-            estimatedMinutes: taskData.estimatedMinutes,
-            tags: taskData.tags || [],
-            state: 'pending',
-            startTime: '',
-            endTime: '',
-            createdAt: new Date().toISOString(),
-        };
-        saveTasks([...tasks, newTask]);
-        setIsAddModalOpen(false);
     };
 
     // 更新任务
@@ -140,7 +141,7 @@ export default function BlocklogView(): React.ReactElement {
 
     return (
         <div
-            className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 dark:from-gray-900 dark:via-[#1a1d29] dark:to-blue-950 p-6">
+            className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
             <div className="max-w-7xl mx-auto">
                 {/* 头部 */}
                 <div className="mb-8">
@@ -150,62 +151,17 @@ export default function BlocklogView(): React.ReactElement {
                                 📋 灵活备选
                             </h1>
                             <p className="text-gray-600 dark:text-gray-400 mt-2">
-                                管理你的任务池，随时安排到日程中
+                                备选任务仅来源于首页的“加入备选”操作
                             </p>
                         </div>
-                        <button
-                            onClick={() => setIsAddModalOpen(true)}
-                            className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 shadow-lg shadow-blue-500/30 transition-all duration-300 hover:scale-105 flex items-center gap-2"
-                        >
-                            <span className="text-xl">+</span>
-                            <span>添加任务</span>
-                        </button>
                     </div>
 
-                    {/* 统计卡片 */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                        {Object.entries(priorityConfig).map(([key, config]) => {
-                            const count = tasks.filter(t => t.priority === key).length;
-                            return (
-                                <div
-                                    key={key}
-                                    className={`${config.bg} border border-gray-200 dark:border-gray-700 rounded-lg p-4 cursor-pointer transition-all hover:scale-105`}
-                                    onClick={() => setFilterPriority(filterPriority === key ? 'all' : key)}
-                                >
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                                                {config.icon} {config.label}优先级
-                                            </p>
-                                            <p className={`text-2xl font-bold ${config.text} mt-1`}>
-                                                {count}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-
-                    {/* 过滤和搜索栏 */}
-                    <div className="flex flex-col md:flex-row gap-4 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md">
-                        <input
-                            type="text"
-                            placeholder="🔍 搜索任务..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                        <select
-                            value={sortBy}
-                            onChange={(e) => setSortBy(e.target.value as any)}
-                            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                            <option value="priority">按优先级排序</option>
-                            <option value="created">按创建时间排序</option>
-                            <option value="estimated">按预估时长排序</option>
-                        </select>
-                    </div>
+                    {/* 可收缩搜索栏 */}
+                    <CollapsibleSearch
+                        value={searchQuery}
+                        onChange={setSearchQuery}
+                        placeholder="搜索备选任务..."
+                    />
                 </div>
 
                 {/* 任务列表 */}
@@ -213,98 +169,117 @@ export default function BlocklogView(): React.ReactElement {
                     {filteredTasks.length === 0 ? (
                         <div className="text-center py-20 bg-white dark:bg-gray-800 rounded-lg shadow-md">
                             <p className="text-6xl mb-4">📭</p>
-                            <p className="text-gray-500 dark:text-gray-400 text-lg">
-                                {searchQuery || filterPriority !== 'all' ? '没有找到匹配的任务' : '还没有任务，点击上方按钮添加'}
+                            <p className="text-gray-500 dark:text-gray-400 text-lg mb-4">
+                                {searchQuery || filterPriority !== 'all' ? '没有找到匹配的任务' : '还没有备选任务，请前往首页点击“加入备选”'}
                             </p>
+                            <button
+                                onClick={() => router.push('/')}
+                                className="px-5 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:from-indigo-600 hover:to-purple-700 shadow-md transition-all"
+                            >
+                                前往首页
+                            </button>
                         </div>
                     ) : (
-                        filteredTasks.map((task) => {
-                            const config = priorityConfig[task.priority];
+                        (() => {
+                            const groups: Record<string, {title: string; items: BacklogTask[]}> = {};
+                            filteredTasks.forEach((t) => {
+                                const key = t.groupId || '__ungrouped__';
+                                const title = t.groupTitle || '未分组';
+                                if (!groups[key]) groups[key] = {title, items: []};
+                                groups[key].items.push(t);
+                            });
+
+                            const entries = Object.entries(groups).filter(([gid]) => groupFilter === 'all' || gid === groupFilter);
+
                             return (
-                                <div
-                                    key={task.id}
-                                    className="bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 p-6 border-l-4"
-                                    style={{borderLeftColor: `var(--${task.priority}-color, #3b82f6)`}}
-                                >
-                                    <div className="flex items-start justify-between">
-                                        <div className="flex-1">
-                                            <div className="flex items-center gap-3 mb-2">
-                                                <span className="text-2xl">{config.icon}</span>
-                                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                                                    {task.task}
-                                                </h3>
-                                                <span
-                                                    className={`px-3 py-1 rounded-full text-xs font-medium ${config.bg} ${config.text}`}>
-                                                    {config.label}
-                                                </span>
-                                            </div>
-                                            {task.remark && (
-                                                <p className="text-gray-600 dark:text-gray-400 mb-3 ml-11">
-                                                    {task.remark}
-                                                </p>
-                                            )}
-                                            <div
-                                                className="flex items-center gap-4 ml-11 text-sm text-gray-500 dark:text-gray-400">
-                                                {task.estimatedMinutes && (
-                                                    <span>⏱️ 预计 {task.estimatedMinutes} 分钟</span>
-                                                )}
-                                                <span>📅 创建于 {moment(task.createdAt).format('YYYY-MM-DD HH:mm')}</span>
-                                            </div>
-                                            {task.tags && task.tags.length > 0 && (
-                                                <div className="flex gap-2 mt-3 ml-11">
-                                                    {task.tags.map((tag, idx) => (
-                                                        <span
-                                                            key={idx}
-                                                            className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded text-xs"
-                                                        >
-                                                            #{tag}
-                                                        </span>
-                                                    ))}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {entries.map(([gid, group]) => {
+                                        const totalMinutes = group.items.reduce((acc, it) => acc + (it.estimatedMinutes || 0), 0);
+                                        return (
+                                            <div key={gid} className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm hover:shadow-md transition-all">
+                                                <div className="flex items-start justify-between">
+                                                    <div>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="inline-block w-3 h-3 rounded-full bg-blue-500"></span>
+                                                            <h2 className="text-base font-semibold text-gray-900 dark:text-white truncate">{group.title || '未命名提示词'}</h2>
+                                                        </div>
+                                                        <div className="mt-3 text-sm text-gray-600 dark:text-gray-400">
+                                                            <div>🧩 任务数量：{group.items.length}</div>
+                                                            <div className="mt-1">⏱️ 总时长：{totalMinutes > 0 ? `${totalMinutes} 分钟` : '暂无估时'}</div>
+                                                        </div>
+                                                    </div>
+                                                    <Link
+                                                        href={`/?historyId=${encodeURIComponent(gid)}`}
+                                                        className="px-3 py-2 text-sm rounded-md bg-blue-600 text-white hover:bg-blue-700"
+                                                    >
+                                                        去首页查看
+                                                    </Link>
                                                 </div>
-                                            )}
-                                        </div>
-                                        <div className="flex gap-2">
-                                            <button
-                                                onClick={() => setEditingTask(task)}
-                                                className="px-4 py-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
-                                            >
-                                                ✏️ 编辑
-                                            </button>
-                                            <button
-                                                onClick={() => handleDeleteTask(task.id)}
-                                                className="px-4 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-                                            >
-                                                🗑️ 删除
-                                            </button>
-                                            <button
-                                                onClick={() => {
-                                                    const date = prompt('请输入要安排的日期 (YYYY-MM-DD):', moment().format('YYYY-MM-DD'));
-                                                    if (date) handleMoveToSchedule(task, date);
-                                                }}
-                                                className="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all"
-                                            >
-                                                📅 安排
-                                            </button>
-                                        </div>
-                                    </div>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             );
-                        })
+                        })()
                     )}
                 </div>
             </div>
 
             {/* 添加/编辑任务模态框 */}
-            {(isAddModalOpen || editingTask) && (
+            {editingTask && (
                 <TaskModal
                     task={editingTask}
                     onClose={() => {
-                        setIsAddModalOpen(false);
                         setEditingTask(null);
                     }}
-                    onSave={editingTask ? handleUpdateTask : handleAddTask}
+                    onSave={handleUpdateTask}
                 />
             )}
+        </div>
+    );
+}
+
+// 可收缩搜索输入组件
+function CollapsibleSearch({
+                              value,
+                              onChange,
+                              placeholder
+                          }: {
+    value: string;
+    onChange: (v: string) => void;
+    placeholder?: string;
+}) {
+    const [open, setOpen] = useState(false);
+
+    useEffect(() => {
+        if (value && !open) setOpen(true);
+    }, [value, open]);
+
+    return (
+        <div className="bg-white dark:bg-gray-800 p-2 rounded-lg shadow">
+            <div className="w-full max-w-md">
+                {!open ? (
+                    <button
+                        type="button"
+                        onClick={() => setOpen(true)}
+                        className="flex items-center gap-2 px-2.5 py-1.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                        aria-label="打开搜索"
+                    >
+                        <span className="text-base">🔍</span>
+                        <span>搜索</span>
+                    </button>
+                ) : (
+                    <input
+                        type="text"
+                        value={value}
+                        onChange={(e) => onChange(e.target.value)}
+                        onBlur={() => { if (!value) setOpen(false); }}
+                        placeholder={`🔍 ${placeholder || '搜索...'}`}
+                        className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        autoFocus
+                    />
+                )}
+            </div>
         </div>
     );
 }
@@ -322,7 +297,7 @@ function TaskModal({
     const [formData, setFormData] = useState({
         task: task?.task || '',
         remark: task?.remark || '',
-        priority: task?.priority || 'medium' as BacklogTask['priority'],
+        priority: task?.priority || undefined as BacklogTask['priority'],
         estimatedMinutes: task?.estimatedMinutes || 0,
         tags: task?.tags?.join(', ') || '',
     });
@@ -361,9 +336,9 @@ function TaskModal({
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            优先级
+                            优先级（可选）
                         </label>
-                        <div className="grid grid-cols-4 gap-2">
+                        <div className="flex flex-wrap gap-2 items-center">
                             {Object.entries(priorityConfig).map(([key, config]) => (
                                 <button
                                     key={key}
@@ -378,6 +353,14 @@ function TaskModal({
                                     {config.icon} {config.label}
                                 </button>
                             ))}
+                            <button
+                                type="button"
+                                onClick={() => setFormData({...formData, priority: undefined})}
+                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 ${formData.priority ? '' : 'opacity-100'}`}
+                                title="清除优先级"
+                            >
+                                清除优先级
+                            </button>
                         </div>
                     </div>
 

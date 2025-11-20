@@ -10,15 +10,18 @@ import {useToast} from '@/src/components/Toast';
 import Mform from '@/src/views/schedule/components/Mform';
 import {generateWeekHeaders} from '@/src/views/schedule/utils/timeUtils';
 import {stateOptions, timeOptions} from '@/src/views/schedule/constants';
+import storage from '@/src/shared/utils/storage';
 
 type Props = {
     // 一维任务数组：包含父任务与其后插入的子任务
     tasks: UiTask[];
     onTaskClick: (t: UiTask, index: number) => void;
     onReset?: () => void;
+    groupTitle?: string;
+    groupId?: string;
 };
 
-export default function TaskContext({tasks, onTaskClick, onReset}: Props): React.ReactElement {
+export default function TaskContext({tasks, onTaskClick, onReset, groupTitle, groupId}: Props): React.ReactElement {
     if (!tasks || tasks.length === 0) return <></>;
     const router = useRouter();
     const toast = useToast();
@@ -166,6 +169,46 @@ export default function TaskContext({tasks, onTaskClick, onReset}: Props): React
             toast.error('确认添加失败，请稍后重试');
         }
     };
+
+    // 批量加入“灵活备选”（backlog）
+    const addAllToBacklog = () => {
+        try {
+            const existing = storage.get<any[]>('backlog_tasks', []) || [];
+            const nowISO = new Date().toISOString();
+            const batchId = groupId || `grp_${Date.now()}`;
+            const batchTitle = groupTitle || `AI规划批次 ${moment().format('YYYY-MM-DD HH:mm')}`;
+            const toMinutes = (s?: string) => {
+                if (!s || !/^\d{2}:\d{2}$/.test(s)) return undefined;
+                const [h, m] = s.split(':').map(Number);
+                return h * 60 + m;
+            };
+            const newBacklogs = tasks.map((t, i) => {
+                const startM = toMinutes(t.startTime);
+                const endM = toMinutes(t.endTime);
+                const est = startM != null && endM != null && endM > startM ? (endM - startM) : undefined;
+                return {
+                    id: Date.now() + i,
+                    task: t.task || '',
+                    remark: t.remark || '',
+                    estimatedMinutes: est,
+                    tags: [],
+                    state: 'pending',
+                    startTime: '',
+                    endTime: '',
+                    createdAt: nowISO,
+                    groupId: batchId,
+                    groupTitle: batchTitle,
+                    origin: 'batch',
+                } as any;
+            });
+            storage.set('backlog_tasks', [...existing, ...newBacklogs]);
+            toast.success(`已加入备选 ${newBacklogs.length} 条`);
+            router.push('/planner');
+        } catch (e) {
+            console.error('加入备选失败：', e);
+            toast.error('加入备选失败，请稍后重试');
+        }
+    };
     return (
         <div
             className="w-full flex-1 p-2.5 animate-fadeIn flex flex-col rounded border border-gray-200 dark:border-gray-700 bg-gradient-to-br from-white to-blue-50/30 dark:from-gray-800 dark:to-blue-900/10 shadow-xl mt-3">
@@ -184,6 +227,13 @@ export default function TaskContext({tasks, onTaskClick, onReset}: Props): React
                         className="px-2 py-1 text-xs rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                     >
                         添加进日程
+                    </button>
+                    <button
+                        type="button"
+                        onClick={addAllToBacklog}
+                        className="px-2 py-1 text-xs rounded-md border border-purple-300 dark:border-purple-600 text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors"
+                    >
+                        加入备选
                     </button>
                 </div>
             </div>
