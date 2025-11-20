@@ -338,6 +338,20 @@ export default function HomeLanding(): React.ReactElement {
 
             {/* 主内容容器：左右并排两栏（固定视口高度，避免页面级滚动） */}
             <div className="relative z-10 w-full mx-auto flex gap-4 h-[calc(100dvh-60px)] overflow-hidden">
+                {/* 左右栏分割线悬浮把手（始终靠近分割处） */}
+                <button
+                    type="button"
+                    title={isCollapsed ? '展开左侧栏' : '收起左侧栏'}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        if (isCollapsed) expand(); else collapse();
+                    }}
+                    style={{left: isCollapsed ? 8 : 280}}
+                    className="absolute top-1/2 -translate-y-1/2 z-30 h-8 w-8 flex items-center justify-center rounded-full border border-gray-300 dark:border-gray-700 bg-white/80 dark:bg-gray-800/70 text-gray-700 dark:text-gray-200 shadow-sm hover:shadow transition-all"
+                    aria-label={isCollapsed ? '展开左侧栏' : '收起左侧栏'}
+                >
+                    {isCollapsed ? '⟩' : '⟨'}
+                </button>
                 {/* 左侧历史侧栏：常驻显示 */}
                 <div
                     className={`shrink-0 h-[calc(100dvh-60px)] transition-all duration-300 ${isCollapsed ? 'w-0 opacity-0 pointer-events-none' : 'w-[280px] opacity-100'}`}
@@ -390,26 +404,6 @@ export default function HomeLanding(): React.ReactElement {
                 <div className="flex-1 h-full overflow-y-auto" ref={rightColRef} onClick={() => {
                     if (isCollapsed) expand();
                 }}>
-                    {/* 右栏左上角：收起/展开按钮 */}
-                    <div className="sticky top-0 z-20">
-                        <div className="px-2 pt-2">
-                            <button
-                                type="button"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (isCollapsed) {
-                                        expand();
-                                    } else {
-                                        collapse();
-                                    }
-                                }}
-                                title={isCollapsed ? '展开左侧栏' : '收起左侧栏'}
-                                className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md border border-gray-300 dark:border-gray-600 bg-white/80 dark:bg-gray-800/70 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                            >
-                                {isCollapsed ? '⟩ 展开' : '⟨ 收起'}
-                            </button>
-                        </div>
-                    </div>
                     {/* 内容 + 底部输入栏（非固定） */}
                     <div className="flex flex-col min-h-full">
                         <div className={`${isEmpty ? 'flex-1 grid place-items-center' : 'flex-1 flex flex-col'}`}>

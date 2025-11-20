@@ -5,7 +5,7 @@ import {Task} from '@/types/app/scrum';
 import Modal from './components/Modal';
 import Header from './components/Header';
 import {generateWeekHeaders} from './utils/timeUtils';
-import {addTaskLocal, getTasksLocal, initMigration, loadAllTasksSync, updateTaskLocal} from '@/src/shared/cached';
+import {addTaskLocal, getTasksLocalAsync, initMigration, loadAllTasksSync, updateTaskLocal} from '@/src/shared/cached';
 import {stateOptions, timeOptions} from './constants';
 import Calendar from "./components/Calendar";
 import {useAppSettings} from '@/src/provider/AppSettingsProvider';
@@ -52,7 +52,8 @@ export default function ScheduleView(props?: ScrumPageProps): React.ReactElement
         const endDate = currentDate.clone().endOf('isoWeek').format('YYYY-MM-DD');
         console.log('加载任务数据（按周范围）:', {startDate, endDate});
         try {
-            const list = getTasksLocal({startDate, endDate});
+            // 优先从 IndexedDB 查询，自动降级到 localStorage
+            const list = await getTasksLocalAsync({startDate, endDate});
             console.log('加载到的任务数量:', list.length, list);
             setTasks(list);
         } catch (error) {
