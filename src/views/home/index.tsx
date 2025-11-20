@@ -1,11 +1,12 @@
 "use client";
 
-import React, {useMemo, useState} from "react";
+import React, {useMemo, useRef, useState} from "react";
 import ChatPanel from "@/src/views/home/components/ChatPanel";
 import {SimpleTask as UiTask} from "@/src/views/home/components/TaskFlow";
 import TaskContext from "@/src/views/home/components/TaskContext";
 import EmptyState from "@/src/views/home/components/EmptyState";
 import ErrorAlert from "@/src/views/home/components/ErrorAlert";
+import ProcessingOverlay from "@/src/views/home/components/ProcessingOverlay";
 
 export default function HomeLanding(): React.ReactElement {
     const [startISO, setStartISO] = useState<string>("");
@@ -14,6 +15,7 @@ export default function HomeLanding(): React.ReactElement {
     const [chatInput, setChatInput] = useState<string>("");
     const [loading, setLoading] = useState<boolean>(false);
     const [jsonErrors, setJsonErrors] = useState<string[]>([]);
+    const abortRef = useRef<AbortController | null>(null);
     // 一维任务数组：包含首次生成的任务与后续插入的子任务
     const [tasks, setTasks] = useState<UiTask[]>([]);
 
@@ -156,7 +158,7 @@ export default function HomeLanding(): React.ReactElement {
     const requestTasks = async (userText: string, windowISO: {
         startISO: string;
         endISO: string
-    }): Promise<UiTask[]> => {
+    }, signal?: AbortSignal): Promise<UiTask[]> => {
         // 构建用户消息为 user 与 system prompt
         const prompt = `${buildTasksPrompt(userText)}\n用户内容：${userText}\n起止时间窗(ISO)：${windowISO.startISO} ~ ${windowISO.endISO}`;
 
@@ -173,7 +175,8 @@ export default function HomeLanding(): React.ReactElement {
             const resp = await fetch(apiUrl, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(body)
+                body: JSON.stringify(body),
+                signal
             });
 
             if (!resp.ok) {
@@ -183,8 +186,10 @@ export default function HomeLanding(): React.ReactElement {
             const data = await resp.json();
             const text = data.choices?.[0]?.message?.content || '';
             return parseTasksJson(text);
-        } catch (err) {
+        } catch (err: any) {
             console.error('API call error:', err);
+            // 若为主动取消请求，直接返回空数组，避免错误提示
+            if (err?.name === 'AbortError') return [];
             throw err;
         }
     };
@@ -202,13 +207,15 @@ export default function HomeLanding(): React.ReactElement {
         setJsonErrors([]);
         const userText = chatInput.trim();
         try {
-            const newTasks = await requestTasks(userText, {startISO, endISO});
+            abortRef.current = new AbortController();
+            const newTasks = await requestTasks(userText, {startISO, endISO}, abortRef.current.signal);
             setTasks(applyPrevNext(newTasks));
             setChatInput("");
         } catch (err: any) {
             setJsonErrors([err?.message || '请求失败']);
         } finally {
             setLoading(false);
+            abortRef.current = null;
         }
     };
 
@@ -227,7 +234,8 @@ export default function HomeLanding(): React.ReactElement {
         setLoading(true);
         try {
             const splitPrompt = buildSplitPrompt(t, {startISO, endISO});
-            const children = await requestTasks(splitPrompt, {startISO, endISO});
+            abortRef.current = new AbortController();
+            const children = await requestTasks(splitPrompt, {startISO, endISO}, abortRef.current.signal);
             setTasks((prev: UiTask[]) => {
                 const next = [...prev];
                 const pos = ctx && typeof ctx.taskIndex === 'number' ? ctx.taskIndex + 1 : next.length;
@@ -236,7 +244,16 @@ export default function HomeLanding(): React.ReactElement {
             });
         } finally {
             setLoading(false);
+            abortRef.current = null;
         }
+    };
+
+    const cancelProcessing = () => {
+        if (abortRef.current) {
+            try { abortRef.current.abort(); } catch {}
+            abortRef.current = null;
+        }
+        setLoading(false);
     };
 
     const isEmpty = tasks.length === 0 && !loading;
@@ -267,6 +284,20 @@ export default function HomeLanding(): React.ReactElement {
                     />
                 </div>
             </div>
+
+            {/* 加工等待交互层 */}
+            {loading && (
+                <ProcessingOverlay
+                    onCancel={cancelProcessing}
+                    onRetry={canSend ? handleSend : undefined}
+                    onImprovePrompt={isEmpty ? undefined : () => {
+                        // 将当前卡片流程摘要写回输入框以便用户优化
+                        const summary = tasks.map(t => `${t.startTime}-${t.endTime} ${t.task}`).join('\n');
+                        setChatInput((prev) => prev ? `${prev}\n\n优化方向：\n${summary}` : summary);
+                    }}
+                    message={chatInput || '正在根据你的输入进行任务拆分'}
+                />
+            )}
 
             {/* 底部输入栏（仅在空内容时显示，避免与任务面板并存） */}
             {isEmpty && (

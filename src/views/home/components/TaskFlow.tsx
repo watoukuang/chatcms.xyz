@@ -48,25 +48,20 @@ const TaskCard: React.FC<{ t: SimpleTask; onClick?: () => void }> = ({t, onClick
             onClick={onClick}
         >
             {/* 悬停提示 */}
-            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <span className="text-xs text-blue-600 dark:text-blue-400">点击拆解 →</span>
-            </div>
+            {/*<div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">*/}
+            {/*    <span className="text-xs text-blue-600 dark:text-blue-400">点击拆解 →</span>*/}
+            {/*</div>*/}
 
-            {/* 状态和日期 */}
-            <div className="flex items-center justify-between mb-3">
-                <div className={`px-3 py-1 text-xs font-medium rounded-full ${badgeColor(t.state)}`}>
-                    {t.state === 'pending' ? '待开始' :
-                        t.state === 'in-progress' ? '进行中' :
-                            t.state === 'completed' ? '已完成' : '延期'}
+            {/* 标题栏（含状态徽章与日期，下划线分隔） */}
+            <div className="flex items-center justify-between mb-3 pb-2 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex items-center gap-2 min-w-0">
+                    <div className="text-base font-bold text-gray-900 dark:text-white truncate">
+                        {t.task || '未命名任务'}
+                    </div>
                 </div>
-                <div className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                <div className="text-xs font-medium text-gray-600 dark:text-gray-400 flex-shrink-0">
                     📅 {t.taskTime || '--'}
                 </div>
-            </div>
-
-            {/* 任务标题 */}
-            <div className="text-base font-bold text-gray-900 dark:text-white mb-2 line-clamp-2 min-h-[60px]">
-                {t.task || '未命名任务'}
             </div>
 
             {/* 时间信息 */}
