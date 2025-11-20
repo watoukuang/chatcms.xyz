@@ -13,7 +13,7 @@ const Sidebar: React.FC = () => {
         {icon: <ArticleIcon className="w-4 h-4"/>, label: '固定日程', href: '/schedule'},
         {icon: <FolderIcon className="w-4 h-4"/>, label: '灵活备选', href: '/planner'},
         {icon: '🏪', label: '任务市场', href: '/market'},
-        {icon: '🤖', label: '智能应用', href: '/ai-tools'}
+        {icon: '🤖', label: '智能应用', href: '/robot'}
     ];
 
     const router = useRouter();

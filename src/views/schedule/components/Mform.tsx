@@ -30,10 +30,11 @@ interface HFormProps {
     weekDayHeaders: WeekDayHeader[];
     timeOptions: TimeOption[];
     stateOptions: StateOption[];
+    disabled?: boolean;
 }
 
 const Mform: React.FC<HFormProps> = (props) => {
-    const {values, errors, onChange, weekDayHeaders, timeOptions, stateOptions} = props;
+    const {values, errors, onChange, weekDayHeaders, timeOptions, stateOptions, disabled = false} = props;
     return (
         <div className="flex flex-col gap-4">
             <div className="flex flex-col">
@@ -44,6 +45,7 @@ const Mform: React.FC<HFormProps> = (props) => {
                     maxLength={255}
                     rows={3}
                     className="border rounded px-3 py-2 text-sm w-full"
+                    disabled={disabled}
                     placeholder="请输入任务内容"
                 />
                 {errors?.task && <div className="text-xs text-red-600 mt-1">{errors.task}</div>}
@@ -56,6 +58,7 @@ const Mform: React.FC<HFormProps> = (props) => {
                     onChange={(e) => onChange('remark', e.target.value)}
                     rows={6}
                     className="border rounded px-3 py-2 text-sm w-full"
+                    disabled={disabled}
                     placeholder="可选，添加任务备注"
                 />
             </div>
@@ -67,6 +70,7 @@ const Mform: React.FC<HFormProps> = (props) => {
                         className="border rounded px-3 py-2 text-sm w-full"
                         value={values.taskTime || ''}
                         onChange={(e) => onChange('taskTime', e.target.value)}
+                        disabled={disabled}
                     >
                         <option value="" disabled>请选择日期</option>
                         {weekDayHeaders.map(day => (
@@ -81,6 +85,7 @@ const Mform: React.FC<HFormProps> = (props) => {
                         className="border rounded px-3 py-2 text-sm w-full"
                         value={values.startTime || ''}
                         onChange={(e) => onChange('startTime', e.target.value)}
+                        disabled={disabled}
                     >
                         <option value="" disabled>请选择开始时间</option>
                         {timeOptions.filter(opt => opt.value !== '23:00').map(opt => (
@@ -95,6 +100,7 @@ const Mform: React.FC<HFormProps> = (props) => {
                         className="border rounded px-3 py-2 text-sm w-full"
                         value={values.endTime || ''}
                         onChange={(e) => onChange('endTime', e.target.value)}
+                        disabled={disabled}
                     >
                         <option value="" disabled>请选择结束时间</option>
                         {timeOptions
@@ -114,6 +120,7 @@ const Mform: React.FC<HFormProps> = (props) => {
                     className="border rounded px-3 py-2 text-sm w-full"
                     value={values.state || 'pending'}
                     onChange={(e) => onChange('state', e.target.value)}
+                    disabled={disabled}
                 >
                     {stateOptions.map(opt => (
                         <option key={opt.value} value={opt.value}>{opt.label}</option>

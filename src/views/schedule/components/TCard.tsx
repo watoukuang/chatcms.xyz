@@ -43,10 +43,11 @@ const TCard: React.FC<TaskCardProps> = (props) => {
         width: '90%',
         overflow: 'auto',
         color: '#fff',
-        padding: '10px 15px',
+        padding: '10px 12px',
         cursor: 'pointer',
         display: 'flex' as const,
         alignItems: 'center' as const,
+        justifyContent: 'space-between' as const,
         boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
         fontSize: '15px',
         fontWeight: 500 as const,
@@ -71,9 +72,8 @@ const TCard: React.FC<TaskCardProps> = (props) => {
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
         >
-            <div style={textContentStyle}>
-                {displayText}
-            </div>
+            <div style={textContentStyle}>{displayText}</div>
+            {/* 已移除“市场”按钮 */}
         </div>
     );
 };

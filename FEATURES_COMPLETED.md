@@ -230,7 +230,7 @@ pages/
 ├── schedule.tsx           # 日程路由
 ├── planner.tsx           # 备选路由
 ├── market.tsx        # 市场路由
-└── ai-tools.tsx           # AI工具路由
+└── robot.tsx           # AI工具路由
 ```
 
 ---
