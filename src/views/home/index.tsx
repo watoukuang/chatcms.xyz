@@ -439,7 +439,7 @@ export default function HomeLanding(): React.ReactElement {
                             <button
                                 type="button"
                                 onClick={clearAllHistories}
-                                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center gap-2"
+                                className="w-full px-3 py-2 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center gap-2"
                             >
                                 <DelIcon/>
                                 <span>清空所有会话</span>
