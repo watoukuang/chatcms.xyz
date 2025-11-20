@@ -71,7 +71,7 @@ export default function HistorySidebar({ histories, activeId, onSelect, onDelete
               key={h.id}
               type="button"
               onClick={() => onSelect(h)}
-              className={`w-full text-left px-3 py-2 rounded-lg border text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-800/70 ${
+              className={`w-full text-left px-3 py-2 rounded-lg border text-sm font-medium transition-colors hover:bg-gray-100 dark:hover:bg-gray-800/70 ${
                 h.id === activeId
                   ? "border-blue-400 bg-blue-50 dark:bg-blue-900/20"
                   : "border-gray-200 dark:border-gray-700"
@@ -98,7 +98,7 @@ export default function HistorySidebar({ histories, activeId, onSelect, onDelete
             <button
               type="button"
               onClick={onClearAll}
-              className="px-2 py-1 text-xs rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+              className="px-2 py-1 text-xs font-medium rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
             >
               清空
             </button>
