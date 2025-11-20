@@ -34,19 +34,39 @@ export default function TaskContext({tasks, onTaskClick, onReset}: Props): React
                 </div>
             </div>
 
-            {/* 任务流：在此遍历任务并渲染每个卡片与箭头 */}
-            <div className="w-full overflow-x-auto pb-2">
-                <div className="flex items-stretch gap-3 py-2 min-w-max">
-                    {tasks.map((t, i) => (
-                        <TaskFlow
-                            key={(t.id ?? i).toString() + '-' + (t.task || '')}
-                            task={t}
-                            index={i}
-                            total={tasks.length}
-                            onTaskClick={(task) => onTaskClick(task, i)}
-                        />
-                    ))}
-                </div>
+            {/* 任务流：≤3 单行展示带箭头；>3 自动换行且隐藏箭头避免错位 */}
+            <div className="w-full pb-4">
+                {tasks.length <= 3 ? (
+                    <div className="flex items-stretch gap-5 py-2">
+                        {tasks.map((t, i) => (
+                            <TaskFlow
+                                key={(t.id ?? i).toString() + '-' + (t.task || '')}
+                                task={t}
+                                index={i}
+                                total={tasks.length}
+                                onTaskClick={(task) => onTaskClick(task, i)}
+                                showArrow={true}
+                            />
+                        ))}
+                    </div>
+                ) : (
+                    <div className="flex flex-wrap items-stretch gap-5 py-2">
+                        {tasks.map((t, i) => (
+                            <div
+                                key={(t.id ?? i).toString() + '-' + (t.task || '')}
+                                className="basis-full sm:basis-1/2 md:basis-1/3 flex"
+                            >
+                                <TaskFlow
+                                    task={t}
+                                    index={i}
+                                    total={tasks.length}
+                                    onTaskClick={(task) => onTaskClick(task, i)}
+                                    showArrow={false}
+                                />
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
             <div
                 className="mt-auto pt-4 border-t border-gray-200/60 dark:border-gray-700/60 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">

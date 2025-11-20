@@ -3,20 +3,44 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 interface SidebarContextType {
     isCollapsed: boolean;
     toggleSidebar: () => void;
+    collapse: () => void;
+    expand: () => void;
 }
 
 const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
 
+const STORAGE_KEY = 'aitodo.sidebarCollapsed.v1';
+
 export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    // 固定为不收缩
-    const [isCollapsed] = useState<boolean>(false);
-    const toggleSidebar = () => {
-        // 不再提供收缩能力
-        return;
-    };
+    const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
+
+    // 初始化：从本地存储恢复
+    useEffect(() => {
+        try {
+            const raw = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
+            if (raw === 'true') setIsCollapsed(true);
+            if (raw === 'false') setIsCollapsed(false);
+        } catch {
+            // 忽略存储异常
+        }
+    }, []);
+
+    // 存储持久化
+    useEffect(() => {
+        try {
+            if (typeof window !== 'undefined') {
+                localStorage.setItem(STORAGE_KEY, String(isCollapsed));
+            }
+        } catch {
+        }
+    }, [isCollapsed]);
+
+    const toggleSidebar = () => setIsCollapsed((v) => !v);
+    const collapse = () => setIsCollapsed(true);
+    const expand = () => setIsCollapsed(false);
 
     return (
-        <SidebarContext.Provider value={{ isCollapsed, toggleSidebar }}>
+        <SidebarContext.Provider value={{ isCollapsed, toggleSidebar, collapse, expand }}>
             {children}
         </SidebarContext.Provider>
     );

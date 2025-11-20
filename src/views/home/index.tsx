@@ -7,8 +7,11 @@ import TaskContext from "@/src/views/home/components/TaskContext";
 import EmptyState from "@/src/views/home/components/EmptyState";
 import ErrorAlert from "@/src/views/home/components/ErrorAlert";
 import ProcessingOverlay from "@/src/views/home/components/ProcessingOverlay";
+import HistorySidebar, {TaskHistory} from "@/src/views/home/components/HistorySidebar";
+import {useSidebar} from "@/src/contexts/SidebarContext";
 
 export default function HomeLanding(): React.ReactElement {
+    const {isCollapsed, collapse, expand, toggleSidebar} = useSidebar();
     const [startISO, setStartISO] = useState<string>("");
     const [endISO, setEndISO] = useState<string>("");
     const [durationMin, setDurationMin] = useState<string>("");
@@ -18,6 +21,13 @@ export default function HomeLanding(): React.ReactElement {
     const abortRef = useRef<AbortController | null>(null);
     // 一维任务数组：包含首次生成的任务与后续插入的子任务
     const [tasks, setTasks] = useState<UiTask[]>([]);
+    // 本地历史：持久化每次任务拆解结果
+    const [histories, setHistories] = useState<TaskHistory[]>([]);
+    const [activeHistoryId, setActiveHistoryId] = useState<string | null>(null);
+    const HISTORY_KEY = "aitodo.taskHistory.v1";
+    const [historySearch, setHistorySearch] = useState<string>("");
+    // 右侧内容区域引用（用于展开左侧栏时点击右侧检测）
+    const rightColRef = useRef<HTMLDivElement | null>(null);
 
     const diffMinutes = useMemo(() => {
         if (!startISO || !endISO) return undefined;
@@ -201,6 +211,62 @@ export default function HomeLanding(): React.ReactElement {
         next: i < arr.length - 1 ? arr[i + 1]?.id : undefined,
     }));
 
+    // ---------- 历史持久化 ----------
+    React.useEffect(() => {
+        try {
+            const raw = localStorage.getItem(HISTORY_KEY);
+            if (raw) {
+                const parsed: TaskHistory[] = JSON.parse(raw);
+                setHistories(Array.isArray(parsed) ? parsed : []);
+            }
+        } catch {
+        }
+    }, []);
+
+    const persistHistories = (next: TaskHistory[]) => {
+        setHistories(next);
+        try {
+            localStorage.setItem(HISTORY_KEY, JSON.stringify(next));
+        } catch {
+        }
+    };
+
+    const addHistory = (title: string, generated: UiTask[]) => {
+        const entry: TaskHistory = {
+            id: `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+            title,
+            createdAt: new Date().toISOString(),
+            startISO,
+            endISO,
+            tasks: applyPrevNext(generated)
+        };
+        const next = [entry, ...histories];
+        persistHistories(next);
+        setActiveHistoryId(entry.id);
+    };
+
+    const updateActiveHistoryTasks = (updated: UiTask[]) => {
+        if (!activeHistoryId) return;
+        const next = histories.map(h => h.id === activeHistoryId ? {...h, tasks: applyPrevNext(updated)} : h);
+        persistHistories(next);
+    };
+
+    const clearAllHistories = () => {
+        setActiveHistoryId(null);
+        persistHistories([]);
+        try {
+            localStorage.removeItem(HISTORY_KEY);
+        } catch {
+        }
+    };
+
+    const restoreFromHistory = (h: TaskHistory) => {
+        setTasks(applyPrevNext(h.tasks || []));
+        if (h.startISO) setStartISO(h.startISO);
+        if (h.endISO) setEndISO(h.endISO);
+        setActiveHistoryId(h.id);
+    };
+
     const handleSend = async () => {
         if (!canSend) return;
         setLoading(true);
@@ -210,6 +276,8 @@ export default function HomeLanding(): React.ReactElement {
             abortRef.current = new AbortController();
             const newTasks = await requestTasks(userText, {startISO, endISO}, abortRef.current.signal);
             setTasks(applyPrevNext(newTasks));
+            // 保存历史记录
+            addHistory(userText, newTasks);
             setChatInput("");
         } catch (err: any) {
             setJsonErrors([err?.message || '请求失败']);
@@ -240,7 +308,10 @@ export default function HomeLanding(): React.ReactElement {
                 const next = [...prev];
                 const pos = ctx && typeof ctx.taskIndex === 'number' ? ctx.taskIndex + 1 : next.length;
                 next.splice(pos, 0, ...children);
-                return applyPrevNext(next);
+                const applied = applyPrevNext(next);
+                // 同步更新当前历史的任务快照
+                setTimeout(() => updateActiveHistoryTasks(applied), 0);
+                return applied;
             });
         } finally {
             setLoading(false);
@@ -250,7 +321,10 @@ export default function HomeLanding(): React.ReactElement {
 
     const cancelProcessing = () => {
         if (abortRef.current) {
-            try { abortRef.current.abort(); } catch {}
+            try {
+                abortRef.current.abort();
+            } catch {
+            }
             abortRef.current = null;
         }
         setLoading(false);
@@ -258,30 +332,132 @@ export default function HomeLanding(): React.ReactElement {
 
     const isEmpty = tasks.length === 0 && !loading;
     return (
-        <div
-            className={"relative min-h-screen flex flex-col items-center px-4 pb-0 pt-[60px] overflow-hidden"}>
+        <div className={"relative min-h-screen pb-0 pt-[60px] overflow-hidden"}>
             {/* 背景（极简） */}
             <div className="absolute inset-0 bg-white dark:bg-[#0b0f19]"/>
 
-            {/* 主内容（适当加宽，仅内容区内居中） */}
-            <div className="relative z-10 w-full mx-auto">
-                {/* 只在内容区内居中：使用内容区最小高度为 (视口高度 - 底栏/安全边距) */}
-                <div className={`${isEmpty ? 'grid place-items-center' : 'flex flex-col'}`}
-                     style={{minHeight: isEmpty ? 'calc(100dvh - 60px - 260px)' : 'calc(100dvh - 60px)'}}>
-                    {tasks.length === 0 && !loading && (
-                        <EmptyState onPickTemplate={(t) => setChatInput(t)}/>
-                    )}
+            {/* 主内容容器：左右并排两栏（固定视口高度，避免页面级滚动） */}
+            <div className="relative z-10 w-full mx-auto flex gap-4 h-[calc(100dvh-60px)] overflow-hidden">
+                {/* 左侧历史侧栏：常驻显示 */}
+                <div
+                    className={`shrink-0 h-[calc(100dvh-60px)] transition-all duration-300 ${isCollapsed ? 'w-0 opacity-0 pointer-events-none' : 'w-[280px] opacity-100'}`}
+                    aria-hidden={isCollapsed}>
+                    <div
+                        className={`h-full p-3 bg-white/90 dark:bg-gray-800/60 flex flex-col ${isCollapsed ? 'border-transparent' : 'border-r border-gray-200 dark:border-gray-700'}`}>
+                        {/* 固定头部：新对话 / 清空 / 搜索 */}
+                        <div
+                            className="sticky top-0 z-10 bg-white/90 dark:bg-gray-800/60 -mx-3 px-3 pt-3 pb-3 border-b border-gray-200 dark:border-gray-700">
+                            <div className="flex items-center gap-2 mb-2">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setTasks([]);
+                                        setActiveHistoryId(null);
+                                        setChatInput("");
+                                    }}
+                                    className="px-2 py-1 text-xs rounded-md bg-blue-600 text-white hover:bg-blue-700"
+                                >新对话
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={clearAllHistories}
+                                    className="px-2 py-1 text-xs rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                >清空
+                                </button>
+                            </div>
+                            <input
+                                type="text"
+                                value={historySearch}
+                                onChange={(e) => setHistorySearch(e.target.value)}
+                                placeholder="搜索会话/任务"
+                                className="w-full border border-gray-300 dark:border-gray-600 bg-transparent rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500"
+                            />
+                        </div>
 
-                    {/* 错误提示 */}
-                    {jsonErrors.length > 0 && (
-                        <ErrorAlert errors={jsonErrors} onDismiss={() => setJsonErrors([])}/>
-                    )}
-                    {/* 任务上下文：填充主页并渲染任务流程块 */}
-                    <TaskContext
-                        tasks={tasks}
-                        onTaskClick={(t, index) => handleSplitTask(t, {taskIndex: index})}
-                        onReset={() => setTasks([])}
-                    />
+                        {/* 仅鼠标悬停时允许滚动的内容区 */}
+                        <div className="flex-1 overflow-y-hidden hover:overflow-y-auto overscroll-contain pt-3">
+                            <HistorySidebar
+                                histories={histories.filter(h => !historySearch.trim() || (h.title || "").toLowerCase().includes(historySearch.trim().toLowerCase()))}
+                                activeId={activeHistoryId}
+                                onSelect={restoreFromHistory}
+                                onClearAll={undefined}
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {/* 右侧主内容（独立滚动容器） */}
+                <div className="flex-1 h-full overflow-y-auto" ref={rightColRef} onClick={() => {
+                    if (isCollapsed) expand();
+                }}>
+                    {/* 右栏左上角：收起/展开按钮 */}
+                    <div className="sticky top-0 z-20">
+                        <div className="px-2 pt-2">
+                            <button
+                                type="button"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (isCollapsed) {
+                                        expand();
+                                    } else {
+                                        collapse();
+                                    }
+                                }}
+                                title={isCollapsed ? '展开左侧栏' : '收起左侧栏'}
+                                className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md border border-gray-300 dark:border-gray-600 bg-white/80 dark:bg-gray-800/70 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                            >
+                                {isCollapsed ? '⟩ 展开' : '⟨ 收起'}
+                            </button>
+                        </div>
+                    </div>
+                    {/* 内容 + 底部输入栏（非固定） */}
+                    <div className="flex flex-col min-h-full">
+                        <div className={`${isEmpty ? 'flex-1 grid place-items-center' : 'flex-1 flex flex-col'}`}>
+                            {tasks.length === 0 && !loading && (
+                                <EmptyState onPickTemplate={(t) => setChatInput(t)}/>
+                            )}
+
+                            {/* 错误提示 */}
+                            {jsonErrors.length > 0 && (
+                                <ErrorAlert errors={jsonErrors} onDismiss={() => setJsonErrors([])}/>
+                            )}
+                            {/* 任务上下文：填充主页并渲染任务流程块 */}
+                            <TaskContext
+                                tasks={tasks}
+                                onTaskClick={(t, index) => handleSplitTask(t, {taskIndex: index})}
+                                onReset={() => {
+                                    setTasks([]);
+                                    updateActiveHistoryTasks([]);
+                                }}
+                            />
+                        </div>
+
+                        {/* 底部输入栏（置于右栏内部）：仅在空状态或加载中显示 */}
+                        {(isEmpty || loading) && (
+                            <div className="bg-transparent pt-3 pb-3 border-t border-gray-200 dark:border-gray-700">
+                                <div className="w-full max-w-4xl mx-auto px-4">
+                                    <ChatPanel
+                                        startISO={startISO}
+                                        setStartISO={setStartISO}
+                                        endISO={endISO}
+                                        setEndISO={setEndISO}
+                                        durationMin={durationMin}
+                                        setDurationMin={setDurationMin}
+                                        chatInput={chatInput}
+                                        setChatInput={setChatInput}
+                                        loading={loading}
+                                        lastMessage={""}
+                                        diffMinutes={diffMinutes}
+                                        validation={validation}
+                                        canSend={canSend}
+                                        handleSend={handleSend}
+                                        onKeyDownTextArea={onKeyDownTextArea}
+                                        showTemplates={false}
+                                    />
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -299,30 +475,7 @@ export default function HomeLanding(): React.ReactElement {
                 />
             )}
 
-            {/* 底部输入栏（仅在空内容时显示，避免与任务面板并存） */}
-            {isEmpty && (
-                <div
-                    className="fixed bottom-0 left-1/2 -translate-x-1/2 z-20 bg-transparent pt-3 pb-3 w-full max-w-4xl px-4 md:left-[calc(50%+40px)] md:translate-x-[-50%]">
-                    <ChatPanel
-                        startISO={startISO}
-                        setStartISO={setStartISO}
-                        endISO={endISO}
-                        setEndISO={setEndISO}
-                        durationMin={durationMin}
-                        setDurationMin={setDurationMin}
-                        chatInput={chatInput}
-                        setChatInput={setChatInput}
-                        loading={loading}
-                        lastMessage={""}
-                        diffMinutes={diffMinutes}
-                        validation={validation}
-                        canSend={canSend}
-                        handleSend={handleSend}
-                        onKeyDownTextArea={onKeyDownTextArea}
-                        showTemplates={false}
-                    />
-                </div>
-            )}
+            {/* 底部输入栏已并入右栏内部，非固定 */}
         </div>
     )
 }

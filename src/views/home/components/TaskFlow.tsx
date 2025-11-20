@@ -18,6 +18,7 @@ interface TaskFlowProps {
     index: number;
     total: number;
     onTaskClick?: (t: SimpleTask, index: number) => void;
+    showArrow?: boolean; // 默认展示箭头；多行布局时可关闭
 }
 
 const badgeColor = (state?: SimpleTask['state']) => {
@@ -44,14 +45,9 @@ const TaskCard: React.FC<{ t: SimpleTask; onClick?: () => void }> = ({t, onClick
 
     return (
         <div
-            className="group min-w-[320px] sm:min-w-[360px] md:min-w-[420px] max-w-[520px] bg-gradient-to-br from-white to-blue-50/30 dark:from-gray-800 dark:to-blue-900/10 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 p-5 cursor-pointer relative overflow-hidden"
+            className="group min-w-[280px] sm:min-w-[320px] md:min-w-[360px] max-w-[520px] bg-gradient-to-br from-white to-blue-50/30 dark:from-gray-800 dark:to-blue-900/10 border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 rounded-xl shadow-lg transition-colors duration-200 p-5 cursor-pointer relative"
             onClick={onClick}
         >
-            {/* 悬停提示 */}
-            {/*<div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">*/}
-            {/*    <span className="text-xs text-blue-600 dark:text-blue-400">点击拆解 →</span>*/}
-            {/*</div>*/}
-
             {/* 标题栏（含状态徽章与日期，下划线分隔） */}
             <div className="flex items-center justify-between mb-3 pb-2 border-b border-gray-200 dark:border-gray-700">
                 <div className="flex items-center gap-2 min-w-0">
@@ -59,9 +55,9 @@ const TaskCard: React.FC<{ t: SimpleTask; onClick?: () => void }> = ({t, onClick
                         {t.task || '未命名任务'}
                     </div>
                 </div>
-                <div className="text-xs font-medium text-gray-600 dark:text-gray-400 flex-shrink-0">
-                    📅 {t.taskTime || '--'}
-                </div>
+                {/*<div className="text-xs font-medium text-gray-600 dark:text-gray-400 flex-shrink-0">*/}
+                {/*    📅 {t.taskTime || '--'}*/}
+                {/*</div>*/}
             </div>
 
             {/* 时间信息 */}
@@ -85,9 +81,7 @@ const TaskCard: React.FC<{ t: SimpleTask; onClick?: () => void }> = ({t, onClick
                 </div>
             )}
 
-            {/* 底部装饰 */}
-            <div
-                className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity"/>
+            {/* 底部装饰移除：避免悬停出现蓝色横线 */}
         </div>
     );
 };
@@ -110,11 +104,11 @@ const Arrow: React.FC = () => (
     </div>
 );
 
-const TaskFlow: React.FC<TaskFlowProps> = ({task, index, total, onTaskClick}) => {
+const TaskFlow: React.FC<TaskFlowProps> = ({task, index, total, onTaskClick, showArrow = true}) => {
     return (
         <>
             <TaskCard t={task} onClick={() => onTaskClick?.(task, index)}/>
-            {index < total - 1 && <Arrow/>}
+            {showArrow && index < total - 1 && <Arrow/>}
         </>
     );
 };
