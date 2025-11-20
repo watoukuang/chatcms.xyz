@@ -198,8 +198,8 @@ export default function TaskContext({tasks, onTaskClick, onReset}: Props): React
                                 task={t}
                                 index={i}
                                 total={tasks.length}
-                                onCardClick={(task) => handleTaskClick(task, i)}
-                                onTaskClick={(task) => onTaskClick(task, i)}
+                                onCardClick={(task: UiTask) => handleTaskClick(task, i)}
+                                onTaskClick={(task: UiTask) => onTaskClick(task, i)}
                                 showArrow={true}
                             />
                         ))}
@@ -215,8 +215,8 @@ export default function TaskContext({tasks, onTaskClick, onReset}: Props): React
                                     task={t}
                                     index={i}
                                     total={tasks.length}
-                                    onCardClick={(task) => handleTaskClick(task, i)}
-                                    onTaskClick={(task) => onTaskClick(task, i)}
+                                    onCardClick={(task: UiTask) => handleTaskClick(task, i)}
+                                    onTaskClick={(task: UiTask) => onTaskClick(task, i)}
                                     showArrow={false}
                                 />
                             </div>

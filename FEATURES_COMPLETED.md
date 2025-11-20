@@ -228,7 +228,7 @@ src/
 pages/
 ├── index.tsx              # 首页路由
 ├── schedule.tsx           # 日程路由
-├── blocklog.tsx           # 备选路由
+├── planner.tsx           # 备选路由
 ├── marketplace.tsx        # 市场路由
 └── ai-tools.tsx           # AI工具路由
 ```

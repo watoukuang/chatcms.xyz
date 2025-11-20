@@ -18,6 +18,7 @@ interface TaskFlowProps {
     index: number;
     total: number;
     onTaskClick?: (t: SimpleTask, index: number) => void;
+    onCardClick?: (t: SimpleTask, index: number) => void;
     showArrow?: boolean; // 默认展示箭头；多行布局时可关闭
 }
 
