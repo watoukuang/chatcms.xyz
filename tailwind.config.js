@@ -11,9 +11,9 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primary: "#1a202c",
-        secondary: "#4a5568",
-        accent: "#f56565",
+        primary: "#0f1115",    // 深色主背景
+        secondary: "#121418",  // 次级背景
+        accent: "#A3E635",     // 荧光绿强调色（lime-400）
       },
       keyframes: {
         fadeIn: {

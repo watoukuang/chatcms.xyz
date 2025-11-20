@@ -20,7 +20,7 @@ export default function ProcessingOverlay({ onCancel, onRetry, onImprovePrompt, 
           <div className="p-5">
             {/* 标题与状态动画 */}
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-5 h-5 rounded-full border-2 border-blue-500 border-t-transparent animate-spin"/>
+              <div className="w-5 h-5 rounded-full border-2 border-lime-500 border-t-transparent animate-spin"/>
               <div className="text-base font-semibold text-gray-900 dark:text-white">AI 正在拆分 TODO…</div>
             </div>
             {message && (
@@ -36,11 +36,11 @@ export default function ProcessingOverlay({ onCancel, onRetry, onImprovePrompt, 
                 '格式化为 JSON 列表'
               ].map((s, i) => (
                 <div key={i} className="flex items-center gap-2 text-sm">
-                  <span className="w-5 h-5 inline-flex items-center justify-center rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                  <span className="w-5 h-5 inline-flex items-center justify-center rounded-full bg-lime-100/50 dark:bg-lime-900/30 text-lime-600 dark:text-lime-300 border border-lime-200 dark:border-lime-800">
                     {i + 1}
                   </span>
                   <span className="text-gray-800 dark:text-gray-200">{s}</span>
-                  <span className="ml-auto w-20 h-1 rounded bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 animate-pulse"/>
+                  <span className="ml-auto w-20 h-1 rounded bg-gradient-to-r from-lime-400 via-lime-500 to-lime-600 animate-pulse"/>
                 </div>
               ))}
             </div>
@@ -57,7 +57,7 @@ export default function ProcessingOverlay({ onCancel, onRetry, onImprovePrompt, 
                 )}
                 {onRetry && (
                   <button type="button" onClick={onRetry}
-                          className="px-3 py-1.5 text-xs rounded-md bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-colors">
+                          className="px-3 py-1.5 text-xs rounded-md bg-lime-500 hover:bg-lime-600 text-[#0f1115] shadow-sm transition-colors">
                     重试
                   </button>
                 )}

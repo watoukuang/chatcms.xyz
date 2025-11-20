@@ -128,13 +128,13 @@ export default function RobotNavView(): React.ReactElement {
 
     return (
         <div
-            className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-gray-900 dark:via-[#1a1d29] dark:to-indigo-950 p-6">
+            className="min-h-screen bg-[#0f1115] p-6">
             <div className="max-w-7xl mx-auto">
                 {/* 头部 */}
                 <div className="mb-8">
                     <div className="flex items-center justify-between gap-4">
                         <div>
-                            <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent mb-2">
+                            <h1 className="text-3xl font-bold bg-gradient-to-r from-lime-400 to-lime-500 bg-clip-text text-transparent mb-2">
                                 🤖 机器人导航
                             </h1>
                             <p className="text-gray-600 dark:text-gray-400">
@@ -143,7 +143,7 @@ export default function RobotNavView(): React.ReactElement {
                         </div>
                         <button
                             onClick={() => setIsSubmitOpen(true)}
-                            className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:from-indigo-600 hover:to-purple-700 transition-all font-medium"
+                            className="px-4 py-2 bg-gradient-to-r from-lime-500 to-lime-400 text-[#0f1115] rounded-lg hover:from-lime-600 hover:to-lime-500 transition-all font-medium"
                         >
                             提交你的机器人
                         </button>
@@ -158,8 +158,8 @@ export default function RobotNavView(): React.ReactElement {
                             onClick={() => setActiveTab(k)}
                             className={`px-3 py-1 rounded-full text-xs transition-colors ${
                                 activeTab === k
-                                    ? 'bg-indigo-600 text-white'
-                                    : 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-200 dark:hover:bg-indigo-800'
+                                    ? 'bg-lime-500 text-[#0f1115]'
+                                    : 'bg-lime-100 dark:bg-lime-900/30 text-lime-700 dark:text-lime-300 hover:bg-lime-200 dark:hover:bg-lime-800'
                             }`}
                         >
                             {k === 'all' ? '全部' : categoryLabels[k]}
@@ -191,7 +191,7 @@ export default function RobotNavView(): React.ReactElement {
                                     </span>
                                 )}
                                 {bot.source && (
-                                    <span className="inline-block px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 rounded-full text-[10px]">
+                                    <span className="inline-block px-2 py-0.5 bg-lime-100 dark:bg-lime-900/30 text-lime-700 dark:text-lime-300 rounded-full text-[10px]">
                                         来源：{bot.source === 'custom' ? '用户' : '内置'}
                                     </span>
                                 )}
@@ -212,7 +212,7 @@ export default function RobotNavView(): React.ReactElement {
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div
-                            className="sticky top-0 bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-6 py-4 rounded-t-2xl">
+                            className="sticky top-0 bg-gradient-to-r from-lime-500 to-lime-400 text-[#0f1115] px-6 py-4 rounded-t-2xl">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                     <span className="text-4xl">{selectedBot.icon}</span>
@@ -220,7 +220,7 @@ export default function RobotNavView(): React.ReactElement {
                                 </div>
                                 <button
                                     onClick={() => setSelectedBot(null)}
-                                    className="text-white hover:bg-white/20 rounded-lg p-2 transition-colors"
+                                    className="text-[#0f1115] hover:bg-black/10 rounded-lg p-2 transition-colors"
                                 >
                                     ✕
                                 </button>
@@ -235,7 +235,7 @@ export default function RobotNavView(): React.ReactElement {
                                 {selectedBot.url && (
                                     <button
                                         onClick={() => window.open(selectedBot.url!, '_blank')}
-                                        className="w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:from-indigo-600 hover:to-purple-700 transition-all font-medium text-lg shadow-lg"
+                                        className="w-full py-3 bg-gradient-to-r from-lime-500 to-lime-400 text-[#0f1115] rounded-lg hover:from-lime-600 hover:to-lime-500 transition-all font-medium text-lg shadow-lg"
                                     >
                                         打开链接
                                     </button>
@@ -256,8 +256,8 @@ export default function RobotNavView(): React.ReactElement {
                         className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-xl w-full"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <div
-                            className="sticky top-0 bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-6 py-4 rounded-t-2xl">
+                    <div
+                        className="sticky top-0 bg-gradient-to-r from-lime-500 to-lime-400 text-[#0f1115] px-6 py-4 rounded-t-2xl">
                             <div className="flex items-center justify-between">
                                 <h2 className="text-xl font-bold">提交你的机器人</h2>
                                 <button
@@ -327,7 +327,7 @@ export default function RobotNavView(): React.ReactElement {
                             </div>
                             <button
                                 onClick={handleSubmitBot}
-                                className="w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:from-indigo-600 hover:to-purple-700 transition-all font-medium text-lg shadow-lg"
+                                className="w-full py-3 bg-gradient-to-r from-lime-500 to-lime-400 text-[#0f1115] rounded-lg hover:from-lime-600 hover:to-lime-500 transition-all font-medium text-lg shadow-lg"
                             >
                                 提交
                             </button>

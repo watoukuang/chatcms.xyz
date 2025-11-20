@@ -2,28 +2,30 @@
 
 /* 浅色模式 (默认) */
 :root {
-  --bg-primary: #ffffff;
-  --bg-secondary: #f9fafb;
-  --text-primary: #111827;
-  --text-secondary: #4b5563;
-  --border-color: #e5e7eb;
-  --card-bg: #ffffff;
-  --card-border: #f3f4f6;
-  --accent-color: #6b7280; /* office-neutral gray */
-  --accent-shadow: rgba(107, 114, 128, 0.35);
+  /* 全局深色主题基调 + 荧光绿强调色 */
+  --bg-primary: #0f1115;        /* 近黑背景 */
+  --bg-secondary: #121418;      /* 次级区域 */
+  --text-primary: #e5e7eb;      /* 主文本（浅灰） */
+  --text-secondary: #a3aab7;    /* 次文本 */
+  --border-color: #1f232a;      /* 边框色 */
+  --card-bg: #121418;           /* 卡片深色背景 */
+  --card-border: #1f232a;       /* 卡片边框 */
+  --accent-color: #A3E635;      /* 荧光绿（tailwind lime-400） */
+  --accent-shadow: rgba(163, 230, 53, 0.35);
 }
 
 /* 深色模式 - 更深沉的背景色 */
+/* 保持暗色模式与根一致（深色 + 荧光绿） */
 .dark {
-  --bg-primary: #ffffff;  /* 统一白底，即使在暗色模式 */
-  --bg-secondary: #1a1b1e; /* 次要背景区域 */
-  --text-primary: #f5f5f5;
-  --text-secondary: #a0a0a0;
-  --border-color: #2c2c2c;
-  --card-bg: #ffffff;     /* 卡片背景统一白色 */
-  --card-border: #2d2d30;
-  --accent-color: #9ca3af; /* office-neutral gray in dark */
-  --accent-shadow: rgba(156, 163, 175, 0.35);
+  --bg-primary: #0f1115;
+  --bg-secondary: #121418;
+  --text-primary: #e5e7eb;
+  --text-secondary: #a3aab7;
+  --border-color: #1f232a;
+  --card-bg: #121418;
+  --card-border: #1f232a;
+  --accent-color: #A3E635;
+  --accent-shadow: rgba(163, 230, 53, 0.35);
 }
 
 /* 应用主题颜色 */

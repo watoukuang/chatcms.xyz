@@ -290,7 +290,7 @@ export default function MarketplaceView(): React.ReactElement {
                         placeholder="🔍 搜索任务模板..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full max-w-xl px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 shadow"
+                        className="w-full max-w-xl px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-lime-500 shadow"
                     />
                 </div>
 
@@ -396,7 +396,7 @@ export default function MarketplaceView(): React.ReactElement {
                         className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <div className="sticky top-0 bg-gradient-to-r from-purple-500 to-pink-600 text-white px-6 py-4 rounded-t-2xl">
+                        <div className="sticky top-0 bg-gradient-to-r from-lime-500 to-lime-400 text-[#0f1115] px-6 py-4 rounded-t-2xl">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                     <span className="text-4xl">{selectedTemplate.icon}</span>

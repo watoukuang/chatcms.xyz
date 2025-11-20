@@ -193,7 +193,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                                 if (n) setStartISO(n);
                             }}
                             onKeyDown={(e) => handleKeyAdjust(e, startISO, setStartISO)}
-                            className="w-full border border-gray-300 dark:border-gray-600 bg-transparent rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
+                            className="w-full border border-gray-300 dark:border-gray-600 bg-transparent rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-lime-500/50 focus:border-lime-500 transition-all"
                         />
                         <div className="flex flex-wrap gap-2 mt-1">
                             <button type="button" onClick={setStartNow}
@@ -218,7 +218,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                                 if (n) setEndISO(n);
                             }}
                             onKeyDown={(e) => handleKeyAdjust(e, endISO, setEndISO)}
-                            className="w-full border border-gray-300 dark:border-gray-600 bg-transparent rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
+                            className="w-full border border-gray-300 dark:border-gray-600 bg-transparent rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-lime-500/50 focus:border-lime-500 transition-all"
                         />
                         <div className="flex flex-wrap gap-2 mt-1">
                             <button type="button" onClick={() => setEndPlus(30)}
@@ -266,7 +266,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                 <div className="flex items-end">
                     <div className="relative flex-1">
                         <textarea
-                            className="flex-1 w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800/50 rounded-xl px-4 py-3 pr-12 text-sm min-h-[80px] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all shadow-sm hover:shadow-md resize-none"
+                            className="flex-1 w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800/50 rounded-xl px-4 py-3 pr-12 text-sm min-h-[80px] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-lime-500/50 focus:border-lime-500 transition-all shadow-sm hover:shadow-md resize-none"
                             placeholder="描述你的任务与偏好，Enter 发送，Cmd/Ctrl+Enter 或 Shift+Enter 换行"
                             value={chatInput}
                             onChange={(e) => setChatInput(e.target.value)}
@@ -277,7 +277,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                         <button
                             type="button"
                             aria-label="发送"
-                            className={`absolute right-3 bottom-3 w-9 h-9 rounded-lg flex items-center justify-center transition-all ${canSend ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:scale-105" : "bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed"}`}
+                            className={`absolute right-3 bottom-3 w-9 h-9 rounded-lg flex items-center justify-center transition-all ${canSend ? "bg-gradient-to-r from-lime-500 to-lime-600 text-[#0f1115] hover:from-lime-600 hover:to-lime-700 shadow-lg hover:scale-105" : "bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed"}`}
                             onClick={handleSend}
                             disabled={!canSend}
                         >
@@ -299,7 +299,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                 </div>
                 {lastMessage && (
                     <pre
-                        className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-800/50 dark:to-blue-900/20 border border-blue-200/50 dark:border-blue-700/30 rounded-xl p-4 text-sm overflow-auto whitespace-pre-wrap text-gray-800 dark:text-gray-200 shadow-inner">
+                        className="bg-gradient-to-br from-lime-100/20 to-lime-300/10 dark:from-gray-800/50 dark:to-lime-900/20 border border-lime-400/30 dark:border-lime-700/30 rounded-xl p-4 text-sm overflow-auto whitespace-pre-wrap text-gray-800 dark:text-gray-200 shadow-inner">
                         {lastMessage}
                     </pre>
                 )}

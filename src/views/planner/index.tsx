@@ -141,13 +141,13 @@ export default function BlocklogView(): React.ReactElement {
 
     return (
         <div
-            className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+            className="min-h-screen bg-gray-50 dark:bg-[#0b0f19] p-6">
             <div className="max-w-7xl mx-auto">
                 {/* 头部 */}
                 <div className="mb-8">
                     <div className="flex items-center justify-between mb-4">
                         <div>
-                            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent">
+                            <h1 className="text-3xl font-bold bg-gradient-to-r from-lime-400 to-lime-500 bg-clip-text text-transparent">
                                 📋 灵活备选
                             </h1>
                             <p className="text-gray-600 dark:text-gray-400 mt-2">
@@ -174,7 +174,7 @@ export default function BlocklogView(): React.ReactElement {
                             </p>
                             <button
                                 onClick={() => router.push('/')}
-                                className="px-5 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:from-indigo-600 hover:to-purple-700 shadow-md transition-all"
+                                className="px-5 py-2 bg-gradient-to-r from-lime-500 to-lime-400 text-[#0f1115] rounded-lg hover:from-lime-600 hover:to-lime-500 shadow-md transition-all"
                             >
                                 前往首页
                             </button>
@@ -200,7 +200,7 @@ export default function BlocklogView(): React.ReactElement {
                                                 <div className="flex items-start justify-between">
                                                     <div>
                                                         <div className="flex items-center gap-2">
-                                                            <span className="inline-block w-3 h-3 rounded-full bg-blue-500"></span>
+                                                            <span className="inline-block w-3 h-3 rounded-full bg-lime-500"></span>
                                                             <h2 className="text-base font-semibold text-gray-900 dark:text-white truncate">{group.title || '未命名提示词'}</h2>
                                                         </div>
                                                         <div className="mt-3 text-sm text-gray-600 dark:text-gray-400">
@@ -210,7 +210,7 @@ export default function BlocklogView(): React.ReactElement {
                                                     </div>
                                                     <Link
                                                         href={`/?historyId=${encodeURIComponent(gid)}`}
-                                                        className="px-3 py-2 text-sm rounded-md bg-blue-600 text-white hover:bg-blue-700"
+                                                        className="px-3 py-2 text-sm rounded-md bg-lime-500 text-[#0f1115] hover:bg-lime-600"
                                                     >
                                                         去首页查看
                                                     </Link>
@@ -275,7 +275,7 @@ function CollapsibleSearch({
                         onChange={(e) => onChange(e.target.value)}
                         onBlur={() => { if (!value) setOpen(false); }}
                         placeholder={`🔍 ${placeholder || '搜索...'}`}
-                        className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-lime-500"
                         autoFocus
                     />
                 )}
@@ -315,7 +315,7 @@ function TaskModal({
             <div
                 className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                 <div
-                    className="sticky top-0 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-4 rounded-t-2xl">
+                    className="sticky top-0 bg-gradient-to-r from-lime-500 to-lime-400 text-[#0f1115] px-6 py-4 rounded-t-2xl">
                     <h2 className="text-xl font-bold">{task ? '✏️ 编辑任务' : '➕ 添加任务'}</h2>
                 </div>
 
@@ -329,7 +329,7 @@ function TaskModal({
                             required
                             value={formData.task}
                             onChange={(e) => setFormData({...formData, task: e.target.value})}
-                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-lime-500"
                             placeholder="输入任务名称..."
                         />
                     </div>
@@ -372,7 +372,7 @@ function TaskModal({
                             value={formData.remark}
                             onChange={(e) => setFormData({...formData, remark: e.target.value})}
                             rows={3}
-                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-lime-500"
                             placeholder="添加备注..."
                         />
                     </div>
@@ -389,7 +389,7 @@ function TaskModal({
                                 ...formData,
                                 estimatedMinutes: parseInt(e.target.value) || 0
                             })}
-                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-lime-500"
                             placeholder="0"
                         />
                     </div>
@@ -402,7 +402,7 @@ function TaskModal({
                             type="text"
                             value={formData.tags}
                             onChange={(e) => setFormData({...formData, tags: e.target.value})}
-                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-lime-500"
                             placeholder="工作, 学习, 个人..."
                         />
                     </div>
@@ -417,7 +417,7 @@ function TaskModal({
                         </button>
                         <button
                             type="submit"
-                            className="px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 shadow-lg shadow-blue-500/30 transition-all"
+                            className="px-6 py-2 bg-gradient-to-r from-lime-500 to-lime-400 text-[#0f1115] rounded-lg hover:from-lime-600 hover:to-lime-500 shadow-lg transition-all"
                         >
                             保存
                         </button>

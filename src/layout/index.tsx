@@ -11,7 +11,7 @@ function LayoutContent({children}: LayoutProps): React.ReactElement {
     const isHome = router.pathname === '/';
 
     return (
-        <div className="min-h-screen bg-white dark:bg-[#1a1d29]">
+        <div className="min-h-screen bg-white dark:bg-[#0f1115]">
             {/* 左侧边栏 */}
             <Sidebar/>
             {/* 顶部导航 */}

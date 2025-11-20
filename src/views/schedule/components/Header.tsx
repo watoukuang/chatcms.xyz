@@ -50,7 +50,7 @@ export default function Header({
                 {typeof showStats === 'boolean' && onToggleStats && (
                     <button
                         onClick={onToggleStats}
-                        className="px-4 py-1.5 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:from-blue-600 hover:to-purple-700 shadow-lg transition-all flex items-center gap-2 text-sm"
+                        className="px-4 py-1.5 bg-gradient-to-r from-lime-500 to-lime-400 text-[#0f1115] rounded-lg hover:from-lime-600 hover:to-lime-500 shadow-lg transition-all flex items-center gap-2 text-sm"
                     >
                         <span>{showStats ? '📅' : '📊'}</span>
                         <span>{showStats ? '显示日程' : '显示统计'}</span>
@@ -58,7 +58,7 @@ export default function Header({
                 )}
                 <div className="h-6 w-px bg-gray-300 dark:border-gray-700 hidden sm:block"></div>
                 <button
-                    className={`px-4 py-1.5 rounded-md text-white text-sm font-medium transition-all ${isPastWeek ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 shadow-sm hover:shadow'}`}
+                    className={`px-4 py-1.5 rounded-md text-white text-sm font-medium transition-all ${isPastWeek ? 'bg-gray-400 cursor-not-allowed' : 'bg-lime-500 hover:bg-lime-600 shadow-sm hover:shadow'}`}
                     onClick={onAdd}
                     disabled={isPastWeek}
                 >

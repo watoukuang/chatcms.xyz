@@ -22,13 +22,13 @@ const Sidebar: React.FC = () => {
 
     return (
         <aside
-            className={"fixed left-0 top-0 h-screen bg-gradient-to-b from-white via-gray-50/50 to-white dark:from-[#1f2937] dark:via-[#1a1d29] dark:to-[#1f2937] border-r border-gray-200/80 dark:border-gray-700/50 shadow-xl dark:shadow-2xl dark:shadow-blue-900/10 z-50 transition-all duration-300 hidden md:flex md:flex-col w-[80px]"}>
+            className={"fixed left-0 top-0 h-screen bg-white dark:bg-[#0f1115] border-r border-gray-200/80 dark:border-gray-800/80 shadow-xl shadow-black/10 z-50 transition-all duration-300 hidden md:flex md:flex-col w-[80px]"}>
             {/* Logo */}
             <div
-                className="px-4 py-6 border-b border-gray-200/70 dark:border-gray-700/50 bg-gradient-to-r from-transparent via-blue-50/30 to-transparent dark:via-blue-900/10">
+                className="px-4 py-6 border-b border-gray-200/60 dark:border-gray-800/60 bg-transparent">
                 <Link href="/public" className="flex items-center gap-3 group">
                     <div
-                        className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all duration-300 flex-shrink-0">
+                        className="w-10 h-10 rounded-lg bg-gradient-to-br from-lime-500 to-lime-600 flex items-center justify-center shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all duration-300 flex-shrink-0">
                         <span className="text-xl">🦊</span>
                     </div>
                     <span
@@ -46,16 +46,16 @@ const Sidebar: React.FC = () => {
                         title={item.label}
                         className={`group relative flex flex-col items-center gap-2 px-3 py-4 mb-2 rounded-xl transition-all duration-300 ${
                             isActive(item.href)
-                                ? 'bg-gradient-to-b from-blue-500/10 via-purple-500/5 to-transparent text-gray-900 dark:text-white font-semibold shadow-md dark:shadow-blue-500/20'
-                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gradient-to-b hover:from-gray-100 hover:to-transparent dark:hover:from-gray-800/50 dark:hover:to-transparent'
+                                ? 'bg-gradient-to-b from-lime-500/10 via-lime-500/5 to-transparent text-gray-900 dark:text-white font-semibold shadow-md shadow-lime-500/20'
+                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gradient-to-b hover:from-gray-100 hover:to-transparent dark:hover:from-[#1a1d29] dark:hover:to-transparent'
                         }`}
                     >
                         {/* 图标背景 */}
                         <div
                             className={`relative flex items-center justify-center w-9 h-9 rounded-lg transition-all duration-300 flex-shrink-0 ${
                                 isActive(item.href)
-                                    ? 'bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-lg shadow-blue-500/30'
-                                    : 'bg-gray-100 dark:bg-gray-800/50 group-hover:bg-gradient-to-br group-hover:from-blue-500/20 group-hover:to-purple-600/20'
+                                    ? 'bg-gradient-to-br from-lime-500 to-lime-600 text-[#0f1115] shadow-lg shadow-lime-500/30'
+                                    : 'bg-gray-100 dark:bg-[#1f232a] group-hover:bg-gradient-to-br group-hover:from-lime-500/20 group-hover:to-lime-600/20'
                             }`}>
                             <span className={`transition-transform duration-300 ${
                                 isActive(item.href) ? 'scale-100' : 'group-hover:scale-110'
@@ -70,13 +70,13 @@ const Sidebar: React.FC = () => {
                                 ? 'text-gray-900 dark:text-white'
                                 : 'text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white'
                         }`}>{item.label}</div>
-                    </Link>
+                </Link>
                 ))}
             </nav>
 
             {/* Bottom Actions */}
             <div
-                className={"mt-auto px-3 py-4 border-t border-gray-200/70 dark:border-gray-700/50 flex flex-col items-center gap-2"}
+                className={"mt-auto px-3 py-4 border-t border-gray-800/60 flex flex-col items-center gap-2"}
             >
                 <DataExport iconOnly/>
                 <Setting iconOnly/>

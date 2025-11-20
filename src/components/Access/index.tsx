@@ -34,7 +34,7 @@ function UpgradePrompt({reason}: UpgradePromptProps) {
         <div className="pt-4 mt-8 sm:mt-12 lg:mt-16 text-center">
             <div className="mb-4">
                 <div
-                    className="w-16 h-16 bg-gradient-to-r from-orange-500 to-amber-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-amber-200/40 dark:shadow-transparent">
+                    className="w-16 h-16 bg-gradient-to-r from-lime-500 to-lime-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-lime-400/40 dark:shadow-transparent">
                     <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                               d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
@@ -51,7 +51,7 @@ function UpgradePrompt({reason}: UpgradePromptProps) {
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Link
                     href="/pricing"
-                    className="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-medium rounded-xl hover:from-orange-600 hover:to-amber-600 transition-all duration-300 shadow-lg shadow-amber-200/50 hover:shadow-amber-300/60"
+                    className="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-lime-500 to-lime-600 text-[#0f1115] font-medium rounded-xl hover:from-lime-600 hover:to-lime-700 transition-all duration-300 shadow-lg shadow-lime-400/50 hover:shadow-lime-400/70"
                 >
                     查看所有计划
                 </Link>
