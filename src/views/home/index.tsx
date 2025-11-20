@@ -11,6 +11,8 @@ import ErrorAlert from "@/src/views/home/components/ErrorAlert";
 import ProcessingOverlay from "@/src/views/home/components/ProcessingOverlay";
 import HistorySidebar, {TaskHistory} from "@/src/views/home/components/HistorySidebar";
 import {useSidebar} from "@/src/contexts/SidebarContext";
+import DelIcon from "@/src/components/Icons/DelIcon";
+import AddIcon from "@/src/components/Icons/AddIcon";
 
 export default function HomeLanding(): React.ReactElement {
     const router = useRouter();
@@ -336,7 +338,10 @@ export default function HomeLanding(): React.ReactElement {
         try {
             const splitPrompt = buildSplitPrompt(t, {startISO: windowStart, endISO: windowEnd});
             abortRef.current = new AbortController();
-            const children = await requestTasks(splitPrompt, {startISO: windowStart, endISO: windowEnd}, abortRef.current.signal);
+            const children = await requestTasks(splitPrompt, {
+                startISO: windowStart,
+                endISO: windowEnd
+            }, abortRef.current.signal);
             setTasks((prev: UiTask[]) => {
                 const next = [...prev];
                 const pos = ctx && typeof ctx.taskIndex === 'number' ? ctx.taskIndex + 1 : next.length;
@@ -385,16 +390,17 @@ export default function HomeLanding(): React.ReactElement {
                 >
                     {isCollapsed ? '⟩' : '⟨'}
                 </button>
+
                 {/* 左侧历史侧栏：常驻显示 */}
                 <div
                     className={`shrink-0 h-[calc(100dvh-60px)] transition-all duration-300 ${isCollapsed ? 'w-0 opacity-0 pointer-events-none' : 'w-[280px] opacity-100'}`}
                     aria-hidden={isCollapsed}>
                     <div
-                        className={`h-full p-3 bg-white/90 dark:bg-gray-800/60 flex flex-col ${isCollapsed ? 'border-transparent' : 'border-r border-gray-200 dark:border-gray-700'}`}>
+                        className={`h-full py-0 px-3 flex flex-col ${isCollapsed ? 'border-transparent' : 'border-r border-gray-200 dark:border-gray-700'}`}>
                         {/* 固定头部：新对话 / 清空 / 搜索 */}
                         <div
-                            className="sticky top-0 z-10 bg-white/90 dark:bg-gray-800/60 -mx-3 px-3 pt-3 pb-3 border-b border-gray-200 dark:border-gray-700">
-                            <div className="flex items-center gap-2 mb-2">
+                            className="sticky top-0 z-10 -mx-3 px-3 pt-3 pb-3 border-b border-gray-200 dark:border-gray-700">
+                            <div className="mb-2">
                                 <button
                                     type="button"
                                     onClick={() => {
@@ -402,14 +408,12 @@ export default function HomeLanding(): React.ReactElement {
                                         setActiveHistoryId(null);
                                         setChatInput("");
                                     }}
-                                    className="px-2 py-1 text-xs rounded-md bg-blue-600 text-white hover:bg-blue-700"
-                                >新对话
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={clearAllHistories}
-                                    className="px-2 py-1 text-xs rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                                >清空
+                                    className="w-full px-3 py-2 text-sm rounded-lg bg-lime-600 text-white hover:bg-lime-700 focus:outline-none focus:ring-2 focus:ring-lime-500/40 text-center"
+                                >
+                                    <span className="inline-flex items-center gap-2 justify-center w-full">
+                                        <AddIcon/>
+                                        <span>新建TODO</span>
+                                    </span>
                                 </button>
                             </div>
                             <input
@@ -429,6 +433,17 @@ export default function HomeLanding(): React.ReactElement {
                                 onSelect={restoreFromHistory}
                                 onClearAll={undefined}
                             />
+                        </div>
+                        {/* 左侧栏底部操作栏（始终置底，不随滚动） */}
+                        <div className="mt-auto -mx-3 px-3 pt-3 pb-3 border-t border-gray-200 dark:border-gray-700">
+                            <button
+                                type="button"
+                                onClick={clearAllHistories}
+                                className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center gap-2"
+                            >
+                                <DelIcon/>
+                                <span>清空所有会话</span>
+                            </button>
                         </div>
                     </div>
                 </div>
