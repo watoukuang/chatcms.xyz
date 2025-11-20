@@ -34,7 +34,7 @@ const badgeColor = (state?: SimpleTask['state']) => {
     }
 };
 
-const TaskCard: React.FC<{ t: SimpleTask; onClick?: () => void }> = ({t, onClick}) => {
+const TaskCard: React.FC<{ t: SimpleTask; onClick?: () => void; onSplit?: () => void }> = ({t, onClick, onSplit}) => {
     const duration = t.startTime && t.endTime ?
         (() => {
             const [sh, sm] = t.startTime.split(':').map(Number);
@@ -48,16 +48,24 @@ const TaskCard: React.FC<{ t: SimpleTask; onClick?: () => void }> = ({t, onClick
             className="group min-w-[280px] sm:min-w-[320px] md:min-w-[360px] max-w-[520px] bg-gradient-to-br from-white to-blue-50/30 dark:from-gray-800 dark:to-blue-900/10 border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 rounded-xl shadow-lg transition-colors duration-200 p-5 cursor-pointer relative"
             onClick={onClick}
         >
-            {/* 标题栏（含状态徽章与日期，下划线分隔） */}
+            {/* 标题栏（含操作按钮） */}
             <div className="flex items-center justify-between mb-3 pb-2 border-b border-gray-200 dark:border-gray-700">
                 <div className="flex items-center gap-2 min-w-0">
                     <div className="text-base font-bold text-gray-900 dark:text-white truncate">
                         {t.task || '未命名任务'}
                     </div>
                 </div>
-                {/*<div className="text-xs font-medium text-gray-600 dark:text-gray-400 flex-shrink-0">*/}
-                {/*    📅 {t.taskTime || '--'}*/}
-                {/*</div>*/}
+                <div className="flex items-center gap-2">
+                    <button
+                        type="button"
+                        className="px-2 py-1 text-xs rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                        onClick={(e) => { e.stopPropagation(); onSplit?.(); }}
+                        aria-label="AI拆分此任务"
+                        title="AI拆分此任务"
+                    >
+                        🤖 AI拆分
+                    </button>
+                </div>
             </div>
 
             {/* 时间信息 */}
@@ -104,10 +112,10 @@ const Arrow: React.FC = () => (
     </div>
 );
 
-const TaskFlow: React.FC<TaskFlowProps> = ({task, index, total, onTaskClick, showArrow = true}) => {
+const TaskFlow: React.FC<TaskFlowProps> = ({task, index, total, onTaskClick, onCardClick, showArrow = true}) => {
     return (
         <>
-            <TaskCard t={task} onClick={() => onTaskClick?.(task, index)}/>
+            <TaskCard t={task} onClick={() => onCardClick?.(task, index)} onSplit={() => onTaskClick?.(task, index)} />
             {showArrow && index < total - 1 && <Arrow/>}
         </>
     );

@@ -2,11 +2,14 @@
 
 import React from "react";
 import moment from 'moment';
-import {addTaskLocal, getTasksLocalAsync} from '@/src/shared/cached';
+import {addTaskLocal, getTasksLocalAsync, updateTaskLocal} from '@/src/shared/cached';
 import { useRouter } from 'next/router';
 import TaskFlow, {SimpleTask as UiTask} from "@/src/views/home/components/TaskFlow";
 import Dialog from '@/src/components/ui/Dialog';
 import {useToast} from '@/src/components/Toast';
+import Mform from '@/src/views/schedule/components/Mform';
+import {generateWeekHeaders} from '@/src/views/schedule/utils/timeUtils';
+import {stateOptions, timeOptions} from '@/src/views/schedule/constants';
 
 type Props = {
     // 一维任务数组：包含父任务与其后插入的子任务
@@ -23,6 +26,11 @@ export default function TaskContext({tasks, onTaskClick, onReset}: Props): React
     const [confirmOpen, setConfirmOpen] = React.useState(false);
     const [conflictOpen, setConflictOpen] = React.useState(false);
     const [conflictDetails, setConflictDetails] = React.useState<string[]>([]);
+    const [editOpen, setEditOpen] = React.useState(false);
+    const [editingTask, setEditingTask] = React.useState<Partial<UiTask> | null>(null);
+    const [formValues, setFormValues] = React.useState<{[k: string]: any}>({});
+    const [formErrors, setFormErrors] = React.useState<{[k: string]: string}>({});
+    const weekDayHeaders = React.useMemo(() => generateWeekHeaders(moment()), []);
 
     const timeToMinutes = (hhmm?: string): number => {
         const [h, m] = (hhmm || '00:00').split(':').map(Number);
@@ -57,6 +65,67 @@ export default function TaskContext({tasks, onTaskClick, onReset}: Props): React
         }
 
         return { conflict: details.length > 0, details };
+    };
+
+    // 点击卡片：打开编辑弹窗
+    const handleTaskClick = (task: UiTask, index: number) => {
+        setEditingTask(task);
+        setFormValues({
+            taskTime: task.taskTime || weekDayHeaders[0]?.date,
+            startTime: task.startTime || '',
+            endTime: task.endTime || '',
+            task: task.task || '',
+            remark: task.remark || '',
+            state: task.state || 'pending',
+        });
+        setFormErrors({});
+        setEditOpen(true);
+    };
+
+    const validate = (values: any): Record<string, string> => {
+        const {taskTime, startTime, endTime, task} = values || {};
+        const errs: Record<string, string> = {};
+        const requiredChecks: Array<[boolean, string, string]> = [
+            [!!task && String(task).trim() !== '', 'task', '请输入任务内容'],
+            [!!taskTime, 'taskTime', '请选择日期'],
+            [!!startTime, 'startTime', '请选择开始时间'],
+            [!!endTime, 'endTime', '请选择结束时间'],
+        ];
+        requiredChecks.forEach(([ok, key, msg]) => { if (!ok) errs[key] = msg; });
+        if (values?.startTime && values?.endTime && !(values.startTime < values.endTime)) {
+            errs.endTime = '结束时间必须晚于开始时间';
+        }
+        return errs;
+    };
+
+    const onFormChange = (field: string, value: any) => {
+        setFormValues(prev => ({...prev, [field]: value}));
+        setFormErrors(prev => ({...prev, [field]: ''}));
+    };
+
+    const handleEditOk = () => {
+        const errs = validate(formValues);
+        if (Object.keys(errs).length) { setFormErrors(errs); return; }
+        const data = {
+            taskTime: formValues.taskTime,
+            startTime: formValues.startTime,
+            endTime: formValues.endTime,
+            task: formValues.task,
+            remark: formValues.remark,
+            state: formValues.state,
+        };
+        try {
+            const saved = editingTask?.id
+                ? updateTaskLocal({ ...(data as any), id: editingTask.id as number } as any)
+                : addTaskLocal(data as any);
+            toast.success(editingTask?.id ? '任务更新成功' : '任务添加成功');
+            setEditOpen(false);
+            setEditingTask(null);
+            router.push('/schedule');
+        } catch (error) {
+            console.error('保存失败:', error);
+            toast.error(editingTask?.id ? '更新失败' : '添加失败');
+        }
     };
 
     const addAllToSchedule = async () => {
@@ -129,6 +198,7 @@ export default function TaskContext({tasks, onTaskClick, onReset}: Props): React
                                 task={t}
                                 index={i}
                                 total={tasks.length}
+                                onCardClick={(task) => handleTaskClick(task, i)}
                                 onTaskClick={(task) => onTaskClick(task, i)}
                                 showArrow={true}
                             />
@@ -145,6 +215,7 @@ export default function TaskContext({tasks, onTaskClick, onReset}: Props): React
                                     task={t}
                                     index={i}
                                     total={tasks.length}
+                                    onCardClick={(task) => handleTaskClick(task, i)}
                                     onTaskClick={(task) => onTaskClick(task, i)}
                                     showArrow={false}
                                 />
@@ -192,6 +263,29 @@ export default function TaskContext({tasks, onTaskClick, onReset}: Props): React
             cancelText={'取消'}
             maxWidth={560}
         />
+
+        {/* 编辑弹窗 */}
+        <Dialog
+            open={editOpen}
+            title={editingTask?.id ? '✏️ 编辑任务' : '➕ 新增任务'}
+            description={'调整任务内容并保存到固定日程'}
+            icon={<span className="text-blue-600">📝</span>}
+            accent={'blue'}
+            onClose={() => setEditOpen(false)}
+            onOk={handleEditOk}
+            okText={'✓ 保存到固定日程'}
+            cancelText={'取消'}
+            maxWidth={800}
+        >
+            <Mform
+                values={formValues}
+                errors={formErrors}
+                onChange={onFormChange as any}
+                weekDayHeaders={weekDayHeaders}
+                timeOptions={timeOptions}
+                stateOptions={stateOptions}
+            />
+        </Dialog>
         </div>
     );
 }

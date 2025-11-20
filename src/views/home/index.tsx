@@ -1,6 +1,7 @@
 "use client";
 
 import React, {useMemo, useRef, useState} from "react";
+import moment from 'moment';
 import ChatPanel from "@/src/views/home/components/ChatPanel";
 import {SimpleTask as UiTask} from "@/src/views/home/components/TaskFlow";
 import TaskContext from "@/src/views/home/components/TaskContext";
@@ -298,12 +299,26 @@ export default function HomeLanding(): React.ReactElement {
 
     // 点击卡片触发“二次拆解”，将返回的子任务紧贴父任务所在流程后展示
     const handleSplitTask = async (t: UiTask, ctx?: { taskIndex: number }) => {
-        if (!startISO || !endISO) return;
+        // 若全局时间窗未设置，则回退为：使用该任务自身的日期+时间段
+        const fallbackStartISO = (t.taskTime && t.startTime)
+            ? moment(`${t.taskTime} ${t.startTime}`, 'YYYY-MM-DD HH:mm').toISOString()
+            : '';
+        const fallbackEndISO = (t.taskTime && t.endTime)
+            ? moment(`${t.taskTime} ${t.endTime}`, 'YYYY-MM-DD HH:mm').toISOString()
+            : '';
+
+        const windowStart = startISO || fallbackStartISO;
+        const windowEnd = endISO || fallbackEndISO;
+        if (!windowStart || !windowEnd) {
+            // 无法推断时间窗时直接返回（避免无效请求）
+            return;
+        }
+
         setLoading(true);
         try {
-            const splitPrompt = buildSplitPrompt(t, {startISO, endISO});
+            const splitPrompt = buildSplitPrompt(t, {startISO: windowStart, endISO: windowEnd});
             abortRef.current = new AbortController();
-            const children = await requestTasks(splitPrompt, {startISO, endISO}, abortRef.current.signal);
+            const children = await requestTasks(splitPrompt, {startISO: windowStart, endISO: windowEnd}, abortRef.current.signal);
             setTasks((prev: UiTask[]) => {
                 const next = [...prev];
                 const pos = ctx && typeof ctx.taskIndex === 'number' ? ctx.taskIndex + 1 : next.length;
