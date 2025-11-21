@@ -2,6 +2,8 @@
 
 import React from "react";
 import { SimpleTask as UiTask } from "@/src/views/home/components/TaskFlow";
+import AddIcon from "@/src/components/Icons/AddIcon";
+import DelIcon from "@/src/components/Icons/DelIcon";
 
 export type TaskHistory = {
   id: string;
@@ -17,6 +19,7 @@ type Props = {
   activeId?: string | null;
   onSelect: (h: TaskHistory) => void;
   onDelete?: (id: string) => void;
+  onNewTodo: () => void;
   onClearAll?: () => void;
 };
 
@@ -56,8 +59,20 @@ const groupByPeriod = (items: TaskHistory[]) => {
   return buckets;
 };
 
-export default function HistorySidebar({ histories, activeId, onSelect, onDelete, onClearAll }: Props) {
-  const grouped = groupByPeriod(histories);
+export default function Sidebar({ histories, activeId, onSelect, onDelete, onNewTodo, onClearAll }: Props) {
+  const [search, setSearch] = React.useState("");
+
+  const filtered = React.useMemo(
+    () =>
+      histories.filter((h) =>
+        !search.trim()
+          ? true
+          : (h.title || "").toLowerCase().includes(search.trim().toLowerCase())
+      ),
+    [histories, search]
+  );
+
+  const grouped = groupByPeriod(filtered);
 
   const Section = ({ label, items }: { label: string; items: TaskHistory[] }) => (
     <div className="mb-4">
@@ -90,25 +105,53 @@ export default function HistorySidebar({ histories, activeId, onSelect, onDelete
   );
 
   return (
-    <aside className="w-full">
-      <div className="flex items-center justify-between mb-3">
-        <div className="text-sm font-medium text-gray-700 dark:text-gray-200">历史记录</div>
-        <div className="flex items-center gap-2">
-          {onClearAll && (
-            <button
-              type="button"
-              onClick={onClearAll}
-              className="px-2 py-1 text-xs font-medium rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-            >
-              清空
-            </button>
-          )}
+    <div className="h-full py-0 px-3 flex flex-col">
+      {/* 固定头部：新对话 / 搜索 */}
+      <div className="sticky top-0 z-10 -mx-3 px-3 pt-3 pb-3 border-b border-gray-200 dark:border-gray-700 bg-white/90 dark:bg-[#0f1115]/90 backdrop-blur-sm">
+        <div className="mb-2">
+          <button
+            type="button"
+            onClick={onNewTodo}
+            className="w-full px-3 py-2 text-sm rounded-lg bg-lime-600 text-white hover:bg-lime-700 focus:outline-none focus:ring-2 focus:ring-lime-500/40 text-center transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
+          >
+            <span className="inline-flex items-center gap-2 justify-center w-full">
+              <AddIcon />
+              <span>新建TODO</span>
+            </span>
+          </button>
         </div>
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="搜索会话/任务"
+          className="w-full border border-gray-300 dark:border-gray-600 bg-transparent rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-lime-500/40 focus:border-lime-500"
+        />
       </div>
-      <Section label="今天" items={grouped["今天"] || []} />
-      <Section label="昨天" items={grouped["昨天"] || []} />
-      <Section label="7 天内" items={grouped["7 天内"] || []} />
-      <Section label="30 天内" items={grouped["30 天内"] || []} />
-    </aside>
+
+      {/* 仅鼠标悬停时允许滚动的内容区 */}
+      <div className="flex-1 overflow-y-hidden hover:overflow-y-auto overscroll-contain pt-3">
+        <aside className="w-full">
+          <Section label="今天" items={grouped["今天"] || []} />
+          <Section label="昨天" items={grouped["昨天"] || []} />
+          <Section label="7 天内" items={grouped["7 天内"] || []} />
+          <Section label="30 天内" items={grouped["30 天内"] || []} />
+        </aside>
+      </div>
+
+      {/* 左侧栏底部操作栏（始终置底，不随滚动） */}
+      {onClearAll && (
+        <div className="mt-auto -mx-3 px-3 pt-3 pb-3 border-t border-gray-200 dark:border-gray-700">
+          <button
+            type="button"
+            onClick={onClearAll}
+            className="w-full px-3 py-2 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center gap-2"
+          >
+            <DelIcon />
+            <span>清空所有会话</span>
+          </button>
+        </div>
+      )}
+    </div>
   );
 }

@@ -9,10 +9,8 @@ import TaskContext from "@/src/views/home/components/TaskContext";
 import EmptyState from "@/src/views/home/components/EmptyState";
 import ErrorAlert from "@/src/views/home/components/ErrorAlert";
 import ProcessingOverlay from "@/src/views/home/components/ProcessingOverlay";
-import HistorySidebar, {TaskHistory} from "@/src/views/home/components/HistorySidebar";
+import Sidebar, {TaskHistory} from "@/src/views/home/components/Sidebar";
 import {useSidebar} from "@/src/contexts/SidebarContext";
-import DelIcon from "@/src/components/Icons/DelIcon";
-import AddIcon from "@/src/components/Icons/AddIcon";
 import CanvasBackground from "@/src/components/CanvasBackground";
 
 export default function HomeLanding(): React.ReactElement {
@@ -373,10 +371,12 @@ export default function HomeLanding(): React.ReactElement {
     return (
         <div className={"relative min-h-screen pb-0 pt-[60px] overflow-hidden"}>
             {/* 背景（渐变 + 柔和漂移动效 + 画布网格/斑点） */}
-            <div className="absolute inset-0 bg-gradient-to-b from-lime-50/40 via-white to-white dark:from-[#0f1115] dark:via-lime-900/5 dark:to-[#0f1115]"/>
-            <div className="absolute inset-0 pointer-events-none anim-bg-soft-light dark:anim-bg-soft-dark opacity-[0.5]"/>
-            <CanvasBackground variant="grid" opacity={0.10} />
-            <CanvasBackground variant="speckle" opacity={0.08} />
+            <div
+                className="absolute inset-0 bg-gradient-to-b from-lime-50/40 via-white to-white dark:from-[#0f1115] dark:via-lime-900/5 dark:to-[#0f1115]"/>
+            <div
+                className="absolute inset-0 pointer-events-none anim-bg-soft-light dark:anim-bg-soft-dark opacity-[0.5]"/>
+            <CanvasBackground variant="grid" opacity={0.10}/>
+            <CanvasBackground variant="speckle" opacity={0.08}/>
 
             {/* 主内容容器：左右并排两栏（固定视口高度，避免页面级滚动） */}
             <div className="relative z-10 w-full mx-auto flex gap-4 h-[calc(100dvh-60px)] overflow-hidden">
@@ -399,56 +399,18 @@ export default function HomeLanding(): React.ReactElement {
                 <div
                     className={`shrink-0 h-[calc(100dvh-60px)] transition-all duration-300 ${isCollapsed ? 'w-0 opacity-0 pointer-events-none' : 'w-[280px] opacity-100'}`}
                     aria-hidden={isCollapsed}>
-                    <div
-                        className={`h-full py-0 px-3 flex flex-col ${isCollapsed ? 'border-transparent' : 'border-r border-gray-200 dark:border-gray-700'}`}>
-                        {/* 固定头部：新对话 / 清空 / 搜索 */}
-                        <div
-                            className="sticky top-0 z-10 -mx-3 px-3 pt-3 pb-3 border-b border-gray-200 dark:border-gray-700">
-                            <div className="mb-2">
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setTasks([]);
-                                        setActiveHistoryId(null);
-                                        setChatInput("");
-                                    }}
-                                    className="w-full px-3 py-2 text-sm rounded-lg bg-lime-600 text-white hover:bg-lime-700 focus:outline-none focus:ring-2 focus:ring-lime-500/40 text-center transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
-                                >
-                                    <span className="inline-flex items-center gap-2 justify-center w-full">
-                                        <AddIcon/>
-                                        <span>新建TODO</span>
-                                    </span>
-                                </button>
-                            </div>
-                            <input
-                                type="text"
-                                value={historySearch}
-                                onChange={(e) => setHistorySearch(e.target.value)}
-                                placeholder="搜索会话/任务"
- className="w-full border border-gray-300 dark:border-gray-600 bg-transparent rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-lime-500/40 focus:border-lime-500"
-                            />
-                        </div>
-
-                        {/* 仅鼠标悬停时允许滚动的内容区 */}
-                        <div className="flex-1 overflow-y-hidden hover:overflow-y-auto overscroll-contain pt-3">
-                            <HistorySidebar
-                                histories={histories.filter(h => !historySearch.trim() || (h.title || "").toLowerCase().includes(historySearch.trim().toLowerCase()))}
-                                activeId={activeHistoryId}
-                                onSelect={restoreFromHistory}
-                                onClearAll={undefined}
-                            />
-                        </div>
-                        {/* 左侧栏底部操作栏（始终置底，不随滚动） */}
-                        <div className="mt-auto -mx-3 px-3 pt-3 pb-3 border-t border-gray-200 dark:border-gray-700">
-                            <button
-                                type="button"
-                                onClick={clearAllHistories}
-                                className="w-full px-3 py-2 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center gap-2"
-                            >
-                                <DelIcon/>
-                                <span>清空所有会话</span>
-                            </button>
-                        </div>
+                    <div className={`h-full ${isCollapsed ? '' : 'border-r border-gray-200 dark:border-gray-700'}`}>
+                        <Sidebar
+                            histories={histories}
+                            activeId={activeHistoryId}
+                            onSelect={restoreFromHistory}
+                            onNewTodo={() => {
+                                setTasks([]);
+                                setActiveHistoryId(null);
+                                setChatInput("");
+                            }}
+                            onClearAll={clearAllHistories}
+                        />
                     </div>
                 </div>
 
@@ -485,22 +447,20 @@ export default function HomeLanding(): React.ReactElement {
                             <div className="bg-transparent pt-3 pb-3 border-t border-gray-200 dark:border-gray-700">
                                 <div className="w-full max-w-4xl mx-auto px-4">
                                     <ChatPanel
-                                        startISO={startISO}
-                                        setStartISO={setStartISO}
-                                        endISO={endISO}
-                                        setEndISO={setEndISO}
-                                        durationMin={durationMin}
-                                        setDurationMin={setDurationMin}
-                                        chatInput={chatInput}
-                                        setChatInput={setChatInput}
+                                        time={{
+                                            startISO,
+                                            setStartISO,
+                                            endISO,
+                                            setEndISO,
+                                            durationMin,
+                                            setDurationMin,
+                                        }}
+                                        input={{
+                                            value: chatInput,
+                                            setValue: setChatInput,
+                                        }}
                                         loading={loading}
-                                        lastMessage={""}
-                                        diffMinutes={diffMinutes}
-                                        validation={validation}
-                                        canSend={canSend}
-                                        handleSend={handleSend}
-                                        onKeyDownTextArea={onKeyDownTextArea}
-                                        showTemplates={false}
+                                        onSubmit={handleSend}
                                     />
                                 </div>
                             </div>

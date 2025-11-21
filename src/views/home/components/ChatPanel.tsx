@@ -1,36 +1,45 @@
 import React from "react";
 
-interface ChatPanelProps {
+interface ChatPanelTimeProps {
     startISO: string;
     setStartISO: (val: string) => void;
     endISO: string;
     setEndISO: (val: string) => void;
     durationMin: string;
     setDurationMin: (val: string) => void;
-    chatInput: string;
-    setChatInput: (val: string) => void;
+}
+
+interface ChatPanelInputProps {
+    value: string;
+    setValue: (val: string) => void;
+}
+
+interface ChatPanelProps {
+    time: ChatPanelTimeProps;
+    input: ChatPanelInputProps;
     loading: boolean;
-    lastMessage: string;
-    diffMinutes?: number;
-    validation: string[];
-    canSend: boolean;
-    handleSend: () => void;
-    onKeyDownTextArea: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
-    showTemplates?: boolean;
+    onSubmit: () => void;
 }
 
 const ChatPanel: React.FC<ChatPanelProps> = ({
-                                                 startISO, setStartISO,
-                                                 endISO, setEndISO,
-                                                 durationMin,
-                                                 setDurationMin,
-                                                 chatInput, setChatInput,
-                                                 loading, lastMessage,
-                                                 diffMinutes, validation,
-                                                 canSend, handleSend,
-                                                 onKeyDownTextArea,
-                                                 showTemplates = true
-                                              }) => {
+                                                 time,
+                                                 input,
+                                                 loading,
+                                                 onSubmit
+                                             }) => {
+    const {
+        startISO,
+        setStartISO,
+        endISO,
+        setEndISO,
+        durationMin,
+        setDurationMin
+    } = time;
+
+    const {
+        value: chatInput,
+        setValue: setChatInput
+    } = input;
     // 辅助：格式化为 datetime-local 可接受的本地字符串（到分钟）
     const formatLocalInputValue = (d: Date) => {
         const pad = (n: number) => String(n).padStart(2, "0");
@@ -148,6 +157,38 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
         const base = parseInputDate(startISO);
         setEndISO(formatLocalInputValue(endOfDay(base)));
     };
+
+    // 计算时间差（分钟），供校验使用
+    const diffMinutes = React.useMemo(() => {
+        if (!startISO || !endISO) return undefined;
+        const s = new Date(startISO).getTime();
+        const e = new Date(endISO).getTime();
+        const diff = Math.round((e - s) / 60000);
+        return Number.isFinite(diff) ? diff : undefined;
+    }, [startISO, endISO]);
+
+    // 校验规则搬入 ChatPanel，避免在页面中重复传入
+    const validation = React.useMemo(() => {
+        const errors: string[] = [];
+        if (startISO && endISO) {
+            if (new Date(startISO) >= new Date(endISO)) {
+                errors.push("结束时间必须大于开始时间");
+            }
+        }
+        const dur = durationMin ? Number(durationMin) : undefined;
+        if (durationMin !== "" && (!Number.isFinite(dur!) || dur! <= 0)) {
+            errors.push("目标总时长需为大于0的数字（分钟）");
+        }
+        if (diffMinutes !== undefined && durationMin !== "") {
+            const durNum = Number(durationMin);
+            if (Number.isFinite(durNum) && durNum > diffMinutes) {
+                errors.push(`目标总时长(${durNum}m)不能大于时间窗(${diffMinutes}m)`);
+            }
+        }
+        return errors;
+    }, [startISO, endISO, durationMin, diffMinutes]);
+
+    const canSend = !loading && chatInput.trim().length > 0 && validation.length === 0 && !!startISO && !!endISO;
 
     // 默认值：组件加载时，如果为空则设置为今天、分钟对齐到0或5
     React.useEffect(() => {
@@ -270,7 +311,14 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                             placeholder="描述你的任务与偏好，Enter 发送，Cmd/Ctrl+Enter 或 Shift+Enter 换行"
                             value={chatInput}
                             onChange={(e) => setChatInput(e.target.value)}
-                            onKeyDown={onKeyDownTextArea}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter" && !e.shiftKey && !e.metaKey) {
+                                    e.preventDefault();
+                                    if (canSend) {
+                                        onSubmit();
+                                    }
+                                }
+                            }}
                             aria-label="任务描述"
                             disabled={loading}
                         />
@@ -278,7 +326,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                             type="button"
                             aria-label="发送"
                             className={`absolute right-3 bottom-3 w-9 h-9 rounded-lg flex items-center justify-center transition-all ${canSend ? "bg-gradient-to-r from-lime-500 to-lime-600 text-[#0f1115] hover:from-lime-600 hover:to-lime-700 shadow-lg hover:scale-105 ring-1 ring-lime-500/40" : "bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed"}`}
-                            onClick={handleSend}
+                            onClick={onSubmit}
                             disabled={!canSend}
                         >
                             {loading ? (
@@ -297,12 +345,6 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                         </button>
                     </div>
                 </div>
-                {lastMessage && (
-                    <pre
-                        className="bg-gradient-to-br from-lime-100/20 to-lime-300/10 dark:from-gray-800/50 dark:to-lime-900/20 border border-lime-400/30 dark:border-lime-700/30 rounded-xl p-4 text-sm overflow-auto whitespace-pre-wrap text-gray-800 dark:text-gray-200 shadow-inner">
-                        {lastMessage}
-                    </pre>
-                )}
             </div>
         </div>
     );
