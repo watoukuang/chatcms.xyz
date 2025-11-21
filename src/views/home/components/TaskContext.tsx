@@ -15,6 +15,7 @@ import CanvasBackground from '@/src/components/CanvasBackground';
 import ReactFlow, {
     Background,
     Controls,
+    Panel,
     Node,
     Edge,
     NodeTypes,
@@ -29,6 +30,9 @@ type FlowProps = {
     height?: number;
     snap?: number;
     onCardClick?: (t: UiTask, index: number) => void;
+    overlayTitle?: string;
+    onAddToSchedule?: () => void;
+    onAddToBacklog?: () => void;
 };
 
 const storageKey = (groupId?: string) => `rf_task_positions_${groupId || "default"}`;
@@ -61,12 +65,15 @@ const TaskNode: React.FC<{ data: any }> = ({data}) => {
 const nodeTypes: NodeTypes = {task: TaskNode};
 
 const TaskFlowBoard: React.FC<FlowProps> = ({
-    tasks,
-    groupId,
-    height = 0,
-    snap = 24,
-    onCardClick,
-}: FlowProps) => {
+                                                tasks,
+                                                groupId,
+                                                height = 0,
+                                                snap = 24,
+                                                onCardClick,
+                                                overlayTitle,
+                                                onAddToSchedule,
+                                                onAddToBacklog,
+                                            }: FlowProps) => {
     // 动态高度：根据任务数量做简单自适应（最小 360，最大 720）
     const boardHeight = React.useMemo(() => {
         const rows = Math.max(1, Math.ceil(tasks.length / 4));
@@ -101,7 +108,10 @@ const TaskFlowBoard: React.FC<FlowProps> = ({
         }
     };
     const saveViewport = (vp: any) => {
-        try { localStorage.setItem(vpKey(groupId), JSON.stringify(vp)); } catch {}
+        try {
+            localStorage.setItem(vpKey(groupId), JSON.stringify(vp));
+        } catch {
+        }
     };
 
     // 暗色模式检测（用于网格颜色自适应）
@@ -164,11 +174,11 @@ const TaskFlowBoard: React.FC<FlowProps> = ({
     }, [initialEdges, setEdges]);
 
     const defaultViewport = React.useMemo(() => {
-        return loadViewport() || { x: 0, y: 0, zoom: 1 }; // React Flow 会基于此初始化
+        return loadViewport() || {x: 0, y: 0, zoom: 1}; // React Flow 会基于此初始化
     }, []);
 
     return (
-        <div style={{height: boardHeight}} className="border rounded-lg relative">
+        <div style={{minHeight: boardHeight}} className="border rounded relative h-full overflow-hidden">
             <ReactFlow
                 nodes={nodes}
                 edges={edges}
@@ -185,7 +195,33 @@ const TaskFlowBoard: React.FC<FlowProps> = ({
             >
                 <Background gap={snap} size={1} color={isDark ? "#4ade8022" : "#a3e63522"}/>
                 <Controls/>
+                {(onAddToSchedule || onAddToBacklog) && (
+                    <Panel position="top-right">
+                        <div
+                            className="flex items-center gap-2 bg-white/70 dark:bg-gray-900/50 backdrop-blur px-2 py-1 rounded border border-gray-200/60 dark:border-gray-700/60">
+                            {onAddToSchedule && (
+                                <button
+                                    type="button"
+                                    onClick={onAddToSchedule}
+                                    className="px-2 py-1 text-xs rounded-md border border-lime-300 dark:border-lime-600 text-lime-700 dark:text-lime-300 hover:bg-lime-50 dark:hover:bg-lime-900/20 transition-colors"
+                                >
+                                    添加进日程
+                                </button>
+                            )}
+                            {onAddToBacklog && (
+                                <button
+                                    type="button"
+                                    onClick={onAddToBacklog}
+                                    className="px-2 py-1 text-xs rounded-md border border-lime-300 dark:border-lime-600 text-lime-700 dark:text-lime-300 hover:bg-lime-50 dark:hover:bg-lime-900/20 transition-colors"
+                                >
+                                    加入备选
+                                </button>
+                            )}
+                        </div>
+                    </Panel>
+                )}
             </ReactFlow>
+
         </div>
     );
 };
@@ -393,48 +429,15 @@ export default function TaskContext({tasks, onTaskClick, onReset, groupTitle, gr
         }
     };
     return (
-        <div
-            className="context-card w-full flex-1 p-2.5 animate-fadeIn flex flex-col mt-3">
-            {/* 极淡网格纹理层（Canvas）：不影响交互 */}
-            <CanvasBackground variant="grid" opacity={0.08}/>
-            {/* 标题栏 */}
-            <div className="context-card-header">
-                <div className="flex items-center gap-2">
-                    <span className="text-2xl">🤖</span>
-                    <span className="text-sm font-semibold text-lime-700 dark:text-lime-300">
-                                    {`AI 规划了 ${tasks.length} 个任务`}
-                                </span>
-                </div>
-                <div className="flex items-center gap-3">
-                    <button
-                        type="button"
-                        onClick={addAllToSchedule}
-                        className="px-2 py-1 text-xs rounded-md border border-lime-300 dark:border-lime-600 text-lime-700 dark:text-lime-300 hover:bg-lime-50 dark:hover:bg-lime-900/20 transition-colors"
-                    >
-                        添加进日程
-                    </button>
-                    <button
-                        type="button"
-                        onClick={addAllToBacklog}
-                        className="px-2 py-1 text-xs rounded-md border border-lime-300 dark:border-lime-600 text-lime-700 dark:text-lime-300 hover:bg-lime-50 dark:hover:bg-lime-900/20 transition-colors"
-                    >
-                        加入备选
-                    </button>
-                </div>
-            </div>
-
-            {/* 交互式画布视图（React Flow：拖动/缩放/网格） */}
-            <div className="w-full mb-4">
-                <TaskFlowBoard tasks={tasks} groupId={groupId} onCardClick={(t, i) => handleTaskClick(t, i)}/>
-            </div>
-
-            <div
-                className="mt-auto pt-4 border-t border-gray-200/60 dark:border-gray-700/60 flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-                <span>💡 提示：任务会按时间顺序执行</span>
-                <span>总计 {tasks.length} 个步骤</span>
-            </div>
-
-            {/* 冲突弹窗 */}
+        <div className="w-full flex-1 p-2.5 animate-fadeIn flex flex-col">
+            <TaskFlowBoard
+                tasks={tasks}
+                groupId={groupId}
+                onCardClick={(t, i) => handleTaskClick(t, i)}
+                overlayTitle={`AI 规划了 ${tasks.length} 个任务`}
+                onAddToSchedule={addAllToSchedule}
+                onAddToBacklog={addAllToBacklog}
+            />
             <Dialog
                 open={conflictOpen}
                 title={'日程冲突'}

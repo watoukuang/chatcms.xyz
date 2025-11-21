@@ -457,7 +457,7 @@ export default function HomeLanding(): React.ReactElement {
                     if (isCollapsed) expand();
                 }}>
                     {/* 内容 + 底部输入栏（非固定） */}
-                    <div className="flex flex-col min-h-full">
+                    <div className="flex flex-col h-full">
                         <div className={`${isEmpty ? 'flex-1 grid place-items-center' : 'flex-1 flex flex-col'}`}>
                             {tasks.length === 0 && !loading && (
                                 <EmptyState onPickTemplate={(t) => setChatInput(t)}/>
