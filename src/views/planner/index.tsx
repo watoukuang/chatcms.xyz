@@ -181,7 +181,7 @@ export default function BlocklogView(): React.ReactElement {
                         </div>
                     ) : (
                         (() => {
-                            const groups: Record<string, {title: string; items: BacklogTask[]}> = {};
+                            const groups: Record<string, { title: string; items: BacklogTask[] }> = {};
                             filteredTasks.forEach((t) => {
                                 const key = t.groupId || '__ungrouped__';
                                 const title = t.groupTitle || '未分组';
@@ -196,16 +196,19 @@ export default function BlocklogView(): React.ReactElement {
                                     {entries.map(([gid, group]) => {
                                         const totalMinutes = group.items.reduce((acc, it) => acc + (it.estimatedMinutes || 0), 0);
                                         return (
-                                            <div key={gid} className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm hover:shadow-md transition-all">
+                                            <div key={gid}
+                                                 className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 shadow-sm hover:shadow-md transition-all">
                                                 <div className="flex items-start justify-between">
                                                     <div>
                                                         <div className="flex items-center gap-2">
-                                                            <span className="inline-block w-3 h-3 rounded-full bg-lime-500"></span>
+                                                            <span
+                                                                className="inline-block w-3 h-3 rounded-full bg-lime-500"></span>
                                                             <h2 className="text-base font-semibold text-gray-900 dark:text-white truncate">{group.title || '未命名提示词'}</h2>
                                                         </div>
                                                         <div className="mt-3 text-sm text-gray-600 dark:text-gray-400">
                                                             <div>🧩 任务数量：{group.items.length}</div>
-                                                            <div className="mt-1">⏱️ 总时长：{totalMinutes > 0 ? `${totalMinutes} 分钟` : '暂无估时'}</div>
+                                                            <div className="mt-1">⏱️
+                                                                总时长：{totalMinutes > 0 ? `${totalMinutes} 分钟` : '暂无估时'}</div>
                                                         </div>
                                                     </div>
                                                     <Link
@@ -241,10 +244,10 @@ export default function BlocklogView(): React.ReactElement {
 
 // 可收缩搜索输入组件
 function CollapsibleSearch({
-                              value,
-                              onChange,
-                              placeholder
-                          }: {
+                               value,
+                               onChange,
+                               placeholder
+                           }: {
     value: string;
     onChange: (v: string) => void;
     placeholder?: string;
@@ -273,7 +276,9 @@ function CollapsibleSearch({
                         type="text"
                         value={value}
                         onChange={(e) => onChange(e.target.value)}
-                        onBlur={() => { if (!value) setOpen(false); }}
+                        onBlur={() => {
+                            if (!value) setOpen(false);
+                        }}
                         placeholder={`🔍 ${placeholder || '搜索...'}`}
                         className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-lime-500"
                         autoFocus

@@ -33,7 +33,7 @@ export default function Footer(): React.ReactElement {
                             href="mailto:chatcms@gmail.com"
                             className="text-xs md:text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors duration-300"
                         >
-                            联系邮箱：chatcms@gmail.com
+                            联系邮箱:aitodome@gmail.com
                         </a>
                         <div className="flex items-center gap-3 justify-center">
                             <a

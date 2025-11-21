@@ -8,6 +8,7 @@ import MarketIcon from '@/src/components/Icons/MarketIcon';
 import RobotIcon from '@/src/components/Icons/RobotIcon';
 import DataExport from '@/src/components/DataExport';
 import Setting from '@/src/layout/components/Setting';
+import Logo from "@/src/components/Logo";
 
 const Sidebar: React.FC = () => {
     const menuItems = [
@@ -24,19 +25,7 @@ const Sidebar: React.FC = () => {
 
     return (
         <aside
-            className={"fixed left-0 top-0 h-screen bg-white dark:bg-[#0f1115] border-r border-gray-200/80 dark:border-gray-800/80 shadow-xl shadow-black/10 z-50 transition-all duration-300 hidden md:flex md:flex-col w-[80px]"}>
-            <div
-                className="px-4 py-6 border-gray-200/60 dark:border-gray-800/60 bg-transparent">
-                <Link href="/" className="flex items-center gap-3 group">
-                    <div
-                        className="w-10 h-10 rounded-lg bg-gradient-to-br from-lime-500 to-lime-600 flex items-center justify-center shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all duration-300 flex-shrink-0">
-                        <span className="text-xl">🦊</span>
-                    </div>
-                    <span
-                        className={"font-bold text-lg bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent whitespace-nowrap overflow-hidden transition-all duration-300 w-0 opacity-0"}>AiTodo.Me</span>
-                </Link>
-            </div>
-
+            className={"hidden md:flex md:flex-col w-[80px] h-full bg-white dark:bg-[#0f1115] border-r border-gray-200/80 dark:border-gray-800/80 shadow-xl shadow-black/10 transition-all duration-300"}>
             {/* Menu Items */}
             <nav className="flex-1 py-6 px-3 overflow-y-auto">
                 {menuItems.map((item, index) => (
