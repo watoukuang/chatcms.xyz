@@ -7,7 +7,7 @@ const Header: React.FC = () => {
 
     return (
         <header
-            className={"sticky top-0 h-[60px] w-full bg-white dark:bg-[#0f1115] border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-4 sm:px-6 lg:px-8 z-40 transition-all duration-300"}>
+            className={"fixed top-0 left-0 right-0 h-[60px] bg-white dark:bg-[#0f1115] border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-4 sm:px-6 lg:px-8 z-40 transition-all duration-300 md:left-[80px]"}>
             <Logo/>
             <div className="flex items-center gap-4">
                 <div

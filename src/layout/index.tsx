@@ -12,15 +12,13 @@ function LayoutContent({children}: LayoutProps): React.ReactElement {
 
     return (
         <div className="min-h-screen bg-white dark:bg-[#0f1115]">
+            <Sidebar/>
             <Header/>
             <main
-                className={`transition-all duration-300 ${isHome ? 'pt-0' : 'pt-[60px] min-h-[calc(100vh-60px)]'}`}>
+                className={`ml-0 transition-all duration-300 md:ml-[80px] ${isHome ? 'pt-0' : 'pt-[60px] min-h-[calc(100vh-60px)]'}`}>
                 <div
-                    className={`w-full flex ${isHome ? 'mx-0 px-0 py-0' : 'max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6'}`}>
-                    <Sidebar/>
-                    <div className="flex-1 min-w-0">
-                        {children}
-                    </div>
+                    className={`w-full ${isHome ? 'mx-0 px-0 py-0' : 'max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6'}`}>
+                    {children}
                 </div>
             </main>
             {!isHome && <Footer/>}

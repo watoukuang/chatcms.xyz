@@ -25,7 +25,7 @@ const Sidebar: React.FC = () => {
 
     return (
         <aside
-            className={"hidden md:flex md:flex-col w-[80px] h-full bg-white dark:bg-[#0f1115] border-r border-gray-200/80 dark:border-gray-800/80 shadow-xl shadow-black/10 transition-all duration-300"}>
+            className={"fixed left-0 top-0 hidden md:flex md:flex-col w-[80px] h-screen bg-white dark:bg-[#0f1115] border-r border-gray-200/80 dark:border-gray-800/80 shadow-xl shadow-black/10 z-50 transition-all duration-300"}>
             {/* Menu Items */}
             <nav className="flex-1 py-6 px-3 overflow-y-auto">
                 {menuItems.map((item, index) => (

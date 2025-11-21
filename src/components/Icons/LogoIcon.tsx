@@ -4,38 +4,44 @@ type LogoProps = { className?: string };
 
 export default function LogoIcon({className = 'w-10 h-10'}: LogoProps): React.ReactElement {
     return (
-        <svg className={className} viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg
+            className={className}
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+        >
+            {/* 松鼠耳朵：尖尖三角，暖棕主色 */}
             <path
-                d="M97.8357 54.6682C177.199 59.5311 213.038 52.9891 238.043 52.9891C261.298 52.9891 272.24 129.465 262.683 152.048C253.672 173.341 100.331 174.196 93.1919 165.763C84.9363 156.008 89.7095 115.275 89.7095 101.301"
-                stroke="currentColor" strokeOpacity="0.9" strokeWidth="16" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M98.3318 190.694C-10.6597 291.485 121.25 273.498 148.233 295.083"
-                  stroke="currentColor" strokeOpacity="0.9" strokeWidth="16" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M98.3301 190.694C99.7917 213.702 101.164 265.697 100.263 272.898"
-                  stroke="currentColor" strokeOpacity="0.9" strokeWidth="16" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M208.308 136.239C208.308 131.959 208.308 127.678 208.308 123.396"
-                  stroke="currentColor" strokeOpacity="0.9" strokeWidth="16" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M177.299 137.271C177.035 133.883 177.3 126.121 177.3 123.396" stroke-opacity="0.9"
-                  stroke="currentColor" strokeWidth="16" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M203.398 241.72C352.097 239.921 374.881 226.73 312.524 341.851"
-                  stroke="currentColor" strokeOpacity="0.9" strokeWidth="16" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M285.55 345.448C196.81 341.85 136.851 374.229 178.223 264.504"
-                  stroke="currentColor" strokeOpacity="0.9" strokeWidth="16" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M180.018 345.448C160.77 331.385 139.302 320.213 120.658 304.675"
-                  stroke="currentColor" strokeOpacity="0.9" strokeWidth="16" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M218.395 190.156C219.024 205.562 219.594 220.898 219.594 236.324"
-                  stroke="currentColor" strokeOpacity="0.9" strokeWidth="16" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M218.395 190.156C225.896 202.037 232.97 209.77 241.777 230.327"
-                  stroke="currentColor" strokeOpacity="0.9" strokeWidth="16" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M80.1174 119.041C75.5996 120.222 71.0489 119.99 66.4414 120.41"
-                  stroke="currentColor" strokeOpacity="0.9" strokeWidth="16" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M59.5935 109.469C59.6539 117.756 59.5918 125.915 58.9102 134.086"
-                  stroke="currentColor" strokeOpacity="0.9" strokeWidth="16" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M277.741 115.622C281.155 115.268 284.589 114.823 287.997 114.255"
-                  stroke="currentColor" strokeOpacity="0.9" strokeWidth="16" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M291.412 104.682C292.382 110.109 292.095 115.612 292.095 121.093"
-                  stroke="currentColor" strokeOpacity="0.9" strokeWidth="16" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M225.768 116.466C203.362 113.993 181.657 115.175 160.124 118.568"
-                  stroke="currentColor" strokeOpacity="0.9" strokeWidth="16" strokeLinecap="round" strokeLinejoin="round"/>
+                d="M5.2 9.2L7.4 7.0C7.9 6.5 8.7 6.4 9.3 6.7L9.8 7.0L8.8 9.6C8.2 9.8 7.6 10.1 7.1 10.5L5.2 9.2Z"
+                fill="#D99559"
+            />
+            <path
+                d="M18.8 9.2L16.6 7.0C16.1 6.5 15.3 6.4 14.7 6.7L14.2 7.0L15.2 9.6C15.8 9.8 16.4 10.1 16.9 10.5L18.8 9.2Z"
+                fill="#D99559"
+            />
+
+            {/* 松鼠脸部轮廓：两侧收窄，下巴更尖一点，浅棕 */}
+            <path
+                d="M7.8 9.6C8.6 7.7 10.1 6.4 12 6.4C13.9 6.4 15.4 7.7 16.2 9.6C17.5 10.1 18.4 11.4 18.4 12.9C18.4 15.3 16.4 17.6 12 17.6C7.6 17.6 5.6 15.3 5.6 12.9C5.6 11.4 6.5 10.1 7.8 9.6Z"
+                fill="#F5D3A1"
+            />
+
+            {/* 腮红：橙粉色 */}
+            <circle cx="9" cy="13.6" r="0.9" fill="#F4A8A0" />
+            <circle cx="15" cy="13.6" r="0.9" fill="#F4A8A0" />
+
+            {/* 眼睛 */}
+            <circle cx="10" cy="11.4" r="0.95" fill="#3B3B3B"/>
+            <circle cx="14" cy="11.4" r="0.95" fill="#3B3B3B"/>
+            <circle cx="9.7" cy="11.1" r="0.23" fill="#FFFFFF"/>
+            <circle cx="13.7" cy="11.1" r="0.23" fill="#FFFFFF"/>
+
+            {/* 鼻子：小一点，用深色固定值以增强对比 */}
+            <circle cx="12" cy="12.3" r="0.4" fill="#2A2A2A" />
+
+            {/* 两颗门牙，略微收窄，避免下巴太圆 */}
+            <rect x="11.45" y="13" width="0.6" height="1.2" rx="0.15" fill="#FFFFFF"/>
+            <rect x="11.95" y="13" width="0.6" height="1.2" rx="0.15" fill="#FFFFFF"/>
         </svg>
     );
 }
