@@ -4,12 +4,12 @@ import {useRouter} from 'next/router';
 import Head from 'next/head';
 import {getPageSEO} from '@/src/shared/utils/seo';
 import '../styles/globals.css';
-import '../src/styles/animations.css';
+import '../styles/animations.css';
 import 'reactflow/dist/style.css';
 import {ToastProvider} from '@/src/components/Toast';
 import TopProgressBar from '@/src/components/ui/TopProgressBar';
 import Layout from 'src/layout';
-import {AppSettingsProvider} from '@/src/provider/AppSettingsProvider';
+import { AppProviders } from '@/src/providers/AppProviders';
 
 function Application({Component, pageProps}: AppProps): React.ReactElement {
     const router = useRouter();
@@ -61,11 +61,11 @@ function Application({Component, pageProps}: AppProps): React.ReactElement {
             </Head>
 
             <ToastProvider>
-                <AppSettingsProvider>
+                <AppProviders>
                     <AppLayout>
                         <Component {...pageProps} />
                     </AppLayout>
-                </AppSettingsProvider>
+                </AppProviders>
             </ToastProvider>
         </>
     );
