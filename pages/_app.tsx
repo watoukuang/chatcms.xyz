@@ -5,6 +5,7 @@ import Head from 'next/head';
 import {getPageSEO} from '@/src/shared/utils/seo';
 import '../styles/globals.css';
 import '../src/styles/animations.css';
+import 'reactflow/dist/style.css';
 import {ToastProvider} from '@/src/components/Toast';
 import TopProgressBar from '@/src/components/ui/TopProgressBar';
 import Layout from 'src/layout';

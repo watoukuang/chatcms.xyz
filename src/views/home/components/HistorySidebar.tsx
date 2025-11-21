@@ -73,7 +73,7 @@ export default function HistorySidebar({ histories, activeId, onSelect, onDelete
               onClick={() => onSelect(h)}
               className={`w-full text-left px-3 py-2 rounded-lg border text-sm font-medium transition-colors hover:bg-gray-100 dark:hover:bg-gray-800/70 ${
                 h.id === activeId
-                  ? "border-blue-400 bg-blue-50 dark:bg-blue-900/20"
+                  ? "border-lime-400 bg-lime-50 dark:bg-lime-900/20"
                   : "border-gray-200 dark:border-gray-700"
               }`}
             >

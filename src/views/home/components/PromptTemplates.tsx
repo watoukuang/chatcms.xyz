@@ -203,16 +203,16 @@ const PromptTemplates: React.FC<PromptTemplatesProps> = ({onSelectTemplate}) => 
             {/* 折叠按钮 */}
             <button
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg hover:from-blue-100 hover:to-purple-100 dark:hover:from-blue-900/30 dark:hover:to-purple-900/30 transition-all duration-300 group"
+                className="w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-lime-50 to-lime-100 dark:from-lime-900/20 dark:to-lime-900/30 rounded-lg hover:from-lime-100 hover:to-lime-200 dark:hover:from-lime-900/30 dark:hover:to-lime-900/40 transition-all duration-300 group"
             >
                 <div className="flex items-center gap-2">
                     <span className="text-xl">✨</span>
-                    <span className="font-medium text-gray-700 dark:text-gray-300">智能提示词模板</span>
+                    <span className="font-medium text-lime-700 dark:text-lime-300">智能提示词模板</span>
                     <span
-                        className="text-xs px-2 py-0.5 bg-blue-500 text-white rounded-full">{filteredTemplates.length}</span>
+                        className="text-xs px-2 py-0.5 bg-lime-500 text-[#0f1115] rounded-full">{filteredTemplates.length}</span>
                 </div>
                 <svg
-                    className={`w-5 h-5 text-gray-500 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
+                    className={`w-5 h-5 text-lime-600 dark:text-lime-300 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -232,7 +232,7 @@ const PromptTemplates: React.FC<PromptTemplatesProps> = ({onSelectTemplate}) => 
                                 onClick={() => setSelectedCategory(cat.id as any)}
                                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
                                     selectedCategory === cat.id
-                                        ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg shadow-blue-500/30'
+                                        ? 'bg-gradient-to-r from-lime-500 to-lime-600 text-[#0f1115] shadow-lg shadow-lime-500/30'
                                         : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                                 }`}
                             >
@@ -248,14 +248,14 @@ const PromptTemplates: React.FC<PromptTemplatesProps> = ({onSelectTemplate}) => 
                             <button
                                 key={template.id}
                                 onClick={() => onSelectTemplate(template.template)}
-                                className="group p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:border-blue-500 dark:hover:border-blue-500 hover:shadow-lg hover:shadow-blue-500/10 transition-all duration-300 text-left"
+                                className="group p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:border-lime-500 dark:hover:border-lime-500 hover:shadow-lg hover:shadow-lime-500/10 transition-all duration-300 text-left"
                             >
                                 <div className="flex items-start gap-3">
                                     <span className="text-2xl group-hover:scale-110 transition-transform duration-300">
                                         {template.icon}
                                     </span>
                                     <div className="flex-1 min-w-0">
-                                        <h4 className="font-semibold text-gray-900 dark:text-white mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                        <h4 className="font-semibold text-gray-900 dark:text-white mb-1 group-hover:text-lime-700 dark:group-hover:text-lime-300 transition-colors">
                                             {template.title}
                                         </h4>
                                         <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2">
@@ -269,8 +269,8 @@ const PromptTemplates: React.FC<PromptTemplatesProps> = ({onSelectTemplate}) => 
 
                     {/* 使用提示 */}
                     <div
-                        className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                        <p className="text-xs text-blue-700 dark:text-blue-300">
+                        className="p-3 bg-lime-50 dark:bg-lime-900/20 border border-lime-200 dark:border-lime-800 rounded-lg">
+                        <p className="text-xs text-lime-700 dark:text-lime-300">
                             💡 <strong>使用提示：</strong>点击模板后，会自动填充到输入框，你只需要替换 [方括号] 中的内容即可
                         </p>
                     </div>

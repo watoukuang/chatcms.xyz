@@ -34,7 +34,7 @@ export default function MdRender({content, className = ''}: MarkdownRendererProp
         });
 
         // 链接
-        html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-blue-600 dark:text-blue-400 hover:underline" target="_blank" rel="noopener noreferrer">$1</a>');
+        html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-lime-700 dark:text-lime-300 hover:underline" target="_blank" rel="noopener noreferrer">$1</a>');
 
         // 无序列表
         html = html.replace(/^\- (.+)$/gm, '<li class="ml-4 mb-1">• $1</li>');

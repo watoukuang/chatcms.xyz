@@ -445,9 +445,9 @@ export default function MarketplaceView(): React.ReactElement {
                                         </div>
                                     )}
                                     {selectedTemplate.contact && (
-                                        <div className="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg">
-                                            <p className="text-sm text-blue-700 dark:text-blue-300 mb-1">联系方式</p>
-                                            <p className="text-lg font-semibold text-blue-800 dark:text-blue-200 break-words">{selectedTemplate.contact}</p>
+                                        <div className="bg-lime-50 dark:bg-lime-900/30 p-4 rounded-lg">
+                                            <p className="text-sm text-lime-700 dark:text-lime-300 mb-1">联系方式</p>
+                                            <p className="text-lg font-semibold text-lime-800 dark:text-lime-200 break-words">{selectedTemplate.contact}</p>
                                         </div>
                                     )}
                                 </div>

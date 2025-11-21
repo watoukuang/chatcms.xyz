@@ -68,7 +68,7 @@ const Calendar: React.FC<CalendarProps> = ({
                     {timeTableSlots.map((slot, rowIdx) => {
                         const cellStartTime = slot.split('-')[0];
                         return (
-                            <tr key={slot} className="hover:bg-blue-50/30 transition-colors">
+                            <tr key={slot} className="hover:bg-lime-50/30 transition-colors">
                                 <td className="border border-gray-200 px-3 py-2 align-middle sticky left-0 bg-white z-10 text-sm text-gray-600 font-medium text-center">{slot}</td>
                                 {tableHeaders.map((h) => {
                                     // 被 rowSpan 覆盖则不渲染单元格
@@ -125,7 +125,7 @@ const Calendar: React.FC<CalendarProps> = ({
                                                 className={`h-[60px] w-full flex items-center justify-center text-gray-300 transition-all rounded ${
                                                     isPastWeek || isBreak || isNonWorkDay
                                                         ? 'cursor-not-allowed opacity-50'
-                                                        : 'cursor-pointer hover:bg-blue-50 hover:text-blue-400'
+                                                        : 'cursor-pointer hover:bg-lime-50 hover:text-lime-600'
                                                 }`}
                                                 title={cellTitle}
                                                 aria-label={isBreak ? '休息时间' : isNonWorkDay ? '非工作日' : '该日暂无任务，显示为短横线'}

@@ -2,14 +2,14 @@
 
 /* 浅色模式 (默认) */
 :root {
-  /* 全局深色主题基调 + 荧光绿强调色 */
-  --bg-primary: #0f1115;        /* 近黑背景 */
-  --bg-secondary: #121418;      /* 次级区域 */
-  --text-primary: #e5e7eb;      /* 主文本（浅灰） */
-  --text-secondary: #a3aab7;    /* 次文本 */
-  --border-color: #1f232a;      /* 边框色 */
-  --card-bg: #121418;           /* 卡片深色背景 */
-  --card-border: #1f232a;       /* 卡片边框 */
+  /* 浅色基调 + 荧光绿强调色 */
+  --bg-primary: #ffffff;        /* 浅色主背景 */
+  --bg-secondary: #f8fafc;      /* 次级区域（slate-50） */
+  --text-primary: #111827;      /* 主文本（gray-900） */
+  --text-secondary: #4b5563;    /* 次文本（gray-600） */
+  --border-color: #e5e7eb;      /* 边框色（gray-200） */
+  --card-bg: #ffffff;           /* 卡片浅色背景 */
+  --card-border: #e5e7eb;       /* 卡片边框（gray-200） */
   --accent-color: #A3E635;      /* 荧光绿（tailwind lime-400） */
   --accent-shadow: rgba(163, 230, 53, 0.35);
 }

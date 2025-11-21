@@ -176,11 +176,11 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
 
     return (
         <div
-            className="mx-auto p-6 bg-white/95 dark:bg-[#1f2937]/95 backdrop-blur-xl border border-gray-200/80 dark:border-gray-700/80 rounded-2xl shadow-2xl w-full transition-all duration-300">
+            className="mx-auto p-6 bg-white/95 dark:bg-[#1f2937]/95 backdrop-blur-xl border border-lime-500/30 dark:border-lime-700/40 rounded-2xl shadow-2xl w-full transition-all duration-300">
             <div className="w-full flex flex-col gap-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800/40 border border-gray-200/70 dark:border-gray-700/70">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-3 rounded-lg bg-gradient-to-br from-white to-lime-50/30 dark:from-gray-800 dark:to-lime-900/10 border border-lime-300/50 dark:border-lime-700/40">
                     <div className="flex flex-col gap-1">
-                        <label className="text-xs font-medium text-gray-600 dark:text-gray-400">开始时间</label>
+                        <label className="text-xs font-medium text-lime-700 dark:text-lime-300">开始时间</label>
                         <input
                             type="text"
                             value={startISO}
@@ -197,15 +197,15 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                         />
                         <div className="flex flex-wrap gap-2 mt-1">
                             <button type="button" onClick={setStartNow}
-                                    className="px-2 py-1 text-xs rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 transition">现在开始</button>
+                                    className="px-2 py-1 text-xs rounded-md border border-lime-300 dark:border-lime-600 text-lime-700 dark:text-lime-300 hover:bg-lime-50 dark:hover:bg-lime-900/20 transition">现在开始</button>
                             <button type="button" onClick={setStartToday}
-                                    className="px-2 py-1 text-xs rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 transition">今天</button>
+                                    className="px-2 py-1 text-xs rounded-md border border-lime-300 dark:border-lime-600 text-lime-700 dark:text-lime-300 hover:bg-lime-50 dark:hover:bg-lime-900/20 transition">今天</button>
                             <button type="button" onClick={clearStart}
-                                    className="px-2 py-1 text-xs rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 transition">清除</button>
+                                    className="px-2 py-1 text-xs rounded-md border border-lime-300 dark:border-lime-600 text-lime-700 dark:text-lime-300 hover:bg-lime-50 dark:hover:bg-lime-900/20 transition">清除</button>
                         </div>
                     </div>
                     <div className="flex flex-col gap-1">
-                        <label className="text-xs font-medium text-gray-600 dark:text-gray-400">结束时间</label>
+                        <label className="text-xs font-medium text-lime-700 dark:text-lime-300">结束时间</label>
                         <input
                             type="text"
                             value={endISO}
@@ -222,22 +222,22 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                         />
                         <div className="flex flex-wrap gap-2 mt-1">
                             <button type="button" onClick={() => setEndPlus(30)}
-                                    className="px-2 py-1 text-xs rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 transition">+30分钟</button>
+                                    className="px-2 py-1 text-xs rounded-md border border-lime-300 dark:border-lime-600 text-lime-700 dark:text-lime-300 hover:bg-lime-50 dark:hover:bg-lime-900/20 transition">+30分钟</button>
                             <button type="button" onClick={() => setEndPlus(60)}
-                                    className="px-2 py-1 text-xs rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 transition">+1小时</button>
+                                    className="px-2 py-1 text-xs rounded-md border border-lime-300 dark:border-lime-600 text-lime-700 dark:text-lime-300 hover:bg-lime-50 dark:hover:bg-lime-900/20 transition">+1小时</button>
                             <button type="button" onClick={() => setEndPlus(120)}
-                                    className="px-2 py-1 text-xs rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 transition">+2小时</button>
+                                    className="px-2 py-1 text-xs rounded-md border border-lime-300 dark:border-lime-600 text-lime-700 dark:text-lime-300 hover:bg-lime-50 dark:hover:bg-lime-900/20 transition">+2小时</button>
                             <button type="button" onClick={setEndToday}
-                                    className="px-2 py-1 text-xs rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 transition">今天结束</button>
+                                    className="px-2 py-1 text-xs rounded-md border border-lime-300 dark:border-lime-600 text-lime-700 dark:text-lime-300 hover:bg-lime-50 dark:hover:bg-lime-900/20 transition">今天结束</button>
                             <button type="button" onClick={setEndNow}
-                                    className="px-2 py-1 text-xs rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 transition">现在</button>
+                                    className="px-2 py-1 text-xs rounded-md border border-lime-300 dark:border-lime-600 text-lime-700 dark:text-lime-300 hover:bg-lime-50 dark:hover:bg-lime-900/20 transition">现在</button>
                             <button type="button" onClick={clearEnd}
-                                    className="px-2 py-1 text-xs rounded-md bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 transition">清除</button>
+                                    className="px-2 py-1 text-xs rounded-md border border-lime-300 dark:border-lime-600 text-lime-700 dark:text-lime-300 hover:bg-lime-50 dark:hover:bg-lime-900/20 transition">清除</button>
                         </div>
                     </div>
                 </div>
                 {startISO && endISO && (
-                    <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                    <div className="flex items-center gap-2 text-xs text-lime-700 dark:text-lime-300">
                         {(() => {
                             const s = new Date(startISO).getTime();
                             const e = new Date(endISO).getTime();
@@ -245,7 +245,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                             const totalMin = Math.round(diffMs / 60000);
                             const h = Math.floor(totalMin / 60);
                             const m = totalMin % 60;
-                            return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-gray-100 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700">时长：{h}小时{m}分钟</span>;
+                            return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-lime-100/30 dark:bg-lime-900/20 border border-lime-300 dark:border-lime-700">时长：{h}小时{m}分钟</span>;
                         })()}
                     </div>
                 )}
@@ -277,7 +277,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                         <button
                             type="button"
                             aria-label="发送"
-                            className={`absolute right-3 bottom-3 w-9 h-9 rounded-lg flex items-center justify-center transition-all ${canSend ? "bg-gradient-to-r from-lime-500 to-lime-600 text-[#0f1115] hover:from-lime-600 hover:to-lime-700 shadow-lg hover:scale-105" : "bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed"}`}
+                            className={`absolute right-3 bottom-3 w-9 h-9 rounded-lg flex items-center justify-center transition-all ${canSend ? "bg-gradient-to-r from-lime-500 to-lime-600 text-[#0f1115] hover:from-lime-600 hover:to-lime-700 shadow-lg hover:scale-105 ring-1 ring-lime-500/40" : "bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed"}`}
                             onClick={handleSend}
                             disabled={!canSend}
                         >
@@ -289,7 +289,7 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                                         strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                                 </svg>
                             ) : (
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-4 h-4">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className={`w-4 h-4 ${canSend ? 'text-lime-50 dark:text-lime-200' : ''}`}>
                                     <path d="M5 12h12M13 5l7 7-7 7" strokeWidth="2" strokeLinecap="round"
                                           strokeLinejoin="round"/>
                                 </svg>

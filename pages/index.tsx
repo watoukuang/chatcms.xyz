@@ -1,1 +1,5 @@
-export {default} from '@/src/views/home'
+import HomeLanding from '@/src/views/home'
+
+export default function Page() {
+  return <HomeLanding/>;
+}

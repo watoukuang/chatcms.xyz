@@ -324,7 +324,7 @@ const TodoPanel: React.FC<ScrumPageProps> = (props) => {
                         </button>
                         <div className="h-6 w-px bg-gray-300 dark:bg-gray-700"></div>
                         <button
-                            className={`px-4 py-1.5 rounded-md text-white text-sm font-medium transition-all ${isPastWeek ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 shadow-sm hover:shadow'}`}
+                            className={`px-4 py-1.5 rounded-md text-[#0f1115] text-sm font-medium transition-all ${isPastWeek ? 'bg-gray-400 cursor-not-allowed' : 'bg-lime-600 hover:bg-lime-700 shadow-sm hover:shadow shadow-lime-500/20'}`}
                             onClick={handleAdd} 
                             disabled={isPastWeek}>+ 新增任务
                         </button>
@@ -363,7 +363,7 @@ const TodoPanel: React.FC<ScrumPageProps> = (props) => {
                             {timeTableSlots.map((slot, rowIdx) => {
                                 const cellStartTime = slot.split('-')[0];
                                 return (
-                                    <tr key={slot} className="hover:bg-blue-50/30 transition-colors">
+                                    <tr key={slot} className="hover:bg-lime-50/30 transition-colors">
                                         <td className="border border-gray-200 px-3 py-2 align-middle sticky left-0 bg-white z-10 text-sm text-gray-600 font-medium text-center">{slot}</td>
                                         {weekDayHeaders.map((h) => {
                                             // 被 rowSpan 覆盖则不渲染单元格
@@ -401,7 +401,7 @@ const TodoPanel: React.FC<ScrumPageProps> = (props) => {
                                                             });
                                                             setIsDrawerVisible(true);
                                                         }}
-                                                        className={`h-[60px] w-full flex items-center justify-center text-gray-300 hover:bg-blue-50 hover:text-blue-400 transition-all rounded ${isPastWeek ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+                                                        className={`h-[60px] w-full flex items-center justify-center text-gray-300 hover:bg-lime-50 hover:text-lime-600 transition-all rounded ${isPastWeek ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
                                                         title={isPastWeek ? '历史周不可编辑' : '点击添加任务'}
                                                         aria-label="该日暂无任务，显示为短横线"
                                                     >
@@ -425,7 +425,7 @@ const TodoPanel: React.FC<ScrumPageProps> = (props) => {
                     <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsDrawerVisible(false)}/>
                     <div className="absolute inset-0 flex items-center justify-center p-4">
                         <div className="bg-white w-full max-w-[800px] rounded-lg shadow-2xl transform transition-all">
-                            <div className="px-6 py-4 border-b bg-gray-50">
+                            <div className="px-6 py-4 border-b border-lime-500/20 bg-gray-50">
                                 <h3 className="text-lg font-semibold text-gray-800">
                                     {editingTask?.id ? '✏️ 编辑任务' : '➕ 新增任务'}
                                 </h3>
@@ -440,11 +440,11 @@ const TodoPanel: React.FC<ScrumPageProps> = (props) => {
                                     stateOptions={stateOptions}
                                 />
                             </div>
-                            <div className="px-6 py-4 border-t bg-gray-50 flex justify-end gap-3">
+                            <div className="px-6 py-4 border-t border-lime-500/15 bg-gray-50 flex justify-end gap-3">
                                 <button className="px-4 py-2 border border-gray-300 rounded-md hover:bg-white transition-colors text-sm font-medium text-gray-700"
                                         onClick={() => setIsDrawerVisible(false)}>取消
                                 </button>
-                                <button className="px-4 py-2 rounded-md bg-blue-600 hover:bg-blue-700 text-white transition-all shadow-sm hover:shadow text-sm font-medium"
+                                <button className="px-4 py-2 rounded-md bg-lime-600 hover:bg-lime-700 text-[#0f1115] transition-all shadow-sm hover:shadow shadow-lime-500/20 text-sm font-medium"
                                         onClick={handleOk}>✓ 提交
                                 </button>
                             </div>

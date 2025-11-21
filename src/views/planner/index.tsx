@@ -33,9 +33,9 @@ const priorityConfig = {
     },
     medium: {
         label: '中',
-        color: 'from-blue-500 to-blue-600',
-        bg: 'bg-blue-50 dark:bg-blue-900/20',
-        text: 'text-blue-600 dark:text-blue-400',
+        color: 'from-lime-500 to-lime-600',
+        bg: 'bg-lime-50 dark:bg-lime-900/20',
+        text: 'text-lime-700 dark:text-lime-300',
         icon: '📌'
     },
     low: {

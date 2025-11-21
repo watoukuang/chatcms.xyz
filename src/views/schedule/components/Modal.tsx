@@ -61,7 +61,7 @@ export default function Modal({
                         </button>
                         {onOk && (
                             <button
-                                className="px-4 py-2 rounded-md bg-blue-600 hover:bg-blue-700 text-white transition-all shadow-sm hover:shadow text-sm font-medium"
+                                className="px-4 py-2 rounded-md bg-lime-600 hover:bg-lime-700 text-[#0f1115] transition-all shadow-sm hover:shadow text-sm font-medium"
                                 onClick={onOk}
                             >
                                 {okText}

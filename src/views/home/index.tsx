@@ -13,6 +13,7 @@ import HistorySidebar, {TaskHistory} from "@/src/views/home/components/HistorySi
 import {useSidebar} from "@/src/contexts/SidebarContext";
 import DelIcon from "@/src/components/Icons/DelIcon";
 import AddIcon from "@/src/components/Icons/AddIcon";
+import CanvasBackground from "@/src/components/CanvasBackground";
 
 export default function HomeLanding(): React.ReactElement {
     const router = useRouter();
@@ -371,8 +372,11 @@ export default function HomeLanding(): React.ReactElement {
     const isEmpty = tasks.length === 0 && !loading;
     return (
         <div className={"relative min-h-screen pb-0 pt-[60px] overflow-hidden"}>
-            {/* 背景（极简） */}
-            <div className="absolute inset-0 bg-white dark:bg-[#0b0f19]"/>
+            {/* 背景（渐变 + 柔和漂移动效 + 画布网格/斑点） */}
+            <div className="absolute inset-0 bg-gradient-to-b from-lime-50/40 via-white to-white dark:from-[#0f1115] dark:via-lime-900/5 dark:to-[#0f1115]"/>
+            <div className="absolute inset-0 pointer-events-none anim-bg-soft-light dark:anim-bg-soft-dark opacity-[0.5]"/>
+            <CanvasBackground variant="grid" opacity={0.10} />
+            <CanvasBackground variant="speckle" opacity={0.08} />
 
             {/* 主内容容器：左右并排两栏（固定视口高度，避免页面级滚动） */}
             <div className="relative z-10 w-full mx-auto flex gap-4 h-[calc(100dvh-60px)] overflow-hidden">
@@ -385,7 +389,7 @@ export default function HomeLanding(): React.ReactElement {
                         if (isCollapsed) expand(); else collapse();
                     }}
                     style={{left: isCollapsed ? 8 : 280}}
-                    className="absolute top-1/2 -translate-y-1/2 z-30 h-8 w-8 flex items-center justify-center rounded-full border border-gray-300 dark:border-gray-700 bg-white/80 dark:bg-gray-800/70 text-gray-700 dark:text-gray-200 shadow-sm hover:shadow transition-all"
+                    className="absolute top-1/2 -translate-y-1/2 z-30 h-8 w-8 flex items-center justify-center rounded-full border border-gray-300 dark:border-gray-700 bg-white/80 dark:bg-gray-800/70 text-gray-700 dark:text-gray-200 shadow-sm hover:shadow transition-all duration-200 hover:scale-105 active:scale-95"
                     aria-label={isCollapsed ? '展开左侧栏' : '收起左侧栏'}
                 >
                     {isCollapsed ? '⟩' : '⟨'}
@@ -408,7 +412,7 @@ export default function HomeLanding(): React.ReactElement {
                                         setActiveHistoryId(null);
                                         setChatInput("");
                                     }}
-                                    className="w-full px-3 py-2 text-sm rounded-lg bg-lime-600 text-white hover:bg-lime-700 focus:outline-none focus:ring-2 focus:ring-lime-500/40 text-center"
+                                    className="w-full px-3 py-2 text-sm rounded-lg bg-lime-600 text-white hover:bg-lime-700 focus:outline-none focus:ring-2 focus:ring-lime-500/40 text-center transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
                                 >
                                     <span className="inline-flex items-center gap-2 justify-center w-full">
                                         <AddIcon/>
@@ -421,7 +425,7 @@ export default function HomeLanding(): React.ReactElement {
                                 value={historySearch}
                                 onChange={(e) => setHistorySearch(e.target.value)}
                                 placeholder="搜索会话/任务"
-                                className="w-full border border-gray-300 dark:border-gray-600 bg-transparent rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500"
+ className="w-full border border-gray-300 dark:border-gray-600 bg-transparent rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-lime-500/40 focus:border-lime-500"
                             />
                         </div>
 

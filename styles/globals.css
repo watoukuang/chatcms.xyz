@@ -98,6 +98,18 @@
         @apply relative bg-white p-4 rounded-xl border border-gray-200 transition-shadow hover:shadow-md dark:bg-[#1e1e1e] dark:border-[#2d2d30] dark:text-gray-200;
     }
 
+    /* 分组背景卡片（与 lime 主题统一） */
+    .context-card {
+        @apply relative overflow-hidden rounded-xl border ring-1 shadow-xl;
+        @apply border-lime-500/20 ring-lime-500/20 dark:border-lime-500/15 dark:ring-lime-500/15;
+        @apply bg-gradient-to-br from-white to-lime-50/30 dark:from-[#121418] dark:to-lime-900/10;
+    }
+
+    .context-card-header {
+        @apply flex items-center justify-between mb-4 pb-2 border-b;
+        @apply border-gray-200 dark:border-gray-700;
+    }
+
     /* 隐藏滚动条但保持滚动功能 */
     .scrollbar-hide {
         -ms-overflow-style: none; /* IE and Edge */

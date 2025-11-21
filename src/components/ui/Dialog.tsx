@@ -17,7 +17,7 @@ interface DialogProps {
 }
 
 const accentMap: Record<Accent, string> = {
-  blue: 'from-blue-500/20 to-blue-600/10',
+  blue: 'from-lime-500/20 to-lime-600/10',
   red: 'from-red-500/20 to-red-600/10',
   orange: 'from-orange-500/20 to-orange-600/10',
   green: 'from-green-500/20 to-green-600/10',
@@ -95,7 +95,7 @@ export default function Dialog({
               </button>
               {onOk && (
                 <button
-                  className="px-4 py-2 rounded-md bg-blue-600 hover:bg-blue-700 text-white transition-all shadow-sm hover:shadow text-sm font-medium"
+                  className="px-4 py-2 rounded-md bg-lime-600 hover:bg-lime-700 text-[#0f1115] transition-all shadow-sm hover:shadow text-sm font-medium"
                   onClick={onOk}
                 >
                   {okText}
