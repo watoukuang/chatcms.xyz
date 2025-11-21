@@ -1,0 +1,111 @@
+/* 自定义动画 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.animate-slideIn {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* 首页背景动效：柔和渐变漂移 */
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.anim-bg-soft-light {
+  background-image: linear-gradient(120deg,
+    rgba(163, 230, 53, 0.08) 0%,
+    rgba(255, 255, 255, 0.85) 45%,
+    rgba(163, 230, 53, 0.06) 100%);
+  background-size: 200% 200%;
+  animation: gradientShift 28s ease-in-out infinite;
+}
+
+.anim-bg-soft-dark {
+  background-image:
+    radial-gradient(45rem 30rem at 20% 30%, rgba(163, 230, 53, 0.10), transparent 60%),
+    radial-gradient(36rem 24rem at 80% 70%, rgba(163, 230, 53, 0.06), transparent 60%),
+    linear-gradient(180deg, rgba(15, 17, 21, 1) 0%, rgba(15, 17, 21, 0.98) 100%);
+  background-size: 120% 120%, 120% 120%, 100% 100%;
+  animation: gradientShift 40s ease-in-out infinite;
+}
+
+/* 按钮微交互：柔和脉冲 */
+@keyframes pulseSoft {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(163, 230, 53, 0.25); }
+  50% { box-shadow: 0 0 0 6px rgba(163, 230, 53, 0.12); }
+}
+
+.pulse-soft {
+  animation: pulseSoft 2.6s ease-in-out infinite;
+}
+
+/* 极淡网格纹理（浅/深） */
+@keyframes subtleDrift {
+  0% { background-position: 0 0, 0 0; }
+  50% { background-position: 10px 10px, -10px -10px; }
+  100% { background-position: 0 0, 0 0; }
+}
+
+.grid-soft-light {
+  background-image:
+    linear-gradient(rgba(163, 230, 53, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(163, 230, 53, 0.05) 1px, transparent 1px);
+  background-size: 24px 24px, 24px 24px;
+  animation: subtleDrift 60s ease-in-out infinite;
+}
+
+.grid-soft-dark {
+  background-image:
+    linear-gradient(rgba(163, 230, 53, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(163, 230, 53, 0.04) 1px, transparent 1px);
+  background-size: 22px 22px, 22px 22px;
+  animation: subtleDrift 60s ease-in-out infinite;
+}
+
+/* 极淡斑驳噪点纹理（浅/深） */
+@keyframes grainMove {
+  0% { background-position: 0 0; }
+  50% { background-position: 20px -20px; }
+  100% { background-position: 0 0; }
+}
+
+.speckle-soft-light {
+  background-image: radial-gradient(rgba(17, 24, 39, 0.04) 0.8px, transparent 0.8px);
+  background-size: 5px 5px;
+  animation: grainMove 80s linear infinite;
+}
+
+.speckle-soft-dark {
+  background-image: radial-gradient(rgba(227, 233, 239, 0.035) 0.8px, transparent 0.8px);
+  background-size: 5px 5px;
+  animation: grainMove 80s linear infinite;
+}
