@@ -10,7 +10,7 @@ import ErrorAlert from "@/src/views/home/components/ErrorAlert";
 import Overlay from "@/src/views/home/components/Overlay";
 import Sidebar, {TaskHistory} from "@/src/views/home/components/Sidebar";
 import ToggleBtn from "@/src/views/home/components/ToggleBtn";
-import TaskTreePanel from "@/src/views/home/components/TaskTreePanel";
+import TreePanel from "@/src/views/home/components/TreePanel";
 import {useSidebar} from "@/src/contexts/SidebarContext";
 import CanvasBackground from "@/src/components/CanvasBackground";
 import {
@@ -477,9 +477,10 @@ const HomeLanding: React.FC = () => {
                 </div>
 
                 {/* 右侧主内容（独立滚动容器） */}
-                <div className="flex-1 h-full overflow-y-auto relative" ref={rightColRef} onClick={() => {
-                    if (isCollapsed) expand();
-                }}>
+                <div
+                    className="flex-1 h-full overflow-y-auto relative"
+                    ref={rightColRef}
+                >
                     {/* 内容 + 底部输入栏（非固定） */}
                     <div className="flex flex-col h-full">
                         {/* 顶部错误提示 */}
@@ -532,7 +533,7 @@ const HomeLanding: React.FC = () => {
                                                     : 'opacity-100 border-l border-gray-200 dark:border-gray-700 bg-white/70 dark:bg-gray-900/40 rounded-l-none rounded-md shadow-sm overflow-hidden'
                                             }`}
                                         >
-                                            <TaskTreePanel
+                                            <TreePanel
                                                 tasks={tasks}
                                                 focusTaskId={focusTaskId}
                                                 onFocusChange={handleFocusChange}

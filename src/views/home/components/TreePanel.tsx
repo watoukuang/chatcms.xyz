@@ -3,6 +3,8 @@
 import React from "react";
 import {SimpleTask as UiTask} from "@/src/views/home/components/TaskFlow";
 
+type ParentKey = number | 'root';
+
 export type TaskTreePanelProps = {
     tasks: UiTask[];
     focusTaskId: number | null;
@@ -12,7 +14,18 @@ export type TaskTreePanelProps = {
     onDeleteTask: (taskId: number) => void;
 };
 
-const TaskTreePanel: React.FC<TaskTreePanelProps> = ({
+const buildChildrenMap = (tasks: UiTask[]): Map<ParentKey, UiTask[]> => {
+    const map = new Map<ParentKey, UiTask[]>();
+    tasks.forEach(t => {
+        const key: ParentKey = t.parentId ?? 'root';
+        const list = map.get(key) || [];
+        list.push(t);
+        map.set(key, list);
+    });
+    return map;
+};
+
+const TreePanel: React.FC<TaskTreePanelProps> = ({
     tasks,
     focusTaskId,
     onFocusChange,
@@ -22,19 +35,12 @@ const TaskTreePanel: React.FC<TaskTreePanelProps> = ({
 }) => {
     const [searchQuery, setSearchQuery] = React.useState<string>('');
 
-    const childrenMap = React.useMemo(() => {
-        const map = new Map<number | 'root', UiTask[]>();
-        tasks.forEach(t => {
-            const key: number | 'root' = t.parentId ?? 'root';
-            const list = map.get(key) || [];
-            list.push(t);
-            map.set(key, list);
-        });
-        return map;
-    }, [tasks]);
+    const childrenMap = React.useMemo(() => buildChildrenMap(tasks), [tasks]);
+
+    const normalizedQuery = React.useMemo(() => searchQuery.trim().toLowerCase(), [searchQuery]);
 
     const renderNodes = (
-        parentKey: number | 'root',
+        parentKey: ParentKey,
         depth: number,
         visited: Set<number>
     ): React.ReactNode => {
@@ -43,8 +49,8 @@ const TaskTreePanel: React.FC<TaskTreePanelProps> = ({
         return list
             .filter(task => {
                 // 如果有搜索词，只显示匹配的任务
-                if (!searchQuery.trim()) return true;
-                return task.task?.toLowerCase().includes(searchQuery.toLowerCase());
+                if (!normalizedQuery) return true;
+                return task.task?.toLowerCase().includes(normalizedQuery);
             })
             .map(task => {
                 if (task.id == null) return null;
@@ -65,7 +71,6 @@ const TaskTreePanel: React.FC<TaskTreePanelProps> = ({
                 nextVisited.add(task.id);
 
                 const hasChildren = !!childrenMap.get(task.id);
-                const isSelected = focusTaskId === task.id;
 
                 return (
                     <div key={task.id} style={{marginLeft: depth * 12}} className="mt-0.5">
@@ -193,4 +198,4 @@ const TaskTreePanel: React.FC<TaskTreePanelProps> = ({
     );
 };
 
-export default TaskTreePanel;
+export default TreePanel;

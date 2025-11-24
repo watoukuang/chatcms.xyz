@@ -3,8 +3,9 @@ import React from 'react';
 export type SimpleTask = {
     id?: number;
     taskTime?: string; // YYYY-MM-DD
-    startTime?: string; // HH:mm (可选，用于兼容历史数据)
-    endTime?: string;   // HH:mm (可选，用于兼容历史数据)
+    // 时间字段统一使用 HH:mm 格式，支持分钟精度（如 09:07, 14:23）
+    startTime?: string; // HH:mm 开始时间（分钟精度）
+    endTime?: string;   // HH:mm 结束时间（分钟精度）
     // 新字段：工时估算
     duration?: number; // 工时数值
     unit?: 'minute' | 'hour' | 'day'; // 工时单位
@@ -21,6 +22,9 @@ export type SimpleTask = {
     level?: number; // 层级：0=主线，1=一级子任务，2=二级子任务
     collapsed?: boolean; // 是否折叠子任务
     visibleOnMainFlow?: boolean; // 是否在主画布主链上展示（默认 true）
+    // 排期标记：标记任务是否已被安排到固定日程
+    scheduledDate?: string; // 已排期的日期 YYYY-MM-DD，未排期则为 undefined
+    isScheduled?: boolean; // 是否已排期（快速判断标记）
 };
 
 interface TaskFlowProps {
@@ -207,8 +211,6 @@ const TaskCard: React.FC<{
                     💡 {t.remark}
                 </div>
             )}
-
-            {/* 底部装饰移除：避免悬停出现蓝色横线 */}
         </div>
     );
 };
