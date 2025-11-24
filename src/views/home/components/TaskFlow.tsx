@@ -50,7 +50,27 @@ const TaskCard: React.FC<{
     onClick?: () => void; 
     onSplit?: () => void;
     onToggleCollapse?: () => void;
-}> = ({t, onClick, onSplit, onToggleCollapse}) => {
+    onAddToSchedule?: () => void;
+    onAddToBacklog?: () => void;
+    onEdit?: () => void;
+    onDelete?: () => void;
+    isSelected?: boolean;
+}> = ({t, onClick, onSplit, onToggleCollapse, onAddToSchedule, onAddToBacklog, onEdit, onDelete, isSelected}) => {
+    const [menuOpen, setMenuOpen] = React.useState(false);
+    const menuRef = React.useRef<HTMLDivElement>(null);
+
+    // 点击外部关闭菜单
+    React.useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+                setMenuOpen(false);
+            }
+        };
+        if (menuOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+            return () => document.removeEventListener('mousedown', handleClickOutside);
+        }
+    }, [menuOpen]);
     // 优先使用 duration + unit，其次 estimateMinutes，最后兼容旧数据的 startTime/endTime
     const duration = t.duration && t.unit
         ? (() => {
@@ -72,7 +92,11 @@ const TaskCard: React.FC<{
 
     return (
         <div
-            className="group min-w-[280px] sm:min-w-[320px] md:min-w-[360px] max-w-[520px] bg-gradient-to-br from-white to-blue-50/30 dark:from-gray-800 dark:to-blue-900/10 border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 rounded-xl shadow-lg transition-colors duration-200 p-5 cursor-pointer relative"
+            className={`group min-w-[280px] sm:min-w-[320px] md:min-w-[360px] max-w-[520px] bg-gradient-to-br from-white to-blue-50/30 dark:from-gray-800 dark:to-blue-900/10 border-2 transition-all duration-200 p-5 cursor-pointer relative rounded-xl shadow-lg ${
+                isSelected 
+                    ? 'border-lime-500 dark:border-lime-600 shadow-lime-200 dark:shadow-lime-900/50' 
+                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+            }`}
             onClick={onClick}
         >
             {/* 标题栏（含操作按钮） */}
@@ -83,26 +107,64 @@ const TaskCard: React.FC<{
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-2">
-                        {/* 如果有子任务，显示折叠/展开按钮 */}
-                        {t.children && t.children.length > 0 && (
-                            <button
-                                className="px-2 py-1 text-xs bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded transition-colors"
-                                onClick={(e) => { e.stopPropagation(); onToggleCollapse?.(); }}
-                                aria-label={t.collapsed ? "展开子任务" : "折叠子任务"}
-                                title={t.collapsed ? "展开子任务" : "折叠子任务"}
-                            >
-                                {t.collapsed ? '▶' : '▼'} {t.children.length}
-                            </button>
-                        )}
+                    {/* 如果有子任务，显示折叠/展开按钮 */}
+                    {t.children && t.children.length > 0 && (
                         <button
-                            className="px-3 py-1 text-xs bg-lime-500 hover:bg-lime-600 text-white rounded-lg transition-colors shadow-sm"
-                            onClick={(e) => { e.stopPropagation(); onSplit?.(); }}
-                            aria-label="AI拆分此任务"
-                            title="AI拆分此任务"
+                            className="px-2 py-1 text-xs bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded transition-colors"
+                            onClick={(e) => { e.stopPropagation(); onToggleCollapse?.(); }}
+                            aria-label={t.collapsed ? "展开子任务" : "折叠子任务"}
+                            title={t.collapsed ? "展开子任务" : "折叠子任务"}
                         >
-                            🤖 AI拆分
+                            {t.collapsed ? '▶' : '▼'} {t.children.length}
                         </button>
+                    )}
+                    {/* 菜单按钮 */}
+                    <div className="relative" ref={menuRef}>
+                        <button
+                            className="px-2 py-1 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+                            onClick={(e) => { e.stopPropagation(); setMenuOpen(!menuOpen); }}
+                            aria-label="操作菜单"
+                            title="操作菜单"
+                        >
+                            ⋯
+                        </button>
+                        {/* 下拉菜单 */}
+                        {menuOpen && (
+                            <div className="absolute right-0 top-full mt-1 w-40 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 py-1">
+                                {onSplit && (
+                                    <button
+                                        className="w-full text-left px-3 py-2 text-xs hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 flex items-center gap-2"
+                                        onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onSplit(); }}
+                                    >
+                                        🤖 AI拆分
+                                    </button>
+                                )}
+                                {onAddToSchedule && (
+                                    <button
+                                        className="w-full text-left px-3 py-2 text-xs hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 flex items-center gap-2"
+                                        onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onAddToSchedule(); }}
+                                    >
+                                        📅 加入日程
+                                    </button>
+                                )}
+                                {onEdit && (
+                                    <button
+                                        className="w-full text-left px-3 py-2 text-xs hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 flex items-center gap-2"
+                                        onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onEdit(); }}
+                                    >
+                                        👁️ 查看详情
+                                    </button>
+                                )}
+                                {onDelete && (
+                                    <button
+                                        className="w-full text-left px-3 py-2 text-xs hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 flex items-center gap-2"
+                                        onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onDelete(); }}
+                                    >
+                                        🗑️ 删除任务
+                                    </button>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -155,4 +217,5 @@ const TaskFlow: React.FC<TaskFlowProps> = ({task, index, total, onTaskClick, onC
     );
 };
 
+export { TaskCard };
 export default TaskFlow;

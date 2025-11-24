@@ -2,7 +2,6 @@
 
 import React, {useMemo, useRef, useState} from "react";
 import {useRouter} from 'next/router';
-import moment from 'moment';
 import ChatPanel from "@/src/views/home/components/ChatPanel";
 import {SimpleTask as UiTask} from "@/src/views/home/components/TaskFlow";
 import TaskContext from "@/src/views/home/components/TaskContext";
@@ -10,6 +9,8 @@ import EmptyState from "@/src/views/home/components/EmptyState";
 import ErrorAlert from "@/src/views/home/components/ErrorAlert";
 import Overlay from "@/src/views/home/components/Overlay";
 import Sidebar, {TaskHistory} from "@/src/views/home/components/Sidebar";
+import ToggleBtn from "@/src/views/home/components/ToggleBtn";
+import TaskTreePanel from "@/src/views/home/components/TaskTreePanel";
 import {useSidebar} from "@/src/contexts/SidebarContext";
 import CanvasBackground from "@/src/components/CanvasBackground";
 import {
@@ -19,194 +20,125 @@ import {
 } from "@/src/views/home/utils/taskHistoryService";
 import {applyPrevNext, buildSplitPrompt, requestTasks} from "@/src/shared/service/ChatService";
 
-type TaskTreePanelProps = {
-    tasks: UiTask[];
-    focusTaskId: number | null;
-    onFocusChange: (id: number | null) => void;
-    onAddChild: (parentId: number | null) => void;
-    onEditTask: (taskId: number) => void;
-    onDeleteTask: (taskId: number) => void;
+const normalizeTasksFromHistory = (tasks: UiTask[]): UiTask[] => {
+    const withLevelAndVisibility = tasks.map(t => {
+        const hasChildren = t.children && t.children.length > 0;
+        const hasPrevOrNext = t.prev != null || t.next != null;
+        const defaultVisible = t.visibleOnMainFlow ?? (hasChildren && !hasPrevOrNext ? false : true);
+
+        return {
+            ...t,
+            level: t.level ?? (t.parentId ? 1 : 0),
+            visibleOnMainFlow: defaultVisible,
+        };
+    });
+
+    return withLevelAndVisibility.map((t, i) => {
+        const hasExistingChain = t.prev != null || t.next != null;
+        if (hasExistingChain) {
+            return t;
+        }
+        return {
+            ...t,
+            prev: i > 0 ? withLevelAndVisibility[i - 1]?.id : undefined,
+            next: i < withLevelAndVisibility.length - 1 ? withLevelAndVisibility[i + 1]?.id : undefined,
+        };
+    });
 };
 
-const TaskTreePanel: React.FC<TaskTreePanelProps> = ({
-                                                         tasks,
-                                                         focusTaskId,
-                                                         onFocusChange,
-                                                         onAddChild,
-                                                         onEditTask,
-                                                         onDeleteTask,
-                                                     }) => {
-    const [searchQuery, setSearchQuery] = React.useState<string>('');
+const splitTaskIntoChildren = (prevTasks: UiTask[], parent: UiTask, childrenRaw: UiTask[]): {
+    next: UiTask[];
+    children: UiTask[]
+} => {
+    const next = [...prevTasks];
+    const maxId = next.reduce((max, task) => Math.max(max, task.id || 0), 0);
 
-    const childrenMap = React.useMemo(() => {
-        const map = new Map<number | 'root', UiTask[]>();
-        tasks.forEach(t => {
-            const key: number | 'root' = t.parentId ?? 'root';
-            const list = map.get(key) || [];
-            list.push(t);
-            map.set(key, list);
-        });
-        return map;
-    }, [tasks]);
+    const childrenWithParent = childrenRaw.map((child, index) => ({
+        ...child,
+        id: maxId + index + 1,
+        parentId: parent.id,
+        level: (parent.level || 0) + 1,
+        prev: undefined as number | undefined,
+        next: undefined as number | undefined,
+        visibleOnMainFlow: true,
+    }));
 
-    const renderNodes = (
-        parentKey: number | 'root',
-        depth: number,
-        visited: Set<number>
-    ): React.ReactNode => {
-        const list = childrenMap.get(parentKey) || [];
-
-        return list
-            .filter(task => {
-                // 如果有搜索词，只显示匹配的任务
-                if (!searchQuery.trim()) return true;
-                return task.task?.toLowerCase().includes(searchQuery.toLowerCase());
-            })
-            .map(task => {
-                if (task.id == null) return null;
-
-                // 防止因为错误的 parentId 造成的环形结构，避免无限递归
-                if (visited.has(task.id)) {
-                    return (
-                        <div key={task.id} style={{marginLeft: depth * 12}} className="mt-0.5">
-                            <div className="flex items-center gap-1 px-2 py-1 rounded bg-red-50 text-[11px] text-red-500 dark:bg-red-900/30 dark:text-red-200">
-                                <span>⚠ 循环引用，已停止展开：{task.task || '未命名任务'}</span>
-                            </div>
-                        </div>
-                    );
-                }
-
-                const nextVisited = new Set(visited);
-                nextVisited.add(task.id);
-
-                const hasChildren = !!childrenMap.get(task.id);
-                const isSelected = focusTaskId === task.id;
-
-                return (
-                    <div key={task.id} style={{marginLeft: depth * 12}} className="mt-0.5">
-                        <div
-                            className={`cursor-pointer px-2 py-1.5 rounded text-xs transition-colors ${
-                                focusTaskId === task.id
-                                    ? 'bg-lime-100 text-lime-800 dark:bg-lime-900/40 dark:text-lime-100'
-                                    : 'hover:bg-gray-100 dark:hover:bg-gray-800/80 text-gray-800 dark:text-gray-200'
-                            }`}
-                            onClick={() => onFocusChange(task.id!)}
-                            title={hasChildren 
-                                ? `点击查看子任务 (${task.children?.length} 个)` 
-                                : (task.parentId 
-                                    ? '叶子任务：点击查看同级任务' 
-                                    : '叶子任务：点击回到主视图')
-                            }
-                        >
-                            <div className="flex items-center justify-between gap-1 min-w-0">
-                                <div className="flex items-center gap-1 min-w-0 text-[11px] text-gray-800 dark:text-gray-200">
-                                    {hasChildren && <span className="text-[10px] sm:text-xs">📂</span>}
-                                    {!hasChildren && <span className="text-[10px] sm:text-xs">📄</span>}
-                                    <span
-                                        className="truncate max-w-[140px] sm:max-w-[200px]"
-                                        title={task.task || '未命名任务'}
-                                    >
-                                        {(task.task || '未命名任务').length > 10
-                                            ? (task.task || '未命名任务').slice(0, 10) + '…'
-                                            : (task.task || '未命名任务')}
-                                    </span>
-                                </div>
-                                <div className="flex flex-row items-center gap-1 text-[10px] text-gray-400 dark:text-gray-500 whitespace-nowrap flex-shrink-0">
-                                    <button
-                                        type="button"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            onAddChild(task.id!);
-                                        }}
-                                        className="px-1 rounded hover:bg-lime-100 dark:hover:bg-lime-900/40 flex-shrink-0"
-                                        title="添加子任务"
-                                    >
-                                        ＋
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            onEditTask(task.id!);
-                                        }}
-                                        className="px-1 rounded hover:bg-yellow-100 dark:hover:bg-yellow-900/40 flex-shrink-0"
-                                        title="编辑任务文案"
-                                    >
-                                        ✏️
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            onDeleteTask(task.id!);
-                                        }}
-                                        className="px-1 rounded hover:bg-red-100 dark:hover:bg-red-900/40 flex-shrink-0"
-                                        title="删除任务及子任务"
-                                    >
-                                        🗑
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        {renderNodes(task.id, depth + 1, nextVisited)}
-                    </div>
-                );
-            });
-    };
-
-    if (!tasks.length) {
-        return (
-            <div className="text-xs text-gray-400 dark:text-gray-500 px-2 py-2">
-                暂无任务，请先在左侧生成 TODO。
-            </div>
-        );
+    for (let i = 0; i < childrenWithParent.length; i++) {
+        if (i > 0) {
+            childrenWithParent[i].prev = childrenWithParent[i - 1].id;
+        }
+        if (i < childrenWithParent.length - 1) {
+            childrenWithParent[i].next = childrenWithParent[i + 1].id;
+        }
     }
 
-    return (
-        <div className="h-full flex flex-col">
-            <div className="px-2 py-2 border-b border-gray-200 dark:border-gray-700 space-y-2">
-                <div className="flex items-center justify-between">
-                    <div className="text-xs font-semibold text-gray-700 dark:text-gray-200">任务结构</div>
-                    <button
-                        type="button"
-                        className="text-[11px] px-2 py-0.5 rounded border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/80"
-                        onClick={() => onFocusChange(null)}
-                    >
-                        顶层视图
-                    </button>
-                </div>
-                {/* 搜索框 */}
-                <div className="relative">
-                    <input
-                        type="text"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="搜索任务..."
-                        className="w-full text-xs px-2 py-1.5 pl-7 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-lime-500 dark:focus:ring-lime-600"
-                    />
-                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-xs">
-                        🔍
-                    </span>
-                    {searchQuery && (
-                        <button
-                            type="button"
-                            onClick={() => setSearchQuery('')}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xs"
-                            title="清除搜索"
-                        >
-                            ✕
-                        </button>
-                    )}
-                </div>
-            </div>
-            <div className="flex-1 overflow-y-auto py-1">
-                {renderNodes('root', 0, new Set<number>())}
-            </div>
-        </div>
-    );
+    const parentTask = next.find(task => task.id === parent.id);
+    const parentPrev = parentTask?.prev;
+    const parentNext = parentTask?.next;
+
+    if (childrenWithParent.length > 0) {
+        const firstChild = childrenWithParent[0];
+        const lastChild = childrenWithParent[childrenWithParent.length - 1];
+
+        if (parentPrev != null) {
+            firstChild.prev = parentPrev;
+            const prevTask = next.find(task => task.id === parentPrev);
+            if (prevTask) {
+                prevTask.next = firstChild.id;
+            }
+        }
+
+        if (parentNext != null) {
+            lastChild.next = parentNext;
+            const nextTask = next.find(task => task.id === parentNext);
+            if (nextTask) {
+                nextTask.prev = lastChild.id;
+            }
+        }
+    }
+
+    const parentIndex = next.findIndex(task => task.id === parent.id);
+    if (parentIndex !== -1) {
+        next[parentIndex] = {
+            ...next[parentIndex],
+            children: childrenWithParent.map(c => c.id!),
+            collapsed: false,
+            prev: undefined,
+            next: undefined,
+            visibleOnMainFlow: false,
+        };
+    }
+
+    next.push(...childrenWithParent);
+    return {next, children: childrenWithParent};
 };
 
-export default function HomeLanding(): React.ReactElement {
+const collectTaskIdsToDelete = (tasks: UiTask[], rootId: number): { remaining: UiTask[]; toDelete: Set<number> } => {
+    const toDelete = new Set<number>();
+    const queue: number[] = [rootId];
+
+    while (queue.length) {
+        const id = queue.pop()!;
+        if (toDelete.has(id)) continue;
+        toDelete.add(id);
+        tasks.forEach(t => {
+            if (t.parentId === id && t.id != null) {
+                queue.push(t.id as number);
+            }
+        });
+    }
+
+    const remaining = tasks
+        .filter(t => t.id != null && !toDelete.has(t.id as number))
+        .map(t => ({
+            ...t,
+            children: t.children?.filter(cid => !toDelete.has(cid)),
+        }));
+
+    return {remaining, toDelete};
+};
+
+const HomeLanding: React.FC = () => {
     const router = useRouter();
     const {isCollapsed, collapse, expand} = useSidebar();
     const [chatInput, setChatInput] = useState<string>("");
@@ -217,6 +149,8 @@ export default function HomeLanding(): React.ReactElement {
     const [tasks, setTasks] = useState<UiTask[]>([]);
     // 当前画布聚焦的父任务 id，为 null 表示顶层视图
     const [focusTaskId, setFocusTaskId] = useState<number | null>(null);
+    // 当前选中的任务 id（用于高亮显示）
+    const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
     // 本地历史：持久化每次任务拆解结果
     const [histories, setHistories] = useState<TaskHistory[]>([]);
     const [activeHistoryId, setActiveHistoryId] = useState<string | null>(null);
@@ -241,7 +175,7 @@ export default function HomeLanding(): React.ReactElement {
         const tasksWithChain = generated.some(t => t.prev != null || t.next != null)
             ? generated // 已有链表关系，直接使用
             : applyPrevNext(generated); // 没有链表关系，根据数组顺序建立
-        
+
         const entry: TaskHistory = {
             id: `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
             title,
@@ -274,37 +208,9 @@ export default function HomeLanding(): React.ReactElement {
 
     const restoreFromHistory = (h: TaskHistory) => {
         // 确保从历史记录恢复的任务也有正确的 level 和 visibleOnMainFlow 字段
-        const tasksWithLevel = (h.tasks || []).map(t => {
-            // 推断 visibleOnMainFlow：如果没有设置，默认为 true；
-            // 如果有 children 但 prev 和 next 都为 undefined，说明已被拆分，设为 false
-            const hasChildren = t.children && t.children.length > 0;
-            const hasPrevOrNext = t.prev != null || t.next != null;
-            const defaultVisible = t.visibleOnMainFlow ?? (hasChildren && !hasPrevOrNext ? false : true);
-            
-            return {
-                ...t,
-                level: t.level ?? (t.parentId ? 1 : 0), // 如果没有 level，根据 parentId 推断
-                visibleOnMainFlow: defaultVisible,
-            };
-        });
-        
+        const tasksWithChain = normalizeTasksFromHistory(h.tasks || []);
         // 注意：不调用 applyPrevNext，因为它会覆盖已有的链表关系
         // 只有在任务没有 prev/next 时才根据数组顺序建立关系（兼容旧数据）
-        const tasksWithChain = tasksWithLevel.map((t, i) => {
-            const hasExistingChain = t.prev != null || t.next != null;
-            if (hasExistingChain) {
-                // 已有链表关系，保持不变
-                return t;
-            } else {
-                // 没有链表关系，根据数组顺序建立（兼容旧数据）
-                return {
-                    ...t,
-                    prev: i > 0 ? tasksWithLevel[i - 1]?.id : undefined,
-                    next: i < tasksWithLevel.length - 1 ? tasksWithLevel[i + 1]?.id : undefined,
-                };
-            }
-        });
-        
         setTasks(tasksWithChain);
         setActiveHistoryId(h.id);
         setFocusTaskId(null);
@@ -363,83 +269,14 @@ export default function HomeLanding(): React.ReactElement {
             const childrenRaw = await requestTasks(splitPrompt, abortRef.current.signal);
 
             setTasks((prev: UiTask[]) => {
-                const next = [...prev];
-
-                // 计算当前最大 id，避免子任务 id 冲突
-                const maxId = next.reduce((max, task) => Math.max(max, task.id || 0), 0);
-
-                // 为子任务重新分配唯一 id，并设置父子关系
-                const childrenWithParent = childrenRaw.map((child, index) => ({
-                    ...child,
-                    id: maxId + index + 1,
-                    parentId: t.id,
-                    level: (t.level || 0) + 1,
-                    prev: undefined as number | undefined, // 先清空，后面重连
-                    next: undefined as number | undefined,
-                    visibleOnMainFlow: true,
-                }));
-
-                // 子任务内部建立 prev/next 链
-                for (let i = 0; i < childrenWithParent.length; i++) {
-                    if (i > 0) {
-                        childrenWithParent[i].prev = childrenWithParent[i - 1].id;
-                    }
-                    if (i < childrenWithParent.length - 1) {
-                        childrenWithParent[i].next = childrenWithParent[i + 1].id;
-                    }
-                }
-
-                // 找到父任务 P 的 prev 和 next
-                const parentTask = next.find(task => task.id === t.id);
-                const parentPrev = parentTask?.prev;
-                const parentNext = parentTask?.next;
-
-                // 将子任务链接到父任务原来的位置
-                if (childrenWithParent.length > 0) {
-                    const firstChild = childrenWithParent[0];
-                    const lastChild = childrenWithParent[childrenWithParent.length - 1];
-
-                    // C1 接 P.prev
-                    if (parentPrev != null) {
-                        firstChild.prev = parentPrev;
-                        const prevTask = next.find(task => task.id === parentPrev);
-                        if (prevTask) {
-                            prevTask.next = firstChild.id;
-                        }
-                    }
-
-                    // Cn 接 P.next
-                    if (parentNext != null) {
-                        lastChild.next = parentNext;
-                        const nextTask = next.find(task => task.id === parentNext);
-                        if (nextTask) {
-                            nextTask.prev = lastChild.id;
-                        }
-                    }
-                }
-
-                // 更新父任务：标记为已拆分，从主链中摘除（清空 prev/next）
-                const parentIndex = next.findIndex(task => task.id === t.id);
-                if (parentIndex !== -1) {
-                    next[parentIndex] = {
-                        ...next[parentIndex],
-                        children: childrenWithParent.map(c => c.id!),
-                        collapsed: false,
-                        prev: undefined, // 从主链摘除
-                        next: undefined,
-                        visibleOnMainFlow: false,
-                    };
-                }
-
-                // 将子任务添加到列表中
-                next.push(...childrenWithParent);
+                const {next, children} = splitTaskIntoChildren(prev, t, childrenRaw);
 
                 // 调试日志：打印拆分后的任务结构
                 console.log('✅ 拆分完成，任务结构：', {
                     parentTask: t.task,
                     parentId: t.id,
-                    childrenCount: childrenWithParent.length,
-                    children: childrenWithParent.map(c => ({
+                    childrenCount: children.length,
+                    children: children.map(c => ({
                         id: c.id,
                         task: c.task,
                         prev: c.prev,
@@ -493,16 +330,16 @@ export default function HomeLanding(): React.ReactElement {
             setFocusTaskId(null);
             return;
         }
-        
+
         // 找到被点击的任务
         const clickedTask = tasks.find(t => t.id === id);
         if (!clickedTask) {
             setFocusTaskId(null);
             return;
         }
-        
+
         const hasChildren = clickedTask.children && clickedTask.children.length > 0;
-        
+
         if (hasChildren) {
             // 有子任务：显示子任务
             setFocusTaskId(id);
@@ -576,25 +413,7 @@ export default function HomeLanding(): React.ReactElement {
         if (!window.confirm(`确定删除「${name}」及其所有子任务吗？`)) return;
 
         setTasks(prev => {
-            const toDelete = new Set<number>();
-            const queue: number[] = [taskId];
-            while (queue.length) {
-                const id = queue.pop()!;
-                if (toDelete.has(id)) continue;
-                toDelete.add(id);
-                prev.forEach(t => {
-                    if (t.parentId === id && t.id != null) {
-                        queue.push(t.id as number);
-                    }
-                });
-            }
-
-            const next = prev
-                .filter(t => t.id != null && !toDelete.has(t.id as number))
-                .map(t => ({
-                    ...t,
-                    children: t.children?.filter(cid => !toDelete.has(cid))
-                }));
+            const {remaining: next, toDelete} = collectTaskIdsToDelete(prev, taskId);
 
             updateActiveHistoryTasks(next);
 
@@ -618,26 +437,30 @@ export default function HomeLanding(): React.ReactElement {
 
             {/* 主内容容器：左右并排两栏（固定视口高度，避免页面级滚动） */}
             <div className="relative z-10 w-full mx-auto flex gap-4 h-[calc(100dvh-60px)] overflow-hidden">
-                {/* 左右栏分割线悬浮把手（始终靠近分割处） */}
-                <button
-                    type="button"
-                    title={isCollapsed ? '展开左侧栏' : '收起左侧栏'}
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        if (isCollapsed) expand(); else collapse();
-                    }}
-                    style={{left: isCollapsed ? 8 : 298}}
-                    className="absolute top-1/2 -translate-y-1/2 z-30 h-8 w-8 flex items-center justify-center rounded-full border border-gray-300 dark:border-gray-700 bg-white/80 dark:bg-gray-800/70 text-gray-700 dark:text-gray-200 shadow-sm hover:shadow transition-all duration-200 hover:scale-105 active:scale-95"
-                    aria-label={isCollapsed ? '展开左侧栏' : '收起左侧栏'}
-                >
-                    {isCollapsed ? '⟩' : '⟨'}
-                </button>
-
-                {/* 左侧历史侧栏：常驻显示 */}
+                {/* 左侧历史侧栏：常驻显示，按钮相对侧栏定位；折叠时保留窄容器以便按钮可点击 */}
                 <div
-                    className={`shrink-0 h-[calc(100dvh-60px)] transition-all duration-300 ${isCollapsed ? 'w-0 opacity-0 pointer-events-none' : 'w-[280px] opacity-100'}`}
-                    aria-hidden={isCollapsed}>
-                    <div className={`h-full ${isCollapsed ? '' : 'border-r border-gray-200 dark:border-gray-700'}`}>
+                    className={`relative shrink-0 h-[calc(100dvh-60px)] transition-all duration-300 ${isCollapsed ? 'w-6' : 'w-[280px]'}`}
+                    aria-hidden={false}
+                >
+                    {/* 左侧折叠/展开按钮：始终贴着侧栏右边缘 */}
+                    <div className="absolute top-1/2 -right-3 -translate-y-1/2 z-30">
+                        <ToggleBtn
+                            side="left"
+                            collapsed={isCollapsed}
+                            onToggle={() => {
+                                if (isCollapsed) expand(); else collapse();
+                            }}
+                            labelCollapsed="展开左侧栏"
+                            labelExpanded="收起左侧栏"
+                        />
+                    </div>
+                    <div
+                        className={`h-full transition-opacity duration-200 ${
+                            isCollapsed
+                                ? 'opacity-0 pointer-events-none'
+                                : 'opacity-100 border-r border-gray-200 dark:border-gray-700'
+                        }`}
+                    >
                         <Sidebar
                             histories={histories}
                             activeId={activeHistoryId}
@@ -680,26 +503,35 @@ export default function HomeLanding(): React.ReactElement {
                                         <TaskContext
                                             tasks={tasks}
                                             onTaskClick={(t, index) => handleSplitTask(t, {taskIndex: index})}
+                                            onCardSelect={(taskId) => setSelectedTaskId(taskId)}
                                             onToggleCollapse={handleToggleCollapse}
                                             onReset={() => {
                                                 setTasks([]);
                                                 updateActiveHistoryTasks([]);
                                                 setFocusTaskId(null);
+                                                setSelectedTaskId(null);
                                             }}
                                             groupId={activeHistoryId || undefined}
                                             groupTitle={(histories.find(h => h.id === activeHistoryId)?.title) || undefined}
                                             focusTaskId={focusTaskId}
+                                            selectedTaskId={selectedTaskId}
+                                            onDeleteTask={handleDeleteTaskFromTree}
                                         />
                                     </div>
 
-                                    {/* 右侧：任务树形结构（可收起） */}
+                                    {/* 右侧：任务树形结构（可收起），按钮相对该面板定位；折叠时保留窄容器以便按钮可点击 */}
                                     <div
-                                        className={`transition-all duration-300 flex-shrink-0 ${
-                                            isRightCollapsed ? 'w-0 opacity-0' : 'w-[260px] opacity-100'
+                                        className={`relative transition-all duration-300 flex-shrink-0 ${
+                                            isRightCollapsed ? 'w-6' : 'w-[260px]'
                                         }`}
                                     >
                                         <div
-                                            className="h-full border-l border-gray-200 dark:border-gray-700 bg-white/70 dark:bg-gray-900/40 rounded-l-none rounded-md shadow-sm overflow-hidden">
+                                            className={`h-full transition-opacity duration-200 ${
+                                                isRightCollapsed
+                                                    ? 'opacity-0 pointer-events-none'
+                                                    : 'opacity-100 border-l border-gray-200 dark:border-gray-700 bg-white/70 dark:bg-gray-900/40 rounded-l-none rounded-md shadow-sm overflow-hidden'
+                                            }`}
+                                        >
                                             <TaskTreePanel
                                                 tasks={tasks}
                                                 focusTaskId={focusTaskId}
@@ -709,28 +541,23 @@ export default function HomeLanding(): React.ReactElement {
                                                 onDeleteTask={handleDeleteTaskFromTree}
                                             />
                                         </div>
-                                    </div>
 
-                                    {/* 右侧栏收缩/展开按钮（固定在画布右边缘） */}
-                                    <button
-                                        type="button"
-                                        title={isRightCollapsed ? '展开任务结构' : '收起任务结构'}
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            setIsRightCollapsed(prev => !prev);
-                                        }}
-                                        style={{right: isRightCollapsed ? 8 : 268}}
-                                        className="absolute top-1/2 -translate-y-1/2 z-30 h-8 w-8 flex items-center justify-center rounded-full border border-gray-300 dark:border-gray-700 bg-white/80 dark:bg-gray-800/70 text-gray-700 dark:text-gray-200 shadow-sm hover:shadow transition-all duration-200 hover:scale-105 active:scale-95"
-                                        aria-label={isRightCollapsed ? '展开任务结构' : '收起任务结构'}
-                                    >
-                                        {isRightCollapsed ? '⟨' : '⟩'}
-                                    </button>
+                                        {/* 右侧栏收缩/展开按钮：贴着面板左边缘 */}
+                                        <div className="absolute top-1/2 -left-3 -translate-y-1/2 z-30">
+                                            <ToggleBtn
+                                                side="right"
+                                                collapsed={isRightCollapsed}
+                                                onToggle={() => setIsRightCollapsed(prev => !prev)}
+                                                labelCollapsed="展开任务结构"
+                                                labelExpanded="收起任务结构"
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
                             )}
                         </div>
 
-                        {/* 底部输入栏（置于右栏内部）：仅在空状态或加载中显示 */}
-                        {(isEmpty || loading) && (
+                        {isEmpty && (
                             <div className="bg-transparent pt-3 pb-3 border-t border-gray-200 dark:border-gray-700">
                                 <div className="w-full max-w-4xl mx-auto px-4">
                                     <ChatPanel
@@ -760,4 +587,6 @@ export default function HomeLanding(): React.ReactElement {
             </div>
         </div>
     );
-}
+};
+
+export default HomeLanding;

@@ -4,7 +4,7 @@ import React from "react";
 import moment from 'moment';
 import {addTaskLocal, getTasksLocalAsync, updateTaskLocal} from '@/src/shared/cached';
 import {useRouter} from 'next/router';
-import {SimpleTask as UiTask} from "@/src/views/home/components/TaskFlow";
+import {SimpleTask as UiTask, TaskCard} from "@/src/views/home/components/TaskFlow";
 import Dialog from '@/src/components/ui/Dialog';
 import {useToast} from '@/src/components/Toast';
 import Mform from '@/src/views/schedule/components/Mform';
@@ -15,14 +15,14 @@ import ReactFlow, {
     Background,
     Controls,
     Edge,
+    Handle,
+    MarkerType,
     Node,
     NodeTypes,
     Panel,
+    Position,
     useEdgesState,
     useNodesState,
-    Handle,
-    Position,
-    MarkerType,
 } from "reactflow";
 import 'reactflow/dist/style.css';
 
@@ -32,37 +32,24 @@ type FlowProps = {
     groupId?: string;
     height?: number;
     snap?: number;
-    onCardClick?: (t: UiTask, index: number) => void;
+    onCardClick?: (t: UiTask, index: number) => void; // AI 拆分
+    onCardSelect?: (taskId: number | null) => void; // 选中卡片
     onToggleCollapse?: (taskId: number) => void;
     overlayTitle?: string;
-    onAddToSchedule?: () => void;
-    onAddToBacklog?: () => void;
+    onAddToSchedule?: (task: UiTask) => void;
+    onBatchAddToBacklog?: () => void; // 批量加入备选
+    onEditTask?: (task: UiTask) => void; // 查看/编辑任务详情
+    onDeleteTask?: (taskId: number) => void;
     // 当前聚焦的父任务 id，为 null 表示展示顶层任务
     focusTaskId?: number | null;
+    // 当前选中的任务 id
+    selectedTaskId?: number | null;
 };
 
 const storageKey = (groupId?: string) => `rf_task_positions_${groupId || "default"}`;
 
 const TaskNode: React.FC<{ data: any }> = ({data}) => {
     const t: UiTask = data.task;
-    const isSubtask = t.level && t.level > 0;
-
-    // 计算工时显示（优先 duration+unit，其次 estimateMinutes，最后 startTime/endTime）
-    const durationText = t.duration && t.unit
-        ? (() => {
-            const unitText = t.unit === 'minute' ? '分钟' : t.unit === 'hour' ? '小时' : '天';
-            return `${t.duration}${unitText}`;
-        })()
-        : (t.estimateMinutes
-            ? (t.estimateMinutes >= 60
-                ? `${Math.floor(t.estimateMinutes / 60)}小时${t.estimateMinutes % 60 > 0 ? (t.estimateMinutes % 60) + '分钟' : ''}`
-                : `${t.estimateMinutes}分钟`)
-            : null);
-
-    // 根据层级设置不同样式
-    const cardBg = isSubtask
-        ? 'bg-blue-50/50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
-        : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700';
 
     return (
         <>
@@ -70,45 +57,17 @@ const TaskNode: React.FC<{ data: any }> = ({data}) => {
             <Handle id="in" type="target" position={Position.Left} style={{opacity: 0}}/>
             <Handle id="out" type="source" position={Position.Right} style={{opacity: 0}}/>
 
-            <div
-                onClick={() => data.onDoubleClick?.(t, data.index)}
-                className={`rounded-xl border shadow-md px-3 py-2 w-[320px] ${cardBg}`}
-            >
-                <div
-                    className="flex items-center justify-between mb-2 pb-2 border-b border-gray-200 dark:border-gray-700">
-                    <div className="flex items-center gap-2 flex-1 min-w-0">
-                        {isSubtask && <span className="text-xs text-blue-600 dark:text-blue-400">↳</span>}
-                        <div
-                            className="font-semibold text-gray-900 dark:text-white truncate text-sm">{t.task || "未命名任务"}</div>
-                    </div>
-                    <div className="flex items-center gap-1">
-                        {t.children && t.children.length > 0 && (
-                            <button
-                                className="text-xs px-1.5 py-0.5 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 rounded"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    data.onToggleCollapse?.(t);
-                                }}
-                            >
-                                {t.collapsed ? '▶' : '▼'} {t.children.length}
-                            </button>
-                        )}
-                        <span
-                            className="text-xs px-2 py-0.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200">
-                            {t.state || "pending"}
-                        </span>
-                    </div>
-                </div>
-                {durationText && (
-                    <div className="text-xs text-gray-700 dark:text-gray-300 flex items-center gap-1 mb-1">
-                        <span className="text-blue-600 dark:text-blue-400">⏱️</span>
-                        <span>预计工时：{durationText}</span>
-                    </div>
-                )}
-                {t.remark && (
-                    <div className="mt-2 text-xs text-gray-600 dark:text-gray-400 line-clamp-2">💡 {t.remark}</div>
-                )}
-            </div>
+            <TaskCard
+                t={t}
+                onClick={() => data.onSelect?.(t.id ?? null)}
+                onSplit={data.onSplit}
+                onToggleCollapse={data.onToggleCollapse}
+                onAddToSchedule={data.onAddToSchedule}
+                onAddToBacklog={data.onAddToBacklog}
+                onEdit={data.onEdit}
+                onDelete={data.onDelete}
+                isSelected={data.isSelected}
+            />
         </>
     );
 };
@@ -121,11 +80,15 @@ const TaskFlowBoard: React.FC<FlowProps> = ({
                                                 height = 0,
                                                 snap = 24,
                                                 onCardClick,
+                                                onCardSelect,
                                                 onToggleCollapse,
                                                 overlayTitle,
                                                 onAddToSchedule,
-                                                onAddToBacklog,
+                                                onBatchAddToBacklog,
+                                                onEditTask,
+                                                onDeleteTask,
                                                 focusTaskId,
+                                                selectedTaskId,
                                             }: FlowProps) => {
     // 动态高度：根据任务数量做简单自适应（最小 360，最大 720）
     const boardHeight = React.useMemo(() => {
@@ -204,17 +167,17 @@ const TaskFlowBoard: React.FC<FlowProps> = ({
         // - 未聚焦时：遍历 prev/next 链表来获取主线任务序列
         // - 聚焦某个父任务时：展示该父任务的直接子任务
         let mainTasks: UiTask[];
-        
+
         if (focusTaskId == null) {
             // 找到主链的头节点：
             // 1. prev 为 undefined（没有前驱节点）
             // 2. visibleOnMainFlow 不为 false（允许在主链显示）
             // 3. 注意：不检查 parentId，因为子任务也可能在主链中
-            const headCandidates = taskList.filter(t => 
+            const headCandidates = taskList.filter(t =>
                 !t.prev &&
                 t.visibleOnMainFlow !== false
             );
-            
+
             console.log('🔍 找到的链表头节点：', headCandidates.map(h => ({
                 id: h.id,
                 task: h.task,
@@ -223,17 +186,17 @@ const TaskFlowBoard: React.FC<FlowProps> = ({
                 next: h.next,
                 visibleOnMainFlow: h.visibleOnMainFlow
             })));
-            
+
             // 从头节点开始，沿着 next 指针遍历整条链
             mainTasks = [];
             const visited = new Set<number>();
-            
+
             for (const head of headCandidates) {
                 let current: UiTask | undefined = head;
                 while (current && current.id != null && !visited.has(current.id)) {
                     visited.add(current.id);
                     mainTasks.push(current);
-                    
+
                     // 找到下一个节点
                     if (current.next != null) {
                         current = taskMap.get(current.next);
@@ -252,16 +215,16 @@ const TaskFlowBoard: React.FC<FlowProps> = ({
             totalTasks: taskList.length,
             mainTasks: mainTasks.length,
             mainTaskIds: mainTasks.map(t => ({
-                id: t.id, 
-                task: t.task, 
-                level: t.level, 
+                id: t.id,
+                task: t.task,
+                level: t.level,
                 parentId: t.parentId,
                 prev: t.prev,
                 next: t.next,
                 visibleOnMainFlow: t.visibleOnMainFlow
             })),
         });
-        
+
         // 如果没有任务可显示，返回空布局（不返回 null，避免 React Flow 报错）
         if (mainTasks.length === 0) {
             console.warn('⚠️ 没有任务可显示');
@@ -282,8 +245,13 @@ const TaskFlowBoard: React.FC<FlowProps> = ({
                 data: {
                     task: mainTask,
                     index: nodeIndex++,
-                    onDoubleClick: onCardClick,
+                    onSelect: onCardSelect,
+                    onSplit: onCardClick ? () => onCardClick(mainTask, idx) : undefined,
                     onToggleCollapse: () => toggleCollapseFn?.(mainTask.id!),
+                    onAddToSchedule: onAddToSchedule ? () => onAddToSchedule(mainTask) : undefined,
+                    onEdit: onEditTask ? () => onEditTask(mainTask) : undefined,
+                    onDelete: onDeleteTask ? () => onDeleteTask(mainTask.id!) : undefined,
+                    isSelected: selectedTaskId === mainTask.id,
                 },
             });
 
@@ -433,8 +401,8 @@ const TaskFlowBoard: React.FC<FlowProps> = ({
                             暂无任务显示
                         </div>
                         <div className="text-sm text-gray-500 dark:text-gray-400">
-                            {focusTaskId != null 
-                                ? '该任务下没有子任务，请点击右侧树的"顶层视图"查看所有任务' 
+                            {focusTaskId != null
+                                ? '该任务下没有子任务，请点击右侧树的"顶层视图"查看所有任务'
                                 : '请先在左侧输入任务描述，生成 TODO 列表'
                             }
                         </div>
@@ -473,29 +441,15 @@ const TaskFlowBoard: React.FC<FlowProps> = ({
             >
                 <Background gap={snap} size={1} color={isDark ? "#4ade8022" : "#a3e63522"}/>
                 <Controls/>
-                {(onAddToSchedule || onAddToBacklog) && (
+                {onBatchAddToBacklog && (
                     <Panel position="top-right">
-                        <div
-                            className="flex items-center gap-2 bg-white/70 dark:bg-gray-900/50 backdrop-blur px-2 py-1 rounded border border-gray-200/60 dark:border-gray-700/60">
-                            {onAddToSchedule && (
-                                <button
-                                    type="button"
-                                    onClick={onAddToSchedule}
-                                    className="px-2 py-1 text-xs rounded-md border border-lime-300 dark:border-lime-600 text-lime-700 dark:text-lime-300 hover:bg-lime-50 dark:hover:bg-lime-900/20 transition-colors"
-                                >
-                                    添加日程
-                                </button>
-                            )}
-                            {onAddToBacklog && (
-                                <button
-                                    type="button"
-                                    onClick={onAddToBacklog}
-                                    className="px-2 py-1 text-xs rounded-md border border-lime-300 dark:border-lime-600 text-lime-700 dark:text-lime-300 hover:bg-lime-50 dark:hover:bg-lime-900/20 transition-colors"
-                                >
-                                    加入备选
-                                </button>
-                            )}
-                        </div>
+                        <button
+                            type="button"
+                            onClick={onBatchAddToBacklog}
+                            className="px-3 py-1.5 text-sm rounded-md border border-amber-300 dark:border-amber-600 bg-white/90 dark:bg-gray-800/90 backdrop-blur text-amber-700 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors shadow-sm"
+                        >
+                            ⭐ 加入备选
+                        </button>
                     </Panel>
                 )}
             </ReactFlow>
@@ -506,22 +460,28 @@ const TaskFlowBoard: React.FC<FlowProps> = ({
 type Props = {
     // 一维任务数组：包含父任务与其后插入的子任务
     tasks: UiTask[];
-    onTaskClick: (t: UiTask, index: number) => void;
+    onTaskClick: (t: UiTask, index: number) => void; // AI 拆分
+    onCardSelect?: (taskId: number | null) => void; // 选中卡片
     onToggleCollapse?: (taskId: number) => void;
     onReset?: () => void;
     groupTitle?: string;
     groupId?: string;
     focusTaskId?: number | null;
+    selectedTaskId?: number | null;
+    onDeleteTask?: (taskId: number) => void;
 };
 
 export default function TaskContext({
                                         tasks,
                                         onTaskClick,
+                                        onCardSelect,
                                         onToggleCollapse,
                                         onReset,
                                         groupTitle,
                                         groupId,
                                         focusTaskId,
+                                        selectedTaskId,
+                                        onDeleteTask,
                                     }: Props): React.ReactElement {
     if (!tasks || tasks.length === 0) return <></>;
     const router = useRouter();
@@ -637,6 +597,33 @@ export default function TaskContext({
         }
     };
 
+    // 单个任务加入日程
+    const handleAddToSchedule = async (task: UiTask) => {
+        try {
+            // 检测单个任务冲突
+            const {conflict, details} = await hasConflicts([task]);
+            if (conflict) {
+                setConflictDetails(details);
+                setConflictOpen(true);
+                return;
+            }
+
+            // 直接添加
+            addTaskLocal({
+                taskTime: task.taskTime || moment().format('YYYY-MM-DD'),
+                startTime: task.startTime || '00:00',
+                endTime: task.endTime || '01:00',
+                task: task.task || '',
+                remark: task.remark || '',
+                state: task.state || 'pending'
+            });
+            toast.success(`已添加「${task.task}」到固定日程`);
+        } catch (e) {
+            console.error('添加到固定日程失败：', e);
+            toast.error('添加到固定日程失败，请稍后重试');
+        }
+    };
+
     const addAllToSchedule = async () => {
         try {
             // 先做冲突检测
@@ -722,13 +709,29 @@ export default function TaskContext({
                     tasks={tasks}
                     groupId={groupId}
                     onCardClick={onTaskClick}
+                    onCardSelect={onCardSelect}
                     onToggleCollapse={onToggleCollapse}
                     overlayTitle={`AI 规划了 ${tasks.length} 个任务`}
-                    onAddToSchedule={addAllToSchedule}
-                    onAddToBacklog={addAllToBacklog}
+                    onAddToSchedule={(task) => handleAddToSchedule(task)}
+                    onBatchAddToBacklog={addAllToBacklog}
+                    onEditTask={(task) => {
+                        setEditingTask(task);
+                        setFormValues({
+                            taskTime: task.taskTime || moment().format('YYYY-MM-DD'),
+                            startTime: task.startTime || '09:00',
+                            endTime: task.endTime || '10:00',
+                            task: task.task || '',
+                            remark: task.remark || '',
+                            state: task.state || 'pending',
+                        });
+                        setEditOpen(true);
+                    }}
+                    onDeleteTask={onDeleteTask}
                     focusTaskId={focusTaskId ?? null}
+                    selectedTaskId={selectedTaskId ?? null}
                 />
             </div>
+
             <Dialog
                 open={conflictOpen}
                 title={'日程冲突'}
