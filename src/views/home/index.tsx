@@ -8,7 +8,7 @@ import {SimpleTask as UiTask} from "@/src/views/home/components/TaskFlow";
 import TaskContext from "@/src/views/home/components/TaskContext";
 import EmptyState from "@/src/views/home/components/EmptyState";
 import ErrorAlert from "@/src/views/home/components/ErrorAlert";
-import ProcessingOverlay from "@/src/views/home/components/ProcessingOverlay";
+import Overlay from "@/src/views/home/components/Overlay";
 import Sidebar, {TaskHistory} from "@/src/views/home/components/Sidebar";
 import {useSidebar} from "@/src/contexts/SidebarContext";
 import CanvasBackground from "@/src/components/CanvasBackground";
@@ -49,8 +49,13 @@ const TaskTreePanel: React.FC<TaskTreePanelProps> = ({
         return map;
     }, [tasks]);
 
-    const renderNodes = (parentKey: number | 'root', depth: number): React.ReactNode => {
+    const renderNodes = (
+        parentKey: number | 'root',
+        depth: number,
+        visited: Set<number>
+    ): React.ReactNode => {
         const list = childrenMap.get(parentKey) || [];
+
         return list
             .filter(task => {
                 // 如果有搜索词，只显示匹配的任务
@@ -58,61 +63,92 @@ const TaskTreePanel: React.FC<TaskTreePanelProps> = ({
                 return task.task?.toLowerCase().includes(searchQuery.toLowerCase());
             })
             .map(task => {
-                const hasChildren = !!childrenMap.get(task.id!);
+                if (task.id == null) return null;
+
+                // 防止因为错误的 parentId 造成的环形结构，避免无限递归
+                if (visited.has(task.id)) {
+                    return (
+                        <div key={task.id} style={{marginLeft: depth * 12}} className="mt-0.5">
+                            <div className="flex items-center gap-1 px-2 py-1 rounded bg-red-50 text-[11px] text-red-500 dark:bg-red-900/30 dark:text-red-200">
+                                <span>⚠ 循环引用，已停止展开：{task.task || '未命名任务'}</span>
+                            </div>
+                        </div>
+                    );
+                }
+
+                const nextVisited = new Set(visited);
+                nextVisited.add(task.id);
+
+                const hasChildren = !!childrenMap.get(task.id);
                 const isSelected = focusTaskId === task.id;
+
                 return (
                     <div key={task.id} style={{marginLeft: depth * 12}} className="mt-0.5">
                         <div
-                            className={`flex items-center justify-between px-2 py-1 rounded cursor-pointer text-xs sm:text-sm ${
-                                isSelected
+                            className={`cursor-pointer px-2 py-1.5 rounded text-xs transition-colors ${
+                                focusTaskId === task.id
                                     ? 'bg-lime-100 text-lime-800 dark:bg-lime-900/40 dark:text-lime-100'
                                     : 'hover:bg-gray-100 dark:hover:bg-gray-800/80 text-gray-800 dark:text-gray-200'
                             }`}
                             onClick={() => onFocusChange(task.id!)}
+                            title={hasChildren 
+                                ? `点击查看子任务 (${task.children?.length} 个)` 
+                                : (task.parentId 
+                                    ? '叶子任务：点击查看同级任务' 
+                                    : '叶子任务：点击回到主视图')
+                            }
                         >
-                            <div className="flex items-center gap-1 min-w-0">
-                                {hasChildren && <span className="text-[10px] sm:text-xs">📂</span>}
-                                <span className="truncate max-w-[160px] sm:max-w-[220px]">
-                                    {task.task || '未命名任务'}
-                                </span>
-                            </div>
-                            <div className="flex items-center gap-1 text-[10px] text-gray-400 dark:text-gray-500">
-                                <button
-                                    type="button"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        onAddChild(task.id!);
-                                    }}
-                                    className="px-1 rounded hover:bg-lime-100 dark:hover:bg-lime-900/40"
-                                    title="添加子任务"
-                                >
-                                    ＋
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        onEditTask(task.id!);
-                                    }}
-                                    className="px-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900/40"
-                                    title="重命名"
-                                >
-                                    ✏️
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        onDeleteTask(task.id!);
-                                    }}
-                                    className="px-1 rounded hover:bg-red-100 dark:hover:bg-red-900/40"
-                                    title="删除任务及子任务"
-                                >
-                                    🗑
-                                </button>
+                            <div className="flex items-center justify-between gap-1 min-w-0">
+                                <div className="flex items-center gap-1 min-w-0 text-[11px] text-gray-800 dark:text-gray-200">
+                                    {hasChildren && <span className="text-[10px] sm:text-xs">📂</span>}
+                                    {!hasChildren && <span className="text-[10px] sm:text-xs">📄</span>}
+                                    <span
+                                        className="truncate max-w-[140px] sm:max-w-[200px]"
+                                        title={task.task || '未命名任务'}
+                                    >
+                                        {(task.task || '未命名任务').length > 10
+                                            ? (task.task || '未命名任务').slice(0, 10) + '…'
+                                            : (task.task || '未命名任务')}
+                                    </span>
+                                </div>
+                                <div className="flex flex-row items-center gap-1 text-[10px] text-gray-400 dark:text-gray-500 whitespace-nowrap flex-shrink-0">
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onAddChild(task.id!);
+                                        }}
+                                        className="px-1 rounded hover:bg-lime-100 dark:hover:bg-lime-900/40 flex-shrink-0"
+                                        title="添加子任务"
+                                    >
+                                        ＋
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onEditTask(task.id!);
+                                        }}
+                                        className="px-1 rounded hover:bg-yellow-100 dark:hover:bg-yellow-900/40 flex-shrink-0"
+                                        title="编辑任务文案"
+                                    >
+                                        ✏️
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onDeleteTask(task.id!);
+                                        }}
+                                        className="px-1 rounded hover:bg-red-100 dark:hover:bg-red-900/40 flex-shrink-0"
+                                        title="删除任务及子任务"
+                                    >
+                                        🗑
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                        {renderNodes(task.id!, depth + 1)}
+                        {renderNodes(task.id, depth + 1, nextVisited)}
                     </div>
                 );
             });
@@ -164,7 +200,7 @@ const TaskTreePanel: React.FC<TaskTreePanelProps> = ({
                 </div>
             </div>
             <div className="flex-1 overflow-y-auto py-1">
-                {renderNodes('root', 0)}
+                {renderNodes('root', 0, new Set<number>())}
             </div>
         </div>
     );
@@ -200,11 +236,17 @@ export default function HomeLanding(): React.ReactElement {
     }, []);
 
     const addHistory = (title: string, generated: UiTask[]) => {
+        // 只在任务没有 prev/next 时才应用 applyPrevNext（兼容旧代码）
+        // 新代码应该传入已经有 prev/next 的任务
+        const tasksWithChain = generated.some(t => t.prev != null || t.next != null)
+            ? generated // 已有链表关系，直接使用
+            : applyPrevNext(generated); // 没有链表关系，根据数组顺序建立
+        
         const entry: TaskHistory = {
             id: `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
             title,
             createdAt: new Date().toISOString(),
-            tasks: applyPrevNext(generated)
+            tasks: tasksWithChain
         };
         const next = [entry, ...histories];
         setHistories(next);
@@ -215,9 +257,12 @@ export default function HomeLanding(): React.ReactElement {
 
     const updateActiveHistoryTasks = (updated: UiTask[]) => {
         if (!activeHistoryId) return;
-        const next = histories.map(h => h.id === activeHistoryId ? {...h, tasks: applyPrevNext(updated)} : h);
+        // 注意：不调用 applyPrevNext，直接保存更新后的任务列表
+        // 因为任务列表中已经包含了正确的 prev/next 链表关系
+        const next = histories.map(h => h.id === activeHistoryId ? {...h, tasks: updated} : h);
         setHistories(next);
         saveHistoriesToStorage(next);
+        // 不重置 focusTaskId，保持用户当前的视图状态
     };
 
     const clearAllHistories = () => {
@@ -228,12 +273,39 @@ export default function HomeLanding(): React.ReactElement {
     };
 
     const restoreFromHistory = (h: TaskHistory) => {
-        // 确保从历史记录恢复的任务也有正确的 level 字段
-        const tasksWithLevel = (h.tasks || []).map(t => ({
-            ...t,
-            level: t.level ?? (t.parentId ? 1 : 0), // 如果没有 level，根据 parentId 推断
-        }));
-        setTasks(applyPrevNext(tasksWithLevel));
+        // 确保从历史记录恢复的任务也有正确的 level 和 visibleOnMainFlow 字段
+        const tasksWithLevel = (h.tasks || []).map(t => {
+            // 推断 visibleOnMainFlow：如果没有设置，默认为 true；
+            // 如果有 children 但 prev 和 next 都为 undefined，说明已被拆分，设为 false
+            const hasChildren = t.children && t.children.length > 0;
+            const hasPrevOrNext = t.prev != null || t.next != null;
+            const defaultVisible = t.visibleOnMainFlow ?? (hasChildren && !hasPrevOrNext ? false : true);
+            
+            return {
+                ...t,
+                level: t.level ?? (t.parentId ? 1 : 0), // 如果没有 level，根据 parentId 推断
+                visibleOnMainFlow: defaultVisible,
+            };
+        });
+        
+        // 注意：不调用 applyPrevNext，因为它会覆盖已有的链表关系
+        // 只有在任务没有 prev/next 时才根据数组顺序建立关系（兼容旧数据）
+        const tasksWithChain = tasksWithLevel.map((t, i) => {
+            const hasExistingChain = t.prev != null || t.next != null;
+            if (hasExistingChain) {
+                // 已有链表关系，保持不变
+                return t;
+            } else {
+                // 没有链表关系，根据数组顺序建立（兼容旧数据）
+                return {
+                    ...t,
+                    prev: i > 0 ? tasksWithLevel[i - 1]?.id : undefined,
+                    next: i < tasksWithLevel.length - 1 ? tasksWithLevel[i + 1]?.id : undefined,
+                };
+            }
+        });
+        
+        setTasks(tasksWithChain);
         setActiveHistoryId(h.id);
         setFocusTaskId(null);
     };
@@ -263,14 +335,14 @@ export default function HomeLanding(): React.ReactElement {
             abortRef.current = new AbortController();
             const newTasks = await requestTasks(userText, abortRef.current.signal);
             console.log('📥 AI 返回的原始任务:', newTasks);
-            // 主任务初始化为 level 0
-            const mainTasks = newTasks.map(t => ({...t, level: 0}));
+            // 主任务初始化为 level 0 和 visibleOnMainFlow true
+            const mainTasks = newTasks.map(t => ({...t, level: 0, visibleOnMainFlow: true}));
             console.log('✅ 设置 level 后的任务:', mainTasks);
             const finalTasks = applyPrevNext(mainTasks);
             console.log('🔗 应用 prev/next 后的任务:', finalTasks);
             setTasks(finalTasks);
-            // 保存历史记录
-            addHistory(userText, mainTasks);
+            // 保存历史记录（传入已经有 prev/next 的任务）
+            addHistory(userText, finalTasks);
             setChatInput("");
             setFocusTaskId(null);
         } catch (err: any) {
@@ -282,7 +354,7 @@ export default function HomeLanding(): React.ReactElement {
     };
 
 
-    // 点击卡片触发“二次拆解”，建立父子关系
+    // 点击卡片触发"二次拆解"，建立父子关系
     const handleSplitTask = async (t: UiTask, ctx?: { taskIndex: number }) => {
         setLoading(true);
         try {
@@ -293,33 +365,97 @@ export default function HomeLanding(): React.ReactElement {
             setTasks((prev: UiTask[]) => {
                 const next = [...prev];
 
-                // 为子任务设置父子关系
-                const childrenWithParent = childrenRaw.map(child => ({
+                // 计算当前最大 id，避免子任务 id 冲突
+                const maxId = next.reduce((max, task) => Math.max(max, task.id || 0), 0);
+
+                // 为子任务重新分配唯一 id，并设置父子关系
+                const childrenWithParent = childrenRaw.map((child, index) => ({
                     ...child,
+                    id: maxId + index + 1,
                     parentId: t.id,
                     level: (t.level || 0) + 1,
+                    prev: undefined as number | undefined, // 先清空，后面重连
+                    next: undefined as number | undefined,
+                    visibleOnMainFlow: true,
                 }));
 
-                // 更新父任务的 children 字段
+                // 子任务内部建立 prev/next 链
+                for (let i = 0; i < childrenWithParent.length; i++) {
+                    if (i > 0) {
+                        childrenWithParent[i].prev = childrenWithParent[i - 1].id;
+                    }
+                    if (i < childrenWithParent.length - 1) {
+                        childrenWithParent[i].next = childrenWithParent[i + 1].id;
+                    }
+                }
+
+                // 找到父任务 P 的 prev 和 next
+                const parentTask = next.find(task => task.id === t.id);
+                const parentPrev = parentTask?.prev;
+                const parentNext = parentTask?.next;
+
+                // 将子任务链接到父任务原来的位置
+                if (childrenWithParent.length > 0) {
+                    const firstChild = childrenWithParent[0];
+                    const lastChild = childrenWithParent[childrenWithParent.length - 1];
+
+                    // C1 接 P.prev
+                    if (parentPrev != null) {
+                        firstChild.prev = parentPrev;
+                        const prevTask = next.find(task => task.id === parentPrev);
+                        if (prevTask) {
+                            prevTask.next = firstChild.id;
+                        }
+                    }
+
+                    // Cn 接 P.next
+                    if (parentNext != null) {
+                        lastChild.next = parentNext;
+                        const nextTask = next.find(task => task.id === parentNext);
+                        if (nextTask) {
+                            nextTask.prev = lastChild.id;
+                        }
+                    }
+                }
+
+                // 更新父任务：标记为已拆分，从主链中摘除（清空 prev/next）
                 const parentIndex = next.findIndex(task => task.id === t.id);
                 if (parentIndex !== -1) {
                     next[parentIndex] = {
                         ...next[parentIndex],
                         children: childrenWithParent.map(c => c.id!),
-                        collapsed: false, // 默认展开
+                        collapsed: false,
+                        prev: undefined, // 从主链摘除
+                        next: undefined,
+                        visibleOnMainFlow: false,
                     };
                 }
 
                 // 将子任务添加到列表中
                 next.push(...childrenWithParent);
 
+                // 调试日志：打印拆分后的任务结构
+                console.log('✅ 拆分完成，任务结构：', {
+                    parentTask: t.task,
+                    parentId: t.id,
+                    childrenCount: childrenWithParent.length,
+                    children: childrenWithParent.map(c => ({
+                        id: c.id,
+                        task: c.task,
+                        prev: c.prev,
+                        next: c.next,
+                        parentId: c.parentId,
+                        visibleOnMainFlow: c.visibleOnMainFlow
+                    })),
+                    parentAfterSplit: next.find(task => task.id === t.id),
+                });
+
                 updateActiveHistoryTasks(next);
                 return next;
             });
-            // 拆分完成后，将画布聚焦到该父任务的子任务视图
-            if (t.id != null) {
-                setFocusTaskId(t.id as number);
-            }
+
+            // 拆分完成后，保持当前视图（如果在顶层，继续显示顶层；如果在某个父任务下，继续显示）
+            // 不自动切换 focusTaskId，让用户看到子任务已经替换父任务在链表中的位置
         } catch (err: any) {
             setJsonErrors([err?.message || '拆分失败']);
         } finally {
@@ -350,9 +486,36 @@ export default function HomeLanding(): React.ReactElement {
         setLoading(false);
     };
 
-    // 右侧树形菜单：选择聚焦任务
+    // 右侧树形菜单：选择聚焦任务（优化的交互逻辑）
     const handleFocusChange = (id: number | null) => {
-        setFocusTaskId(id);
+        if (id === null) {
+            // 点击"顶层视图"，回到主链表
+            setFocusTaskId(null);
+            return;
+        }
+        
+        // 找到被点击的任务
+        const clickedTask = tasks.find(t => t.id === id);
+        if (!clickedTask) {
+            setFocusTaskId(null);
+            return;
+        }
+        
+        const hasChildren = clickedTask.children && clickedTask.children.length > 0;
+        
+        if (hasChildren) {
+            // 有子任务：显示子任务
+            setFocusTaskId(id);
+        } else {
+            // 叶子节点（无子任务）：智能处理
+            if (clickedTask.parentId) {
+                // 是子任务：显示其父任务的所有子任务（同级兄弟）
+                setFocusTaskId(clickedTask.parentId);
+            } else {
+                // 是根节点且无子任务：回到主链表视图
+                setFocusTaskId(null);
+            }
+        }
     };
 
     // 右侧树形菜单：新增子任务（简单手动创建占位任务）
@@ -491,7 +654,7 @@ export default function HomeLanding(): React.ReactElement {
                 </div>
 
                 {/* 右侧主内容（独立滚动容器） */}
-                <div className="flex-1 h-full overflow-y-auto" ref={rightColRef} onClick={() => {
+                <div className="flex-1 h-full overflow-y-auto relative" ref={rightColRef} onClick={() => {
                     if (isCollapsed) expand();
                 }}>
                     {/* 内容 + 底部输入栏（非固定） */}
@@ -514,18 +677,6 @@ export default function HomeLanding(): React.ReactElement {
                                 <div className="flex-1 flex gap-3">
                                     {/* 左侧：任务流程画布 */}
                                     <div className="flex-1 min-w-0 relative">
-                                        {/* 临时调试信息 */}
-                                        {/*<div className="absolute top-2 left-2 z-50 bg-yellow-100 dark:bg-yellow-900/50 text-xs p-2 rounded border border-yellow-300 dark:border-yellow-700 max-w-md">*/}
-                                        {/*    <div className="font-bold mb-1">🐛 调试信息</div>*/}
-                                        {/*    <div>任务总数: {tasks.length}</div>*/}
-                                        {/*    <div>focusTaskId: {focusTaskId ?? 'null'}</div>*/}
-                                        {/*    <div>顶层任务(level=0且无parentId): {tasks.filter(t => !t.parentId && (t.level ?? 0) === 0).length}</div>*/}
-                                        {/*    {tasks.slice(0, 3).map((t, i) => (*/}
-                                        {/*        <div key={i} className="mt-1 text-[10px] border-t border-yellow-300 pt-1">*/}
-                                        {/*            #{t.id} {t.task?.substring(0, 15)} | level:{t.level} | parentId:{t.parentId ?? 'null'}*/}
-                                        {/*        </div>*/}
-                                        {/*    ))}*/}
-                                        {/*</div>*/}
                                         <TaskContext
                                             tasks={tasks}
                                             onTaskClick={(t, index) => handleSplitTask(t, {taskIndex: index})}
@@ -591,23 +742,22 @@ export default function HomeLanding(): React.ReactElement {
                                 </div>
                             </div>
                         )}
+
+                        {/* loading 浮层：覆盖右侧主内容（画布 + 树），不遮左侧历史栏 */}
+                        {loading && (
+                            <Overlay
+                                onCancel={cancelProcessing}
+                                onRetry={canSend ? handleSend : undefined}
+                                onImprovePrompt={isEmpty ? undefined : () => {
+                                    const summary = tasks.map(t => `${t.startTime}-${t.endTime} ${t.task}`).join('\n');
+                                    setChatInput(prev => (prev ? `${prev}\n\n优化方向：\n${summary}` : summary));
+                                }}
+                                message={chatInput || '正在根据你的输入进行任务拆分'}
+                            />
+                        )}
                     </div>
                 </div>
             </div>
-
-            {/* 加工等待交互层 */}
-            {loading && (
-                <ProcessingOverlay
-                    onCancel={cancelProcessing}
-                    onRetry={canSend ? handleSend : undefined}
-                    onImprovePrompt={isEmpty ? undefined : () => {
-                        // 将当前卡片流程摘要写回输入框以便用户优化
-                        const summary = tasks.map(t => `${t.startTime}-${t.endTime} ${t.task}`).join('\n');
-                        setChatInput((prev) => prev ? `${prev}\n\n优化方向：\n${summary}` : summary);
-                    }}
-                    message={chatInput || '正在根据你的输入进行任务拆分'}
-                />
-            )}
         </div>
     );
 }

@@ -20,6 +20,7 @@ export type SimpleTask = {
     children?: number[]; // 子任务 ID 列表
     level?: number; // 层级：0=主线，1=一级子任务，2=二级子任务
     collapsed?: boolean; // 是否折叠子任务
+    visibleOnMainFlow?: boolean; // 是否在主画布主链上展示（默认 true）
 };
 
 interface TaskFlowProps {

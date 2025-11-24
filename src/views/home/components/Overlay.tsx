@@ -9,9 +9,10 @@ type Props = {
   message?: string;
 };
 
-export default function ProcessingOverlay({ onCancel, onRetry, onImprovePrompt, message }: Props): React.ReactElement {
+export default function Overlay({ onCancel, onRetry, onImprovePrompt, message }: Props): React.ReactElement {
   return (
-    <div className="fixed left-0 right-0 top-[60px] bottom-0 z-30 pointer-events-auto">
+    // 覆盖父容器区域，由父容器控制具体高度/位置
+    <div className="absolute inset-0 z-30 pointer-events-auto">
       {/* 背景遮罩 */}
       <div className="absolute inset-0 bg-black/30 dark:bg-black/50 backdrop-blur-sm"/>
       {/* 居中卡片 */}

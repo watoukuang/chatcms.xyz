@@ -201,23 +201,72 @@ const TaskFlowBoard: React.FC<FlowProps> = ({
         taskList.forEach(t => taskMap.set(t.id!, t));
 
         // 根据 focusTaskId 分离主线任务：
-        // - 未聚焦时：展示所有顶层任务
+        // - 未聚焦时：遍历 prev/next 链表来获取主线任务序列
         // - 聚焦某个父任务时：展示该父任务的直接子任务
-        const mainTasks = (focusTaskId == null)
-            ? taskList.filter(t => {
-                const hasNoParent = !t.parentId || t.parentId === null || t.parentId === undefined;
-                const isLevelZero = t.level === 0 || t.level === undefined || t.level === null;
-                return hasNoParent && isLevelZero;
-            })
-            : taskList.filter(t => t.parentId === focusTaskId);
+        let mainTasks: UiTask[];
+        
+        if (focusTaskId == null) {
+            // 找到主链的头节点：
+            // 1. prev 为 undefined（没有前驱节点）
+            // 2. visibleOnMainFlow 不为 false（允许在主链显示）
+            // 3. 注意：不检查 parentId，因为子任务也可能在主链中
+            const headCandidates = taskList.filter(t => 
+                !t.prev &&
+                t.visibleOnMainFlow !== false
+            );
+            
+            console.log('🔍 找到的链表头节点：', headCandidates.map(h => ({
+                id: h.id,
+                task: h.task,
+                parentId: h.parentId,
+                prev: h.prev,
+                next: h.next,
+                visibleOnMainFlow: h.visibleOnMainFlow
+            })));
+            
+            // 从头节点开始，沿着 next 指针遍历整条链
+            mainTasks = [];
+            const visited = new Set<number>();
+            
+            for (const head of headCandidates) {
+                let current: UiTask | undefined = head;
+                while (current && current.id != null && !visited.has(current.id)) {
+                    visited.add(current.id);
+                    mainTasks.push(current);
+                    
+                    // 找到下一个节点
+                    if (current.next != null) {
+                        current = taskMap.get(current.next);
+                    } else {
+                        break;
+                    }
+                }
+            }
+        } else {
+            // 聚焦模式：显示指定父任务的子任务
+            mainTasks = taskList.filter(t => t.parentId === focusTaskId);
+        }
 
         console.log('🔍 Layout Debug:', {
             focusTaskId,
             totalTasks: taskList.length,
             mainTasks: mainTasks.length,
-            mainTaskIds: mainTasks.map(t => ({id: t.id, task: t.task, level: t.level, parentId: t.parentId})),
-            allTasks: taskList.map(t => ({id: t.id, task: t.task, level: t.level, parentId: t.parentId})),
+            mainTaskIds: mainTasks.map(t => ({
+                id: t.id, 
+                task: t.task, 
+                level: t.level, 
+                parentId: t.parentId,
+                prev: t.prev,
+                next: t.next,
+                visibleOnMainFlow: t.visibleOnMainFlow
+            })),
         });
+        
+        // 如果没有任务可显示，返回空布局（不返回 null，避免 React Flow 报错）
+        if (mainTasks.length === 0) {
+            console.warn('⚠️ 没有任务可显示');
+            return {nodes: [], edges: []};
+        }
 
         let nodeIndex = 0;
         mainTasks.forEach((mainTask, idx) => {
@@ -238,12 +287,14 @@ const TaskFlowBoard: React.FC<FlowProps> = ({
                 },
             });
 
-            // 主线任务之间的箭头（顺序连接）
-            if (idx < mainTasks.length - 1) {
+            // 主线任务之间的箭头
+            // 优先使用任务的 next 字段，其次按照数组顺序
+            const nextTaskId = mainTask.next ?? (idx < mainTasks.length - 1 ? mainTasks[idx + 1].id : undefined);
+            if (nextTaskId != null && taskMap.get(nextTaskId)) {
                 const edge = {
-                    id: `main-${mainTask.id}-${mainTasks[idx + 1].id}`,
+                    id: `main-${mainTask.id}-${nextTaskId}`,
                     source: String(mainTask.id),
-                    target: String(mainTasks[idx + 1].id),
+                    target: String(nextTaskId),
                     sourceHandle: 'out',
                     targetHandle: 'in',
                     type: 'smoothstep',
@@ -260,8 +311,8 @@ const TaskFlowBoard: React.FC<FlowProps> = ({
                 console.log('➡️ Creating edge:', edge);
             }
 
-            // 处理子任务
-            if (mainTask.children && mainTask.children.length > 0 && !mainTask.collapsed) {
+            // 处理子任务（仅在聚焦模式下展开子任务树）
+            if (focusTaskId != null && mainTask.children && mainTask.children.length > 0 && !mainTask.collapsed) {
                 const children = mainTask.children.map(cid => taskMap.get(cid)).filter(Boolean) as UiTask[];
                 children.forEach((child, cidx) => {
                     const childX = x + CHILD_INDENT;
@@ -373,6 +424,23 @@ const TaskFlowBoard: React.FC<FlowProps> = ({
 
     return (
         <div className="border rounded relative overflow-hidden bg-gray-50 dark:bg-gray-900 h-full w-full">
+            {/* 空状态提示 */}
+            {nodes.length === 0 && (
+                <div className="absolute inset-0 flex items-center justify-center z-10">
+                    <div className="text-center p-8 max-w-md">
+                        <div className="text-6xl mb-4">📋</div>
+                        <div className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                            暂无任务显示
+                        </div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                            {focusTaskId != null 
+                                ? '该任务下没有子任务，请点击右侧树的"顶层视图"查看所有任务' 
+                                : '请先在左侧输入任务描述，生成 TODO 列表'
+                            }
+                        </div>
+                    </div>
+                </div>
+            )}
             {/* React Flow 调试信息 */}
             {/*<div*/}
             {/*    className="absolute top-20 left-2 z-[100] bg-blue-100 dark:bg-blue-900/50 text-xs p-2 rounded border border-blue-300 dark:border-blue-700 shadow-lg">*/}
