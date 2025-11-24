@@ -45,9 +45,9 @@ const badgeColor = (state?: SimpleTask['state']) => {
     }
 };
 
-const TaskCard: React.FC<{ 
-    t: SimpleTask; 
-    onClick?: () => void; 
+const TaskCard: React.FC<{
+    t: SimpleTask;
+    onClick?: () => void;
     onSplit?: () => void;
     onToggleCollapse?: () => void;
     onAddToSchedule?: () => void;
@@ -93,8 +93,8 @@ const TaskCard: React.FC<{
     return (
         <div
             className={`group min-w-[280px] sm:min-w-[320px] md:min-w-[360px] max-w-[520px] bg-gradient-to-br from-white to-blue-50/30 dark:from-gray-800 dark:to-blue-900/10 border-2 transition-all duration-200 p-5 cursor-pointer relative rounded-xl shadow-lg ${
-                isSelected 
-                    ? 'border-lime-500 dark:border-lime-600 shadow-lime-200 dark:shadow-lime-900/50' 
+                isSelected
+                    ? 'border-lime-500 dark:border-lime-600 shadow-lime-200 dark:shadow-lime-900/50'
                     : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
             }`}
             onClick={onClick}
@@ -111,7 +111,10 @@ const TaskCard: React.FC<{
                     {t.children && t.children.length > 0 && (
                         <button
                             className="px-2 py-1 text-xs bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded transition-colors"
-                            onClick={(e) => { e.stopPropagation(); onToggleCollapse?.(); }}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onToggleCollapse?.();
+                            }}
                             aria-label={t.collapsed ? "展开子任务" : "折叠子任务"}
                             title={t.collapsed ? "展开子任务" : "折叠子任务"}
                         >
@@ -122,7 +125,10 @@ const TaskCard: React.FC<{
                     <div className="relative" ref={menuRef}>
                         <button
                             className="px-2 py-1 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
-                            onClick={(e) => { e.stopPropagation(); setMenuOpen(!menuOpen); }}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setMenuOpen(!menuOpen);
+                            }}
                             aria-label="操作菜单"
                             title="操作菜单"
                         >
@@ -130,37 +136,54 @@ const TaskCard: React.FC<{
                         </button>
                         {/* 下拉菜单 */}
                         {menuOpen && (
-                            <div className="absolute right-0 top-full mt-1 w-40 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 py-1">
+                            <div
+                                className="absolute right-0 top-full mt-1 w-40 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 py-1">
                                 {onSplit && (
                                     <button
                                         className="w-full text-left px-3 py-2 text-xs hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 flex items-center gap-2"
-                                        onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onSplit(); }}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setMenuOpen(false);
+                                            onSplit();
+                                        }}
                                     >
-                                        🤖 AI拆分
+                                        🤖 &nbsp;&nbsp;智能拆分
                                     </button>
                                 )}
                                 {onAddToSchedule && (
                                     <button
                                         className="w-full text-left px-3 py-2 text-xs hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 flex items-center gap-2"
-                                        onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onAddToSchedule(); }}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setMenuOpen(false);
+                                            onAddToSchedule();
+                                        }}
                                     >
-                                        📅 加入日程
+                                        📅 &nbsp;&nbsp;加入日程
                                     </button>
                                 )}
                                 {onEdit && (
                                     <button
                                         className="w-full text-left px-3 py-2 text-xs hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 flex items-center gap-2"
-                                        onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onEdit(); }}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setMenuOpen(false);
+                                            onEdit();
+                                        }}
                                     >
-                                        👁️ 查看详情
+                                        👁️ &nbsp;&nbsp;查看详情
                                     </button>
                                 )}
                                 {onDelete && (
                                     <button
                                         className="w-full text-left px-3 py-2 text-xs hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 flex items-center gap-2"
-                                        onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onDelete(); }}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setMenuOpen(false);
+                                            onDelete();
+                                        }}
                                     >
-                                        🗑️ 删除任务
+                                        🗑️ &nbsp;&nbsp;删除任务
                                     </button>
                                 )}
                             </div>
@@ -211,11 +234,11 @@ const Arrow: React.FC = () => (
 const TaskFlow: React.FC<TaskFlowProps> = ({task, index, total, onTaskClick, onCardClick, showArrow = true}) => {
     return (
         <>
-            <TaskCard t={task} onClick={() => onCardClick?.(task, index)} onSplit={() => onTaskClick?.(task, index)} />
+            <TaskCard t={task} onClick={() => onCardClick?.(task, index)} onSplit={() => onTaskClick?.(task, index)}/>
             {showArrow && index < total - 1 && <Arrow/>}
         </>
     );
 };
 
-export { TaskCard };
+export {TaskCard};
 export default TaskFlow;

@@ -409,20 +409,6 @@ const TaskFlowBoard: React.FC<FlowProps> = ({
                     </div>
                 </div>
             )}
-            {/* React Flow 调试信息 */}
-            {/*<div*/}
-            {/*    className="absolute top-20 left-2 z-[100] bg-blue-100 dark:bg-blue-900/50 text-xs p-2 rounded border border-blue-300 dark:border-blue-700 shadow-lg">*/}
-            {/*    <div className="font-bold mb-1">🎨 React Flow 状态</div>*/}
-            {/*    <div>nodes.length: {nodes.length}</div>*/}
-            {/*    <div>edges.length: {edges.length}</div>*/}
-            {/*    <div>boardHeight: {boardHeight}px</div>*/}
-            {/*    <div>layoutedNodes: {layoutedNodes.length}</div>*/}
-            {/*    {nodes.slice(0, 2).map((n, i) => (*/}
-            {/*        <div key={i} className="text-[10px] mt-1 border-t border-blue-300 pt-1">*/}
-            {/*            node #{n.id} @ ({n.position.x.toFixed(0)}, {n.position.y.toFixed(0)})*/}
-            {/*        </div>*/}
-            {/*    ))}*/}
-            {/*</div>*/}
             <ReactFlow
                 nodes={nodes}
                 edges={edges}
