@@ -4,24 +4,27 @@ import React from "react";
 import moment from 'moment';
 import {addTaskLocal, getTasksLocalAsync, updateTaskLocal} from '@/src/shared/cached';
 import {useRouter} from 'next/router';
-import TaskFlow, {SimpleTask as UiTask} from "@/src/views/home/components/TaskFlow";
+import {SimpleTask as UiTask} from "@/src/views/home/components/TaskFlow";
 import Dialog from '@/src/components/ui/Dialog';
 import {useToast} from '@/src/components/Toast';
 import Mform from '@/src/views/schedule/components/Mform';
 import {generateWeekHeaders} from '@/src/views/schedule/utils/timeUtils';
 import {stateOptions, timeOptions} from '@/src/views/schedule/constants';
 import storage from '@/src/shared/utils/storage';
-import CanvasBackground from '@/src/components/CanvasBackground';
 import ReactFlow, {
     Background,
     Controls,
-    Panel,
-    Node,
     Edge,
+    Node,
     NodeTypes,
-    useNodesState,
+    Panel,
     useEdgesState,
+    useNodesState,
+    Handle,
+    Position,
+    MarkerType,
 } from "reactflow";
+import 'reactflow/dist/style.css';
 
 // 内联 TaskFlowBoard 组件逻辑（基于 React Flow）
 type FlowProps = {
@@ -30,35 +33,83 @@ type FlowProps = {
     height?: number;
     snap?: number;
     onCardClick?: (t: UiTask, index: number) => void;
+    onToggleCollapse?: (taskId: number) => void;
     overlayTitle?: string;
     onAddToSchedule?: () => void;
     onAddToBacklog?: () => void;
+    // 当前聚焦的父任务 id，为 null 表示展示顶层任务
+    focusTaskId?: number | null;
 };
 
 const storageKey = (groupId?: string) => `rf_task_positions_${groupId || "default"}`;
 
 const TaskNode: React.FC<{ data: any }> = ({data}) => {
     const t: UiTask = data.task;
+    const isSubtask = t.level && t.level > 0;
+
+    // 计算工时显示（优先 duration+unit，其次 estimateMinutes，最后 startTime/endTime）
+    const durationText = t.duration && t.unit
+        ? (() => {
+            const unitText = t.unit === 'minute' ? '分钟' : t.unit === 'hour' ? '小时' : '天';
+            return `${t.duration}${unitText}`;
+        })()
+        : (t.estimateMinutes
+            ? (t.estimateMinutes >= 60
+                ? `${Math.floor(t.estimateMinutes / 60)}小时${t.estimateMinutes % 60 > 0 ? (t.estimateMinutes % 60) + '分钟' : ''}`
+                : `${t.estimateMinutes}分钟`)
+            : null);
+
+    // 根据层级设置不同样式
+    const cardBg = isSubtask
+        ? 'bg-blue-50/50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
+        : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700';
+
     return (
-        <div
-            onDoubleClick={() => data.onDoubleClick?.(t, data.index)}
-            className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-md px-3 py-2 w-[300px]"
-        >
-            <div className="flex items-center justify-between mb-2 pb-2 border-b border-gray-200 dark:border-gray-700">
-                <div className="font-semibold text-gray-900 dark:text-white truncate">{t.task || "未命名任务"}</div>
-                <span
-                    className="text-xs px-2 py-0.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200">{t.state || "pending"}</span>
+        <>
+            {/* 左侧作为目标锚点，右侧作为源锚点，显式指定 id 供边引用；样式设为透明不影响视觉 */}
+            <Handle id="in" type="target" position={Position.Left} style={{opacity: 0}}/>
+            <Handle id="out" type="source" position={Position.Right} style={{opacity: 0}}/>
+
+            <div
+                onClick={() => data.onDoubleClick?.(t, data.index)}
+                className={`rounded-xl border shadow-md px-3 py-2 w-[320px] ${cardBg}`}
+            >
+                <div
+                    className="flex items-center justify-between mb-2 pb-2 border-b border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                        {isSubtask && <span className="text-xs text-blue-600 dark:text-blue-400">↳</span>}
+                        <div
+                            className="font-semibold text-gray-900 dark:text-white truncate text-sm">{t.task || "未命名任务"}</div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                        {t.children && t.children.length > 0 && (
+                            <button
+                                className="text-xs px-1.5 py-0.5 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 rounded"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    data.onToggleCollapse?.(t);
+                                }}
+                            >
+                                {t.collapsed ? '▶' : '▼'} {t.children.length}
+                            </button>
+                        )}
+                        <span
+                            className="text-xs px-2 py-0.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200">
+                            {t.state || "pending"}
+                        </span>
+                    </div>
+                </div>
+                {durationText && (
+                    <div className="text-xs text-gray-700 dark:text-gray-300 flex items-center gap-1 mb-1">
+                        <span className="text-blue-600 dark:text-blue-400">⏱️</span>
+                        <span>预计工时：{durationText}</span>
+                    </div>
+                )}
+                {t.remark && (
+                    <div className="mt-2 text-xs text-gray-600 dark:text-gray-400 line-clamp-2">💡 {t.remark}</div>
+                )}
             </div>
-            <div className="text-xs text-gray-700 dark:text-gray-300 flex items-center gap-1">
-                <span className="text-blue-600 dark:text-blue-400">⏰</span>
-                <span>{t.startTime || "--:--"}</span>
-                <span className="text-gray-400">→</span>
-                <span>{t.endTime || "--:--"}</span>
-            </div>
-            {t.remark && (
-                <div className="mt-2 text-xs text-gray-600 dark:text-gray-400 line-clamp-2">💡 {t.remark}</div>
-            )}
-        </div>
+        </>
     );
 };
 
@@ -70,9 +121,11 @@ const TaskFlowBoard: React.FC<FlowProps> = ({
                                                 height = 0,
                                                 snap = 24,
                                                 onCardClick,
+                                                onToggleCollapse,
                                                 overlayTitle,
                                                 onAddToSchedule,
                                                 onAddToBacklog,
+                                                focusTaskId,
                                             }: FlowProps) => {
     // 动态高度：根据任务数量做简单自适应（最小 360，最大 720）
     const boardHeight = React.useMemo(() => {
@@ -132,53 +185,208 @@ const TaskFlowBoard: React.FC<FlowProps> = ({
         return;
     }, []);
 
-    const initialNodes: Node[] = React.useMemo(() => {
-        const saved = loadPositions();
-        let x = 80, y = 80, col = 0;
-        const nodes: Node[] = tasks.map((t, i) => {
-            const id = String(t.id ?? i);
-            const pos = saved[id] || {x: x + col * 240, y};
-            col = (col + 1) % 4; // simple row wrap
-            if (col === 0) y += 160;
-            return {
-                id,
-                type: "task",
-                position: pos,
-                data: {task: t, index: i, onDoubleClick: onCardClick},
-            } as Node;
-        });
-        return nodes;
-    }, [tasks, groupId, onCardClick]);
+    // 多行网格布局：根据当前聚焦的父任务决定主任务集合
+    const getLayoutedElements = React.useCallback((taskList: UiTask[], toggleCollapseFn?: (id: number) => void) => {
+        const NODE_WIDTH = 340;
+        const NODE_HEIGHT = 160;
+        const COLS = 3; // 每行 3 列
+        const H_SPACING = 80; // 横向间距
+        const V_SPACING = 100; // 纵向间距
+        const CHILD_INDENT = 60; // 子任务缩进
+        const CHILD_V_OFFSET = 200; // 子任务纵向偏移
 
-    const initialEdges: Edge[] = React.useMemo(() => {
+        const nodes: Node[] = [];
         const edges: Edge[] = [];
-        for (let i = 0; i < tasks.length - 1; i++) {
-            const curId = String(tasks[i].id ?? i);
-            const nextId = String(tasks[i + 1].id ?? (i + 1));
-            edges.push({id: `${curId}-${nextId}`, source: curId, target: nextId, type: "smoothstep"});
-        }
-        return edges;
-    }, [tasks]);
+        const taskMap = new Map<number, UiTask>();
+        taskList.forEach(t => taskMap.set(t.id!, t));
 
-    const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-    const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+        // 根据 focusTaskId 分离主线任务：
+        // - 未聚焦时：展示所有顶层任务
+        // - 聚焦某个父任务时：展示该父任务的直接子任务
+        const mainTasks = (focusTaskId == null)
+            ? taskList.filter(t => {
+                const hasNoParent = !t.parentId || t.parentId === null || t.parentId === undefined;
+                const isLevelZero = t.level === 0 || t.level === undefined || t.level === null;
+                return hasNoParent && isLevelZero;
+            })
+            : taskList.filter(t => t.parentId === focusTaskId);
+
+        console.log('🔍 Layout Debug:', {
+            focusTaskId,
+            totalTasks: taskList.length,
+            mainTasks: mainTasks.length,
+            mainTaskIds: mainTasks.map(t => ({id: t.id, task: t.task, level: t.level, parentId: t.parentId})),
+            allTasks: taskList.map(t => ({id: t.id, task: t.task, level: t.level, parentId: t.parentId})),
+        });
+
+        let nodeIndex = 0;
+        mainTasks.forEach((mainTask, idx) => {
+            const row = Math.floor(idx / COLS);
+            const col = idx % COLS;
+            const x = col * (NODE_WIDTH + H_SPACING);
+            const y = row * (NODE_HEIGHT + V_SPACING);
+
+            nodes.push({
+                id: String(mainTask.id),
+                type: 'task',
+                position: {x, y},
+                data: {
+                    task: mainTask,
+                    index: nodeIndex++,
+                    onDoubleClick: onCardClick,
+                    onToggleCollapse: () => toggleCollapseFn?.(mainTask.id!),
+                },
+            });
+
+            // 主线任务之间的箭头（顺序连接）
+            if (idx < mainTasks.length - 1) {
+                const edge = {
+                    id: `main-${mainTask.id}-${mainTasks[idx + 1].id}`,
+                    source: String(mainTask.id),
+                    target: String(mainTasks[idx + 1].id),
+                    sourceHandle: 'out',
+                    targetHandle: 'in',
+                    type: 'smoothstep',
+                    animated: false,
+                    style: {stroke: '#10b981', strokeWidth: 2},
+                    markerEnd: {
+                        type: MarkerType.ArrowClosed,
+                        color: '#10b981',
+                        width: 18,
+                        height: 18,
+                    },
+                } as Edge;
+                edges.push(edge);
+                console.log('➡️ Creating edge:', edge);
+            }
+
+            // 处理子任务
+            if (mainTask.children && mainTask.children.length > 0 && !mainTask.collapsed) {
+                const children = mainTask.children.map(cid => taskMap.get(cid)).filter(Boolean) as UiTask[];
+                children.forEach((child, cidx) => {
+                    const childX = x + CHILD_INDENT;
+                    const childY = y + CHILD_V_OFFSET + cidx * (NODE_HEIGHT + 60);
+
+                    nodes.push({
+                        id: String(child.id),
+                        type: 'task',
+                        position: {x: childX, y: childY},
+                        data: {
+                            task: child,
+                            index: nodeIndex++,
+                            onDoubleClick: onCardClick,
+                            onToggleCollapse: () => toggleCollapseFn?.(child.id!),
+                        },
+                    });
+
+                    // 父到子的箭头（第一个子任务）
+                    if (cidx === 0) {
+                        const parentEdge: Edge = {
+                            id: `parent-${mainTask.id}-child-${child.id}`,
+                            source: String(mainTask.id),
+                            target: String(child.id),
+                            sourceHandle: 'out',
+                            targetHandle: 'in',
+                            type: 'smoothstep',
+                            animated: false,
+                            style: {stroke: '#94a3b8', strokeWidth: 1.5, strokeDasharray: '5,5'},
+                            markerEnd: {
+                                type: MarkerType.ArrowClosed,
+                                color: '#94a3b8',
+                                width: 14,
+                                height: 14,
+                            },
+                        };
+                        edges.push(parentEdge);
+                    }
+
+                    // 子任务之间的箭头
+                    if (cidx < children.length - 1) {
+                        const childEdge: Edge = {
+                            id: `child-${child.id}-${children[cidx + 1].id}`,
+                            source: String(child.id),
+                            target: String(children[cidx + 1].id),
+                            sourceHandle: 'out',
+                            targetHandle: 'in',
+                            type: 'smoothstep',
+                            animated: false,
+                            style: {stroke: '#94a3b8', strokeWidth: 1.5},
+                            markerEnd: {
+                                type: MarkerType.ArrowClosed,
+                                color: '#94a3b8',
+                                width: 12,
+                                height: 12,
+                            },
+                        };
+                        edges.push(childEdge);
+                    }
+                });
+            }
+        });
+
+        console.log('📊 Final Layout Result:', {
+            nodesCount: nodes.length,
+            edgesCount: edges.length,
+            nodeIds: nodes.map(n => n.id),
+            edges: edges.map(e => ({id: e.id, source: e.source, target: e.target})),
+        });
+
+        return {nodes, edges};
+    }, [onCardClick, focusTaskId]);
+
+    const {nodes: layoutedNodes, edges: layoutedEdges} = React.useMemo(() => {
+        return getLayoutedElements(tasks, onToggleCollapse);
+    }, [tasks, onToggleCollapse, getLayoutedElements]);
+
+    // 使用空数组初始化，避免初始渲染时的竞态条件
+    const [nodes, setNodes, onNodesChange] = useNodesState([]);
+    const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+
+    // 当任务列表变化时同步更新节点和边
+    React.useEffect(() => {
+        console.log('🔄 Updating React Flow:', {
+            nodesCount: layoutedNodes.length,
+            edgesCount: layoutedEdges.length,
+            nodeIds: layoutedNodes.map(n => n.id),
+        });
+
+        // 关键：先清空边，再设置新节点，最后设置新边
+        // 这样可以避免边引用不存在的节点
+        setEdges([]);
+        setNodes(layoutedNodes);
+        // 使用 requestAnimationFrame 确保节点已经渲染
+        requestAnimationFrame(() => {
+            setEdges(layoutedEdges);
+        });
+    }, [layoutedNodes, layoutedEdges, setNodes, setEdges]);
 
     const onNodeDragStop = (_evt: any, node: Node) => {
+        // 使用自动布局时，可以选择保存用户手动调整的位置
         const map = Object.fromEntries(nodes.map(n => [n.id, n.position]));
         map[node.id] = node.position;
         savePositions(map);
     };
-
-    React.useEffect(() => {
-        setEdges(initialEdges);
-    }, [initialEdges, setEdges]);
 
     const defaultViewport = React.useMemo(() => {
         return loadViewport() || {x: 0, y: 0, zoom: 1}; // React Flow 会基于此初始化
     }, []);
 
     return (
-        <div style={{minHeight: boardHeight}} className="border rounded relative h-full overflow-hidden">
+        <div className="border rounded relative overflow-hidden bg-gray-50 dark:bg-gray-900 h-full w-full">
+            {/* React Flow 调试信息 */}
+            {/*<div*/}
+            {/*    className="absolute top-20 left-2 z-[100] bg-blue-100 dark:bg-blue-900/50 text-xs p-2 rounded border border-blue-300 dark:border-blue-700 shadow-lg">*/}
+            {/*    <div className="font-bold mb-1">🎨 React Flow 状态</div>*/}
+            {/*    <div>nodes.length: {nodes.length}</div>*/}
+            {/*    <div>edges.length: {edges.length}</div>*/}
+            {/*    <div>boardHeight: {boardHeight}px</div>*/}
+            {/*    <div>layoutedNodes: {layoutedNodes.length}</div>*/}
+            {/*    {nodes.slice(0, 2).map((n, i) => (*/}
+            {/*        <div key={i} className="text-[10px] mt-1 border-t border-blue-300 pt-1">*/}
+            {/*            node #{n.id} @ ({n.position.x.toFixed(0)}, {n.position.y.toFixed(0)})*/}
+            {/*        </div>*/}
+            {/*    ))}*/}
+            {/*</div>*/}
             <ReactFlow
                 nodes={nodes}
                 edges={edges}
@@ -191,6 +399,8 @@ const TaskFlowBoard: React.FC<FlowProps> = ({
                 defaultViewport={defaultViewport}
                 minZoom={0.5}
                 maxZoom={1.8}
+                fitView
+                fitViewOptions={{padding: 0.2}}
                 onMoveEnd={(_evt: any, vp: any) => saveViewport(vp)}
             >
                 <Background gap={snap} size={1} color={isDark ? "#4ade8022" : "#a3e63522"}/>
@@ -205,7 +415,7 @@ const TaskFlowBoard: React.FC<FlowProps> = ({
                                     onClick={onAddToSchedule}
                                     className="px-2 py-1 text-xs rounded-md border border-lime-300 dark:border-lime-600 text-lime-700 dark:text-lime-300 hover:bg-lime-50 dark:hover:bg-lime-900/20 transition-colors"
                                 >
-                                    添加进日程
+                                    添加日程
                                 </button>
                             )}
                             {onAddToBacklog && (
@@ -221,7 +431,6 @@ const TaskFlowBoard: React.FC<FlowProps> = ({
                     </Panel>
                 )}
             </ReactFlow>
-
         </div>
     );
 };
@@ -230,12 +439,22 @@ type Props = {
     // 一维任务数组：包含父任务与其后插入的子任务
     tasks: UiTask[];
     onTaskClick: (t: UiTask, index: number) => void;
+    onToggleCollapse?: (taskId: number) => void;
     onReset?: () => void;
     groupTitle?: string;
     groupId?: string;
+    focusTaskId?: number | null;
 };
 
-export default function TaskContext({tasks, onTaskClick, onReset, groupTitle, groupId}: Props): React.ReactElement {
+export default function TaskContext({
+                                        tasks,
+                                        onTaskClick,
+                                        onToggleCollapse,
+                                        onReset,
+                                        groupTitle,
+                                        groupId,
+                                        focusTaskId,
+                                    }: Props): React.ReactElement {
     if (!tasks || tasks.length === 0) return <></>;
     const router = useRouter();
     const toast = useToast();
@@ -382,7 +601,7 @@ export default function TaskContext({tasks, onTaskClick, onReset, groupTitle, gr
             });
             setConfirmOpen(false);
             toast.success(`已添加 ${tasks.length} 条到固定日程`);
-            router.push('/schedule');
+            void router.push('/schedule');
         } catch (e) {
             console.error('确认添加失败：', e);
             toast.error('确认添加失败，请稍后重试');
@@ -429,15 +648,19 @@ export default function TaskContext({tasks, onTaskClick, onReset, groupTitle, gr
         }
     };
     return (
-        <div className="w-full flex-1 p-2.5 animate-fadeIn flex flex-col">
-            <TaskFlowBoard
-                tasks={tasks}
-                groupId={groupId}
-                onCardClick={(t, i) => handleTaskClick(t, i)}
-                overlayTitle={`AI 规划了 ${tasks.length} 个任务`}
-                onAddToSchedule={addAllToSchedule}
-                onAddToBacklog={addAllToBacklog}
-            />
+        <div className="w-full h-full flex-1 p-2.5 animate-fadeIn flex flex-col">
+            <div className="flex-1 min-h-0">
+                <TaskFlowBoard
+                    tasks={tasks}
+                    groupId={groupId}
+                    onCardClick={onTaskClick}
+                    onToggleCollapse={onToggleCollapse}
+                    overlayTitle={`AI 规划了 ${tasks.length} 个任务`}
+                    onAddToSchedule={addAllToSchedule}
+                    onAddToBacklog={addAllToBacklog}
+                    focusTaskId={focusTaskId ?? null}
+                />
+            </div>
             <Dialog
                 open={conflictOpen}
                 title={'日程冲突'}

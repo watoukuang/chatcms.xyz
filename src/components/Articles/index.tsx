@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {Article, pageArticleAPI} from '@/src/shared/api/article';
+import {Article, pageArticleAPI} from '@/src/shared/service/article';
 import Pagination from '@/src/views/order/components/pagination';
 import Acard from '@/src/components/Articles/components/Acard';
 import Skeleton from '@/src/components/Articles/components/Skeleton';

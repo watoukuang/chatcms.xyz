@@ -1,318 +1,34 @@
 import React from "react";
 
-interface ChatPanelTimeProps {
-    startISO: string;
-    setStartISO: (val: string) => void;
-    endISO: string;
-    setEndISO: (val: string) => void;
-    durationMin: string;
-    setDurationMin: (val: string) => void;
-}
-
-interface ChatPanelInputProps {
+interface ChatPanelProps {
     value: string;
     setValue: (val: string) => void;
-}
-
-interface ChatPanelProps {
-    time: ChatPanelTimeProps;
-    input: ChatPanelInputProps;
     loading: boolean;
     onSubmit: () => void;
 }
 
 const ChatPanel: React.FC<ChatPanelProps> = ({
-                                                 time,
-                                                 input,
+                                                 value,
+                                                 setValue,
                                                  loading,
                                                  onSubmit
                                              }) => {
-    const {
-        startISO,
-        setStartISO,
-        endISO,
-        setEndISO,
-        durationMin,
-        setDurationMin
-    } = time;
-
-    const {
-        value: chatInput,
-        setValue: setChatInput
-    } = input;
-    // 辅助：格式化为 datetime-local 可接受的本地字符串（到分钟）
-    const formatLocalInputValue = (d: Date) => {
-        const pad = (n: number) => String(n).padStart(2, "0");
-        const yyyy = d.getFullYear();
-        const mm = pad(d.getMonth() + 1);
-        const dd = pad(d.getDate());
-        const hh = pad(d.getHours());
-        const mi = pad(d.getMinutes());
-        return `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
-    };
-
-    // 手动输入：规范化常见格式为本地 ISO 分钟（YYYY-MM-DDTHH:mm）
-    const normalizeISOInput = (raw: string): string => {
-        const s = raw.trim();
-        if (!s) return "";
-        const re = /^([0-9]{4})[-\/.]([0-9]{1,2})[-\/.]([0-9]{1,2})[ T]?([0-9]{1,2}):([0-9]{1,2})$/;
-        const m = s.match(re);
-        if (!m) return "";
-        const [_, yyyy, mm, dd, hh, mi] = m;
-        const M = Number(mm), D = Number(dd), H = Number(hh), Min = Number(mi);
-        if (M < 1 || M > 12 || D < 1 || D > 31 || H < 0 || H > 23 || Min < 0 || Min > 59) return "";
-        const dt = new Date(Number(yyyy), Number(mm) - 1, Number(dd), Number(hh), Number(mi), 0, 0);
-        const aligned = Math.round(dt.getMinutes() / 5) * 5;
-        if (aligned === 60) {
-            dt.setHours(dt.getHours() + 1, 0, 0, 0);
-        } else {
-            dt.setMinutes(aligned, 0, 0);
-        }
-        return formatLocalInputValue(dt);
-    };
-
-    const preferISO = (s?: string) => {
-        if (!s) return s;
-        const n = normalizeISOInput(s);
-        return n || s;
-    };
-
-    const parseInputDate = (val?: string) => (val ? new Date(val) : new Date());
-    const endOfDay = (d: Date) => {
-        const x = new Date(d);
-        x.setHours(23, 59, 0, 0);
-        return x;
-    };
-
-    const minuteStep = 5; // 时间调整：以 5 分钟为步进
-    const adjustMinutes = (baseISO: string | undefined, deltaMin: number) => {
-        const base = parseInputDate(preferISO(baseISO));
-        const target = new Date(base.getTime() + deltaMin * 60000);
-        target.setSeconds(0, 0);
-        // 对分钟进行步进对齐
-        const m = target.getMinutes();
-        const aligned = Math.round(m / minuteStep) * minuteStep;
-        if (aligned === 60) {
-            target.setHours(target.getHours() + 1, 0, 0, 0);
-        } else {
-            target.setMinutes(aligned, 0, 0);
-        }
-        return formatLocalInputValue(target);
-    };
-
-    const handleKeyAdjust = (
-        e: React.KeyboardEvent<HTMLInputElement>,
-        currentISO: string | undefined,
-        setter: (v: string) => void
-    ) => {
-        if (e.key === "ArrowUp") {
-            e.preventDefault();
-            setter(adjustMinutes(currentISO, minuteStep));
-        } else if (e.key === "ArrowDown") {
-            e.preventDefault();
-            setter(adjustMinutes(currentISO, -minuteStep));
-        }
-    };
-
-    const clearStart = () => setStartISO("");
-    const clearEnd = () => setEndISO("");
-    const setStartToday = () => {
-        const now = new Date();
-        now.setHours(0, 0, 0, 0);
-        setStartISO(formatLocalInputValue(now));
-    };
-    const setEndNow = () => {
-        const now = new Date();
-        const aligned = Math.round(now.getMinutes() / 5) * 5;
-        if (aligned === 60) {
-            now.setHours(now.getHours() + 1, 0, 0, 0);
-        } else {
-            now.setMinutes(aligned, 0, 0);
-        }
-        setEndISO(formatLocalInputValue(now));
-    };
-
-    const setStartNow = () => {
-        const now = new Date();
-        const aligned = Math.round(now.getMinutes() / 5) * 5;
-        if (aligned === 60) {
-            now.setHours(now.getHours() + 1, 0, 0, 0);
-        } else {
-            now.setMinutes(aligned, 0, 0);
-        }
-        setStartISO(formatLocalInputValue(now));
-    };
-    const setEndPlus = (mins: number) => {
-        const base = parseInputDate(startISO);
-        const target = new Date(base.getTime() + mins * 60000);
-        const aligned = Math.round(target.getMinutes() / 5) * 5;
-        if (aligned === 60) {
-            target.setHours(target.getHours() + 1, 0, 0, 0);
-        } else {
-            target.setMinutes(aligned, 0, 0);
-        }
-        setEndISO(formatLocalInputValue(target));
-    };
-    const setEndToday = () => {
-        const base = parseInputDate(startISO);
-        setEndISO(formatLocalInputValue(endOfDay(base)));
-    };
-
-    // 计算时间差（分钟），供校验使用
-    const diffMinutes = React.useMemo(() => {
-        if (!startISO || !endISO) return undefined;
-        const s = new Date(startISO).getTime();
-        const e = new Date(endISO).getTime();
-        const diff = Math.round((e - s) / 60000);
-        return Number.isFinite(diff) ? diff : undefined;
-    }, [startISO, endISO]);
-
-    // 校验规则搬入 ChatPanel，避免在页面中重复传入
-    const validation = React.useMemo(() => {
-        const errors: string[] = [];
-        if (startISO && endISO) {
-            if (new Date(startISO) >= new Date(endISO)) {
-                errors.push("结束时间必须大于开始时间");
-            }
-        }
-        const dur = durationMin ? Number(durationMin) : undefined;
-        if (durationMin !== "" && (!Number.isFinite(dur!) || dur! <= 0)) {
-            errors.push("目标总时长需为大于0的数字（分钟）");
-        }
-        if (diffMinutes !== undefined && durationMin !== "") {
-            const durNum = Number(durationMin);
-            if (Number.isFinite(durNum) && durNum > diffMinutes) {
-                errors.push(`目标总时长(${durNum}m)不能大于时间窗(${diffMinutes}m)`);
-            }
-        }
-        return errors;
-    }, [startISO, endISO, durationMin, diffMinutes]);
-
-    const canSend = !loading && chatInput.trim().length > 0 && validation.length === 0 && !!startISO && !!endISO;
-
-    // 默认值：组件加载时，如果为空则设置为今天、分钟对齐到0或5
-    React.useEffect(() => {
-        const ensureFiveAligned = (d: Date) => {
-            const aligned = Math.round(d.getMinutes() / 5) * 5;
-            if (aligned === 60) {
-                d.setHours(d.getHours() + 1, 0, 0, 0);
-            } else {
-                d.setMinutes(aligned, 0, 0);
-            }
-            return d;
-        };
-
-        if (!startISO) {
-            const now = ensureFiveAligned(new Date());
-            setStartISO(formatLocalInputValue(now));
-        }
-        if (!endISO) {
-            const base = startISO ? parseInputDate(preferISO(startISO)) : new Date();
-            const plus = new Date(base.getTime() + 30 * 60000);
-            const alignedPlus = ensureFiveAligned(plus);
-            setEndISO(formatLocalInputValue(alignedPlus));
-        }
-    }, [startISO, endISO]);
-    
+    const canSend = !loading && value.trim().length > 0;
 
     return (
         <div
             className="mx-auto p-6 bg-white/95 dark:bg-[#1f2937]/95 backdrop-blur-xl border border-lime-500/30 dark:border-lime-700/40 rounded-2xl shadow-2xl w-full transition-all duration-300">
             <div className="w-full flex flex-col gap-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-3 rounded-lg bg-gradient-to-br from-white to-lime-50/30 dark:from-gray-800 dark:to-lime-900/10 border border-lime-300/50 dark:border-lime-700/40">
-                    <div className="flex flex-col gap-1">
-                        <label className="text-xs font-medium text-lime-700 dark:text-lime-300">开始时间</label>
-                        <input
-                            type="text"
-                            value={startISO}
-                            onChange={(e) => setStartISO(e.target.value)}
-                            aria-label="开始时间"
-                            placeholder="YYYY-MM-DD HH:mm"
-                            title="使用上下方向键以5分钟为单位调整"
-                            onBlur={(e) => {
-                                const n = normalizeISOInput(e.target.value);
-                                if (n) setStartISO(n);
-                            }}
-                            onKeyDown={(e) => handleKeyAdjust(e, startISO, setStartISO)}
-                            className="w-full border border-gray-300 dark:border-gray-600 bg-transparent rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-lime-500/50 focus:border-lime-500 transition-all"
-                        />
-                        <div className="flex flex-wrap gap-2 mt-1">
-                            <button type="button" onClick={setStartNow}
-                                    className="px-2 py-1 text-xs rounded-md border border-lime-300 dark:border-lime-600 text-lime-700 dark:text-lime-300 hover:bg-lime-50 dark:hover:bg-lime-900/20 transition">现在开始</button>
-                            <button type="button" onClick={setStartToday}
-                                    className="px-2 py-1 text-xs rounded-md border border-lime-300 dark:border-lime-600 text-lime-700 dark:text-lime-300 hover:bg-lime-50 dark:hover:bg-lime-900/20 transition">今天</button>
-                            <button type="button" onClick={clearStart}
-                                    className="px-2 py-1 text-xs rounded-md border border-lime-300 dark:border-lime-600 text-lime-700 dark:text-lime-300 hover:bg-lime-50 dark:hover:bg-lime-900/20 transition">清除</button>
-                        </div>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                        <label className="text-xs font-medium text-lime-700 dark:text-lime-300">结束时间</label>
-                        <input
-                            type="text"
-                            value={endISO}
-                            onChange={(e) => setEndISO(e.target.value)}
-                            aria-label="结束时间"
-                            placeholder="YYYY-MM-DD HH:mm"
-                            title="使用上下方向键以5分钟为单位调整"
-                            onBlur={(e) => {
-                                const n = normalizeISOInput(e.target.value);
-                                if (n) setEndISO(n);
-                            }}
-                            onKeyDown={(e) => handleKeyAdjust(e, endISO, setEndISO)}
-                            className="w-full border border-gray-300 dark:border-gray-600 bg-transparent rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-lime-500/50 focus:border-lime-500 transition-all"
-                        />
-                        <div className="flex flex-wrap gap-2 mt-1">
-                            <button type="button" onClick={() => setEndPlus(30)}
-                                    className="px-2 py-1 text-xs rounded-md border border-lime-300 dark:border-lime-600 text-lime-700 dark:text-lime-300 hover:bg-lime-50 dark:hover:bg-lime-900/20 transition">+30分钟</button>
-                            <button type="button" onClick={() => setEndPlus(60)}
-                                    className="px-2 py-1 text-xs rounded-md border border-lime-300 dark:border-lime-600 text-lime-700 dark:text-lime-300 hover:bg-lime-50 dark:hover:bg-lime-900/20 transition">+1小时</button>
-                            <button type="button" onClick={() => setEndPlus(120)}
-                                    className="px-2 py-1 text-xs rounded-md border border-lime-300 dark:border-lime-600 text-lime-700 dark:text-lime-300 hover:bg-lime-50 dark:hover:bg-lime-900/20 transition">+2小时</button>
-                            <button type="button" onClick={setEndToday}
-                                    className="px-2 py-1 text-xs rounded-md border border-lime-300 dark:border-lime-600 text-lime-700 dark:text-lime-300 hover:bg-lime-50 dark:hover:bg-lime-900/20 transition">今天结束</button>
-                            <button type="button" onClick={setEndNow}
-                                    className="px-2 py-1 text-xs rounded-md border border-lime-300 dark:border-lime-600 text-lime-700 dark:text-lime-300 hover:bg-lime-50 dark:hover:bg-lime-900/20 transition">现在</button>
-                            <button type="button" onClick={clearEnd}
-                                    className="px-2 py-1 text-xs rounded-md border border-lime-300 dark:border-lime-600 text-lime-700 dark:text-lime-300 hover:bg-lime-50 dark:hover:bg-lime-900/20 transition">清除</button>
-                        </div>
-                    </div>
-                </div>
-                {startISO && endISO && (
-                    <div className="flex items-center gap-2 text-xs text-lime-700 dark:text-lime-300">
-                        {(() => {
-                            const s = new Date(startISO).getTime();
-                            const e = new Date(endISO).getTime();
-                            const diffMs = Math.max(0, e - s);
-                            const totalMin = Math.round(diffMs / 60000);
-                            const h = Math.floor(totalMin / 60);
-                            const m = totalMin % 60;
-                            return <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-lime-100/30 dark:bg-lime-900/20 border border-lime-300 dark:border-lime-700">时长：{h}小时{m}分钟</span>;
-                        })()}
-                    </div>
-                )}
-                {/* 手动输入模式，无弹层 */}
-                {validation.length > 0 && (
-                    <div
-                        className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                        <div className="text-red-600 dark:text-red-400 text-sm space-y-1">
-                            {validation.map((m: string, i: number) => (
-                                <div key={i} className="flex items-start gap-2">
-                                    <span className="text-red-500">⚠️</span>
-                                    <span>{m}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
+                {/* 任务描述输入区 */}
                 <div className="flex items-end">
                     <div className="relative flex-1">
                         <textarea
-                            className="flex-1 w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800/50 rounded-xl px-4 py-3 pr-12 text-sm min-h-[80px] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-lime-500/50 focus:border-lime-500 transition-all shadow-sm hover:shadow-md resize-none"
-                            placeholder="描述你的任务与偏好，Enter 发送，Cmd/Ctrl+Enter 或 Shift+Enter 换行"
-                            value={chatInput}
-                            onChange={(e) => setChatInput(e.target.value)}
+                            className="flex-1 w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800/50 rounded-xl px-4 py-3 pr-12 text-sm min-h-[120px] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-lime-500/50 focus:border-lime-500 transition-all shadow-sm hover:shadow-md resize-none"
+                            placeholder="现在你想做什么？例如：今晚把个人网站做出一个能看的版本&#10;&#10;AI 会帮你拆分成可执行的步骤，并估算每一步的工时。&#10;&#10;Enter 发送，Shift+Enter 换行"
+                            value={value}
+                            onChange={(e) => setValue(e.target.value)}
                             onKeyDown={(e) => {
-                                if (e.key === "Enter" && !e.shiftKey && !e.metaKey) {
+                                if (e.key === "Enter" && !e.shiftKey && !e.metaKey && !e.ctrlKey) {
                                     e.preventDefault();
                                     if (canSend) {
                                         onSubmit();
@@ -337,7 +53,8 @@ const ChatPanel: React.FC<ChatPanelProps> = ({
                                         strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                                 </svg>
                             ) : (
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className={`w-4 h-4 ${canSend ? 'text-lime-50 dark:text-lime-200' : ''}`}>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     className={`w-4 h-4 ${canSend ? 'text-lime-50 dark:text-lime-200' : ''}`}>
                                     <path d="M5 12h12M13 5l7 7-7 7" strokeWidth="2" strokeLinecap="round"
                                           strokeLinejoin="round"/>
                                 </svg>

@@ -2,7 +2,7 @@ import React, {useState, useEffect} from 'react';
 import {useRouter} from 'next/router';
 import Link from 'next/link';
 import Head from 'next/head';
-import {Article, getArticleByIdAPI} from '@/src/shared/api/article';
+import {Article, getArticleByIdAPI} from '@/src/shared/service/article';
 import Container from '@/src/views/slug/components/Container';
 import Header from '@/src/views/slug/components/Header';
 import Content from '@/src/views/slug/components/Content';

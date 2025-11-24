@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {createPortal} from 'react-dom';
 import GoogleIcon from '@/src/components/Icons/GoogleIcon'
-import {login, register} from '@/src/shared/api/auth';
+import {login, register} from '@/src/shared/service/auth';
 import {useToast} from '@/src/components/Toast';
 import {LoginDTO, RegisterDTO} from "@/src/shared/types/user";
 import {useRouter} from 'next/router';
@@ -54,7 +54,7 @@ export default function LoginModal({open, onClose, onSuccess, initialMode}: Logi
     if (!mounted || !open) return null;
 
     const googleUrl =
-        process.env.NEXT_PUBLIC_GOOGLE_OAUTH_URL || '/api/auth/google';
+        process.env.NEXT_PUBLIC_GOOGLE_OAUTH_URL || '/service/auth/google';
 
     const onGoogle = () => {
         try {

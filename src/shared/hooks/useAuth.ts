@@ -1,5 +1,5 @@
 import {useState, useEffect, useCallback} from 'react';
-import {logout} from '../api/auth';
+import {logout} from '@/src/shared/service/auth';
 import {UserDetail, AuthState} from '../types/user';
 import storage from '../utils/storage';
 

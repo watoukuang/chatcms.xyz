@@ -27,8 +27,8 @@ docker run --name nginx --restart=always -p 443:443 -p 80:80 -d -v /usr/local/ng
 - 构建后端二进制包
 
 ```shell
-root@local:~# cd /opt/app/demochain/demochain-api
-root@local:/opt/app/demochain/demochain-api# ./build.sh
+root@local:~# cd /opt/app/demochain/demochain-service
+root@local:/opt/app/demochain/demochain-service# ./build.sh
 ```
 
 - 上传数据文件
@@ -39,7 +39,7 @@ root@local:~# scp demochain.db root@38.190.226.11:~
 
 - 上传二进制包
 ```shell
-root@local:~# cd /opt/app/demochain/demochain-api/dist
+root@local:~# cd /opt/app/demochain/demochain-service/dist
 root@local:~# scp demochain root@38.190.226.11:~
 ```
 

@@ -3,14 +3,23 @@ import React from 'react';
 export type SimpleTask = {
     id?: number;
     taskTime?: string; // YYYY-MM-DD
-    startTime?: string; // HH:mm
-    endTime?: string;   // HH:mm
+    startTime?: string; // HH:mm (可选，用于兼容历史数据)
+    endTime?: string;   // HH:mm (可选，用于兼容历史数据)
+    // 新字段：工时估算
+    duration?: number; // 工时数值
+    unit?: 'minute' | 'hour' | 'day'; // 工时单位
+    estimateMinutes?: number; // 预估工时（分钟，兼容旧数据）
     task?: string;
     remark?: string;
     state?: 'pending' | 'in-progress' | 'completed' | 'delayed';
     // 新增：链式导航字段，指向相邻任务的 id（若存在）
     prev?: number;
     next?: number;
+    // 父子关系字段
+    parentId?: number; // 父任务 ID，如果是子任务
+    children?: number[]; // 子任务 ID 列表
+    level?: number; // 层级：0=主线，1=一级子任务，2=二级子任务
+    collapsed?: boolean; // 是否折叠子任务
 };
 
 interface TaskFlowProps {
@@ -35,14 +44,30 @@ const badgeColor = (state?: SimpleTask['state']) => {
     }
 };
 
-const TaskCard: React.FC<{ t: SimpleTask; onClick?: () => void; onSplit?: () => void }> = ({t, onClick, onSplit}) => {
-    const duration = t.startTime && t.endTime ?
-        (() => {
-            const [sh, sm] = t.startTime.split(':').map(Number);
-            const [eh, em] = t.endTime.split(':').map(Number);
-            const mins = (eh * 60 + em) - (sh * 60 + sm);
-            return mins > 0 ? `${mins}分钟` : '';
-        })() : '';
+const TaskCard: React.FC<{ 
+    t: SimpleTask; 
+    onClick?: () => void; 
+    onSplit?: () => void;
+    onToggleCollapse?: () => void;
+}> = ({t, onClick, onSplit, onToggleCollapse}) => {
+    // 优先使用 duration + unit，其次 estimateMinutes，最后兼容旧数据的 startTime/endTime
+    const duration = t.duration && t.unit
+        ? (() => {
+            const unitText = t.unit === 'minute' ? '分钟' : t.unit === 'hour' ? '小时' : '天';
+            return `${t.duration}${unitText}`;
+        })()
+        : (t.estimateMinutes
+            ? (t.estimateMinutes >= 60
+                ? `${Math.floor(t.estimateMinutes / 60)}小时${t.estimateMinutes % 60 > 0 ? (t.estimateMinutes % 60) + '分钟' : ''}`
+                : `${t.estimateMinutes}分钟`)
+            : (t.startTime && t.endTime
+                ? (() => {
+                    const [sh, sm] = t.startTime.split(':').map(Number);
+                    const [eh, em] = t.endTime.split(':').map(Number);
+                    const mins = (eh * 60 + em) - (sh * 60 + sm);
+                    return mins > 0 ? `${mins}分钟` : '';
+                })()
+                : ''));
 
     return (
         <div
@@ -57,30 +82,37 @@ const TaskCard: React.FC<{ t: SimpleTask; onClick?: () => void; onSplit?: () => 
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
-                    <button
-                        type="button"
-                        className="px-2 py-1 text-xs rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                        onClick={(e) => { e.stopPropagation(); onSplit?.(); }}
-                        aria-label="AI拆分此任务"
-                        title="AI拆分此任务"
-                    >
-                        🤖 AI拆分
-                    </button>
+                    <div className="flex items-center gap-2">
+                        {/* 如果有子任务，显示折叠/展开按钮 */}
+                        {t.children && t.children.length > 0 && (
+                            <button
+                                className="px-2 py-1 text-xs bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded transition-colors"
+                                onClick={(e) => { e.stopPropagation(); onToggleCollapse?.(); }}
+                                aria-label={t.collapsed ? "展开子任务" : "折叠子任务"}
+                                title={t.collapsed ? "展开子任务" : "折叠子任务"}
+                            >
+                                {t.collapsed ? '▶' : '▼'} {t.children.length}
+                            </button>
+                        )}
+                        <button
+                            className="px-3 py-1 text-xs bg-lime-500 hover:bg-lime-600 text-white rounded-lg transition-colors shadow-sm"
+                            onClick={(e) => { e.stopPropagation(); onSplit?.(); }}
+                            aria-label="AI拆分此任务"
+                            title="AI拆分此任务"
+                        >
+                            🤖 AI拆分
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            {/* 时间信息 */}
-            <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 mb-2">
-                <span className="text-blue-600 dark:text-blue-400">⏰</span>
-                <span className="font-medium">{t.startTime || '--:--'}</span>
-                <span className="text-gray-400">→</span>
-                <span className="font-medium">{t.endTime || '--:--'}</span>
-                {duration && (
-                    <span className="ml-auto text-xs text-gray-500 dark:text-gray-400">
-            ({duration})
-          </span>
-                )}
-            </div>
+            {/* 工时信息 */}
+            {duration && (
+                <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 mb-2">
+                    <span className="text-blue-600 dark:text-blue-400">⏱️</span>
+                    <span className="font-medium">预计工时：{duration}</span>
+                </div>
+            )}
 
             {/* 备注 */}
             {t.remark && (
