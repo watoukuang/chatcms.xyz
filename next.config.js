@@ -41,6 +41,14 @@ const nextConfig = {
       },
     ];
   },
+  async rewrites() {
+    return [
+      {
+        source: '/service/v1/:path*',
+        destination: 'http://localhost:8081/api/v1/:path*',
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;
