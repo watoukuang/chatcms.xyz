@@ -4,16 +4,17 @@ import {useRouter} from 'next/router';
 import Head from 'next/head';
 import {getPageSEO} from '@/src/shared/utils/seo';
 import '../styles/globals.css';
-import {ToastProvider} from 'components/Toast';
-import TopProgressBar from '@/components/ui/TopProgressBar';
-import Layout from '@/layout';
+import '../styles/animations.css';
+import 'reactflow/dist/style.css';
+import {ToastProvider} from '@/src/components/Toast';
+import TopProgressBar from '@/src/components/ui/TopProgressBar';
+import Layout from 'src/layout';
+import { AppProviders } from '@/src/providers/AppProviders';
 
 function Application({Component, pageProps}: AppProps): React.ReactElement {
     const router = useRouter();
     const seo = getPageSEO(router.pathname);
     const AppLayout = Layout;
-
-    // 取消登录路由拦截与重定向，允许直接访问所有页面
 
     return (
         <>
@@ -27,7 +28,7 @@ function Application({Component, pageProps}: AppProps): React.ReactElement {
                 <meta name="theme-color" content="#0f1115" media="(prefers-color-scheme: dark)"/>
                 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)"/>
                 <meta property="og:type" content="website"/>
-                <meta property="og:site_name" content="DemoChain"/>
+                <meta property="og:site_name" content="AiTodo"/>
                 <meta property="og:title" content={seo.ogTitle || seo.title}/>
                 <meta property="og:description" content={seo.ogDescription || seo.description}/>
                 <meta property="og:url" content={seo.canonical}/>
@@ -47,11 +48,11 @@ function Application({Component, pageProps}: AppProps): React.ReactElement {
                         __html: JSON.stringify({
                             '@context': 'https://schema.org',
                             '@type': 'WebSite',
-                            name: 'ChatCMS',
-                            url: 'https://chatcms.xyz',
+                            name: 'AITODO',
+                            url: 'https://aitodo.me',
                             potentialAction: {
                                 '@type': 'SearchAction',
-                                target: 'https://chatcms.xyz/?q={search_term_string}',
+                                target: 'https://aitodo.me/?q={search_term_string}',
                                 'query-input': 'required name=search_term_string',
                             },
                         }),
@@ -60,9 +61,11 @@ function Application({Component, pageProps}: AppProps): React.ReactElement {
             </Head>
 
             <ToastProvider>
-                <AppLayout>
-                    <Component {...pageProps} />
-                </AppLayout>
+                <AppProviders>
+                    <AppLayout>
+                        <Component {...pageProps} />
+                    </AppLayout>
+                </AppProviders>
             </ToastProvider>
         </>
     );

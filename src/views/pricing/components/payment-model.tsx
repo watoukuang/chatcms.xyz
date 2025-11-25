@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 import {Network, Order, OrderDTO} from '@/src/shared/types/order';
-import {addOrderAPI} from '@/src/shared/api/order';
-import {useToast} from 'components/Toast';
+import {addOrderAPI} from '@/src/shared/service/order';
+import {useToast} from '@/src/components/Toast';
 import StepHeader from './step-header';
 import SelectStep from './select-step';
 import PaymentStep from './payment-step';

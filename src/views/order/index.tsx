@@ -1,6 +1,6 @@
 import React, {useState, useEffect} from 'react';
 import Head from 'next/head';
-import {pageOrderAPI} from '@/src/shared/api/order';
+import {pageOrderAPI} from '@/src/shared/service/order';
 import OrderTable from './components/order-table';
 import Empty from './components/empty';
 import Loading from './components/loading'

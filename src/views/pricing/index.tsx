@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 import Link from 'next/link';
 import PaymentModel from './components/payment-model';
-import {useToast} from 'components/Toast';
+import {useToast} from '@/src/components/Toast';
 import {PlanType} from "@/src/shared/types/plan";
 
 const combos = [
@@ -245,7 +245,7 @@ export default function Pricing(): React.ReactElement {
 
             <section className="mb-12">
                 <div
-                    className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-2xl p-8 text-center border border-blue-200 dark:border-blue-800">
+                    className="bg-gray-50 dark:bg-white/5 rounded-2xl p-8 text-center border border-gray-200 dark:border-white/10">
                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">💰 支付方式</h2>
                     <p className="text-gray-600 dark:text-gray-400 mb-6">我们支持 USDT
                         加密货币支付，安全便捷，全球通用</p>

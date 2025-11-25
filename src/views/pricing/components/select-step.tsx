@@ -40,7 +40,7 @@ export default function SelectStep({
                             key={network.id}
                             className={`flex items-center p-3 rounded-lg border cursor-pointer transition-colors ${
                                 selectedNetwork === network.id
-                                    ? 'border-orange-500 ring-1 ring-orange-500/20 bg-white dark:bg-white/[0.04]'
+                                    ? 'border-lime-500 ring-1 ring-lime-500/20 bg-white dark:bg-white/[0.04]'
                                     : 'border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/[0.03]'
                             }`}
                         >
@@ -60,7 +60,7 @@ export default function SelectStep({
                             </div>
                             {selectedNetwork === network.id && (
                                 <div
-                                    className="w-5 h-5 rounded-full flex items-center justify-center bg-orange-500 text-white">
+                                    className="w-5 h-5 rounded-full flex items-center justify-center bg-lime-500 text-[#0f1115]">
                                     <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                                         <path fillRule="evenodd"
                                               d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
@@ -76,7 +76,7 @@ export default function SelectStep({
             <button
                 onClick={onCreate}
                 disabled={loading}
-                className="w-full py-2.5 rounded-lg text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-sm hover:shadow"
+                className="w-full py-2.5 rounded-lg text-[#0f1115] font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 bg-gradient-to-r from-lime-500 to-lime-600 hover:from-lime-600 hover:to-lime-700 shadow-sm hover:shadow"
             >
                 {loading ? '创建订单中...' : '确认支付'}
             </button>

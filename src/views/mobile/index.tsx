@@ -1,5 +1,5 @@
 import React from 'react';
-import Articles from "@/components/Articles";
+import Articles from "@/src/components/Articles";
 
 export default function MobileHero(): React.ReactElement {
     return (

@@ -1,4 +1,5 @@
 import {R} from '@/src/shared/types/response';
+import storage from './storage';
 
 interface RequestConfig {
     headers?: Record<string, string>;
@@ -19,7 +20,7 @@ class RequestService {
         };
         Object.assign(reqHeaders, headers);
         if (typeof window !== 'undefined') {
-            const token = localStorage.getItem('token');
+            const token = storage.get<string>('token');
             if (token) reqHeaders.Authorization = `Bearer ${token}`;
         }
 
@@ -51,8 +52,8 @@ class RequestService {
                     : `请求失败 (${response.status})`;
                 if (response.status === 401) {
                     if (typeof window !== 'undefined') {
-                        localStorage.removeItem('token');
-                        localStorage.removeItem('user_detail');
+                        storage.remove('token');
+                        storage.remove('user_detail');
                         try {
                             window.dispatchEvent(new Event('authChanged'));
                         } catch {

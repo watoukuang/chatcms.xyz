@@ -11,7 +11,7 @@ export default function OrderTag({status}: OrderStatusBadgeProps) {
             case 'confirmed':
                 return 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400';
             case 'paid':
-                return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400';
+                return 'bg-lime-100 text-lime-800 dark:bg-lime-900/20 dark:text-lime-400';
             case 'pending_payment':
             case 'created':
                 return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400';
